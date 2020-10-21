@@ -1,0 +1,8 @@
+*bin*
+*debug*
+vendor
+*.tmp
+*.txt
+*.log
+*.bin
+*.sum
