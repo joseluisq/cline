@@ -24,6 +24,7 @@ func main() {
 				Summary:   "load environment variables from a file path",
 				Value:     false,
 				Shortcuts: []string{"v"},
+				EnvVar:    "ENV_FILE",
 			},
 		},
 		Commands: []*cli.Cmd{
@@ -63,6 +64,7 @@ func main() {
 			fmt.Printf("Application `%s` executed!\n", ctx.App.Name)
 			fmt.Printf("Application Tail arguments: %#v\n", ctx.TailArgs)
 			fmt.Printf("Application Flag `file` opted: `%s`\n", ctx.Flags.StringSlice("file"))
+			fmt.Printf("Application Flag `verbose` opted: `%s`\n", ctx.Flags.StringSlice("verbose"))
 
 			return nil
 		},

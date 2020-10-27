@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"syscall"
 )
 
 // FlagValue represents a `bool`, `int` or `string` input value for a command flag.
@@ -38,12 +39,14 @@ func (v FlagValue) StringSlice() []string {
 
 // Flag defines a command flag.
 type Flag struct {
-	Name          string
-	Summary       string
-	Value         interface{}
-	Shortcuts     []string
-	vflag         FlagValue
-	vflagAssigned bool
+	Name             string
+	Summary          string
+	Value            interface{}
+	Shortcuts        []string
+	EnvVar           string
+	vflag            FlagValue
+	vflagAssigned    bool
+	vflagEnvAssigned bool
 }
 
 // FlagMap defines a hash map of command flags.
@@ -139,18 +142,48 @@ func findFlagByKey(key string, opts []*Flag) (*Flag, bool) {
 func setDefaultFlagValue(flag *Flag) bool {
 	switch v := flag.Value.(type) {
 	case bool:
-		flag.vflag = FlagValue(strconv.FormatBool(v))
+		val := FlagValue(strconv.FormatBool(v))
+		ev, ok := syscall.Getenv(flag.EnvVar)
+		if ok {
+			if b, err := FlagValue(ev).Bool(); err == nil {
+				val = FlagValue(strconv.FormatBool(b))
+			}
+		}
+		flag.vflagEnvAssigned = ok
+		flag.vflag = val
 		return true
 	case int:
-		flag.vflag = FlagValue(strconv.Itoa(v))
+		val := FlagValue(strconv.Itoa(v))
+		ev, ok := syscall.Getenv(flag.EnvVar)
+		if ok {
+			s := FlagValue(ev)
+			if _, err := s.Int(); err == nil {
+				val = s
+			}
+		}
+		flag.vflagEnvAssigned = ok
+		flag.vflag = val
 		return true
 	case string:
-		flag.vflag = FlagValue(v)
+		val := FlagValue(v)
+		ev, ok := syscall.Getenv(flag.EnvVar)
+		if ok {
+			val = FlagValue(ev)
+		}
+		flag.vflagEnvAssigned = ok
+		flag.vflag = val
 		return true
 	case []string:
-		flag.vflag = FlagValue(strings.Join(v, ","))
+		val := FlagValue(strings.Join(v, ","))
+		ev, ok := syscall.Getenv(flag.EnvVar)
+		if ok {
+			val = FlagValue(ev)
+		}
+		flag.vflagEnvAssigned = ok
+		flag.vflag = val
 		return true
 	case nil:
+		flag.vflagEnvAssigned = false
 		flag.vflag = FlagValue("")
 		return true
 	}
