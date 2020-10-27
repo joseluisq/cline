@@ -27,6 +27,15 @@ func (v FlagValue) String() string {
 	return string(v)
 }
 
+// StringSlice converts current flag value to a string slice.
+func (v FlagValue) StringSlice() []string {
+	var strs []string
+	for _, s := range strings.Split(string(v), ",") {
+		strs = append(strs, strings.TrimSpace(s))
+	}
+	return strs
+}
+
 // Flag defines a command flag.
 type Flag struct {
 	Name          string
@@ -64,6 +73,11 @@ func (b *FlagMap) Int(flagName string) (int, error) {
 // String gets current flag value as `string`.
 func (b *FlagMap) String(flagName string) string {
 	return b.byKey(flagName).String()
+}
+
+// StringSlice gets current flag value as a string slice.
+func (b *FlagMap) StringSlice(flagName string) []string {
+	return b.byKey(flagName).StringSlice()
 }
 
 // Cmd defines an application command.
@@ -133,6 +147,9 @@ func setDefaultFlagValue(flag *Flag) bool {
 	case string:
 		flag.vflag = FlagValue(v)
 		return true
+	case []string:
+		flag.vflag = FlagValue(strings.Join(v, ","))
+		return true
 	case nil:
 		flag.vflag = FlagValue("")
 		return true
@@ -155,7 +172,7 @@ func (app *App) Run() error {
 		assigned := setDefaultFlagValue(f)
 
 		if !assigned {
-			return fmt.Errorf("global flag `%s` has invalid data type value. Use bool, int, string or nil", fname)
+			return fmt.Errorf("global flag `%s` has invalid data type value. Use bool, int, string, []string or nil", fname)
 		}
 	}
 
@@ -177,7 +194,7 @@ func (app *App) Run() error {
 			assigned := setDefaultFlagValue(f)
 
 			if !assigned {
-				return fmt.Errorf("command flag `%s` has invalid data type value. Use bool, int, string or nil", fname)
+				return fmt.Errorf("command flag `%s` has invalid data type value. Use bool, int, string, []string or nil", fname)
 			}
 		}
 	}
@@ -273,7 +290,7 @@ func (app *App) Run() error {
 				} else {
 					tailArgs = append(tailArgs, arg)
 				}
-			case string:
+			case string, []string:
 				lastFlag.vflag = s
 				lastFlag.vflagAssigned = true
 			default:
@@ -283,7 +300,8 @@ func (app *App) Run() error {
 		}
 	}
 
-	if hasCommand {
+	// Call command handler
+	if hasCommand && lastCmd.Handler != nil {
 		return lastCmd.Handler(&CmdContext{
 			Cmd: lastCmd,
 			Flags: &FlagMap{
@@ -299,7 +317,7 @@ func (app *App) Run() error {
 		})
 	}
 
-	// No provided arguments
+	// Call application handler
 	if app.Handler != nil {
 		return app.Handler(&AppContext{
 			App: app,

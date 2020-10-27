@@ -62,7 +62,7 @@ func main() {
 		Handler: func(ctx *cli.AppContext) error {
 			fmt.Printf("Application `%s` executed!\n", ctx.App.Name)
 			fmt.Printf("Application Tail arguments: %#v\n", ctx.TailArgs)
-			fmt.Printf("Application Flag `file` opted: `%s`\n", ctx.Flags.String("file"))
+			fmt.Printf("Application Flag `file` opted: `%s`\n", ctx.Flags.StringSlice("file"))
 
 			return nil
 		},
