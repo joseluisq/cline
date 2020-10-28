@@ -46,14 +46,11 @@ func main() {
 			},
 			Handler: func(ctx *cli.CmdContext) error {
 				fmt.Printf("Cmd `%s` executed!\n", ctx.Cmd.Name)
-
 				i, err := ctx.Flags.Int("version")
-
 				if err != nil {
 					fmt.Println(err)
 					os.Exit(1)
 				}
-
 				fmt.Printf("Cmd Flag `version` opted: `%d` (%T)\n", i, i)
 				fmt.Printf("Cmd Tail arguments: %#v\n", ctx.TailArgs)
 				return nil
@@ -61,14 +58,12 @@ func main() {
 		},
 	}
 	app.Handler = func(ctx *cli.AppContext) error {
-		fmt.Printf("Application `%s` executed!\n", ctx.App.Name)
-		fmt.Printf("Application Tail arguments: %#v\n", ctx.TailArgs)
-		fmt.Printf("Application Flag `file` opted: `%s`\n", ctx.Flags.StringSlice("file"))
-		fmt.Printf("Application Flag `verbose` opted: `%s`\n", ctx.Flags.StringSlice("verbose"))
-
+		fmt.Printf("App `%s` executed!\n", ctx.App.Name)
+		fmt.Printf("App Tail arguments: %#v\n", ctx.TailArgs)
+		fmt.Printf("App Flag `file` opted: `%s`\n", ctx.Flags.StringSlice("file"))
+		fmt.Printf("App Flag `verbose` opted: `%s`\n", ctx.Flags.StringSlice("verbose"))
 		return nil
 	}
-
 	if err := app.Run(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
