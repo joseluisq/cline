@@ -224,14 +224,6 @@ func (fs *FlagStringSlice) setDefaultValue() {
 	fs.zflag = val
 }
 
-// FlagHelp defines a flag help.
-type FlagHelp struct {
-	Summary       string
-	zdescription  string
-	zflag         FlagValue
-	zflagAssigned bool
-}
-
 // Application version values
 var (
 	versionNumber string = "devel"
@@ -468,9 +460,18 @@ func (app *App) Run(vArgs []string) error {
 				flagLen = len([]rune(fname))
 			}
 		}
+		if len([]rune("version")) > flagLen {
+			flagLen = len([]rune("version"))
+		}
+		if len([]rune("help")) > flagLen {
+			flagLen = len([]rune("help"))
+		}
 		for _, f := range flagsList {
 			fmt.Fprintf(w, "  --%s%s    %s\n", f[0], strings.Repeat(" ", flagLen-len([]rune(f[0]))), f[1])
 		}
+		// Additional flags
+		fmt.Fprintf(w, "  --%s%s    %s\n", "version", strings.Repeat(" ", flagLen-len([]rune("version"))), "Prints version information")
+		fmt.Fprintf(w, "  --%s%s    %s\n", "help", strings.Repeat(" ", flagLen-len([]rune("help"))), "Prints help information")
 
 		fmt.Fprintf(w, "\n")
 		fmt.Fprintf(w, "COMMANDS:\n")
