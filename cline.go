@@ -4,10 +4,14 @@ package cline
 
 import (
 	"fmt"
+	"html/template"
+	"io"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
+	"text/tabwriter"
 )
 
 // Flag defines a flag generic type.
@@ -29,6 +33,15 @@ func (v FlagValue) Int() (int, error) {
 // String converts current flag value to `string`.
 func (v FlagValue) String() string {
 	return string(v)
+}
+
+// StringSlice converts current flag value to a string slice.
+func (v FlagValue) StringSlice() []string {
+	var strs []string
+	for _, s := range strings.Split(string(v), ",") {
+		strs = append(strs, strings.TrimSpace(s))
+	}
+	return strs
 }
 
 // Cmd defines an application command.
@@ -122,15 +135,6 @@ func (fm *FlagMap) StringSlice(flagName string) []string {
 	return fm.findByKey(flagName).StringSlice()
 }
 
-// StringSlice converts current flag value to a string slice.
-func (v FlagValue) StringSlice() []string {
-	var strs []string
-	for _, s := range strings.Split(string(v), ",") {
-		strs = append(strs, strings.TrimSpace(s))
-	}
-	return strs
-}
-
 // FlagBool defines a flag with `bool` type.
 type FlagBool struct {
 	Name          string
@@ -220,13 +224,57 @@ func (fs *FlagStringSlice) setDefaultValue() {
 	fs.zflag = val
 }
 
+// FlagHelp defines a flag help.
+type FlagHelp struct {
+	Summary       string
+	zdescription  string
+	zflag         FlagValue
+	zflagAssigned bool
+}
+
+// Application version values
+var (
+	versionNumber string = "devel"
+	buildTime     string
+)
+
+var versionTemplate = `Version:      {{.Version}}
+Go version:   {{.GoVersion}}
+Built:        {{.BuildTime}}
+OS/Arch:      {{.Os}}/{{.Arch}}`
+
 // New creates a new application instance.
 func New() *App {
 	return &App{}
 }
 
+// getVersionTmpl write the version template
+func getVersionTmpl(wr io.Writer) error {
+	tmpl, err := template.New("").Parse(versionTemplate)
+
+	if err != nil {
+		return err
+	}
+
+	v := struct {
+		Version   string
+		GoVersion string
+		BuildTime string
+		Os        string
+		Arch      string
+	}{
+		Version:   versionNumber,
+		GoVersion: runtime.Version(),
+		BuildTime: buildTime,
+		Os:        runtime.GOOS,
+		Arch:      runtime.GOARCH,
+	}
+
+	return tmpl.Execute(wr, v)
+}
+
 // Run executes the application.
-func (app *App) Run() error {
+func (app *App) Run(vArgs []string) error {
 	// Commands and flags validation
 	// 1. Check application flags
 	aflags, err := checkAndInitFlags(app.Flags)
@@ -256,9 +304,11 @@ func (app *App) Run() error {
 	var lastFlag Flag
 	var tailArgs []string
 	var hasCommand = false
+	var hasHelp = false
+	var hasVersion = false
 
-	for i := 1; i < len(os.Args); i++ {
-		arg := strings.ToLower(strings.TrimSpace(os.Args[i]))
+	for i := 1; i < len(vArgs); i++ {
+		arg := strings.ToLower(strings.TrimSpace(vArgs[i]))
 		// Check for no supported arguments (remaining)
 		if len(tailArgs) > 0 {
 			tailArgs = append(tailArgs, arg)
@@ -273,6 +323,18 @@ func (app *App) Run() error {
 				tailArgs = append(tailArgs, arg)
 				continue
 			}
+
+			// Process special flags (help,version)
+			switch flagKey {
+			case "help", "h":
+				hasHelp = true
+			case "version", "v":
+				hasVersion = true
+			}
+			if hasHelp || hasVersion {
+				break
+			}
+
 			// Assign flag default values
 			var flags []Flag
 			if hasCommand {
@@ -370,6 +432,77 @@ func (app *App) Run() error {
 			tailArgs = append(tailArgs, arg)
 			continue
 		}
+	}
+
+	// Show `help` flag details
+	if hasHelp {
+		fmt.Printf("NAME: %s [OPTIONS] COMMAND\n\n", app.Name)
+		fmt.Printf("%s\n\n", app.Summary)
+
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 8, 8, 0, ' ', 0)
+		defer w.Flush()
+
+		fmt.Fprintf(w, "OPTIONS:\n")
+
+		var flagsList [][]string
+		var flagLen int = 0
+
+		for _, fl := range app.Flags {
+			fname := ""
+			switch f := fl.(type) {
+			case FlagBool:
+				fname = f.Name
+				flagsList = append(flagsList, []string{f.Name, f.Summary})
+			case FlagInt:
+				fname = f.Name
+				flagsList = append(flagsList, []string{f.Name, f.Summary})
+			case FlagString:
+				fname = f.Name
+				flagsList = append(flagsList, []string{f.Name, f.Summary})
+			case FlagStringSlice:
+				fname = f.Name
+				flagsList = append(flagsList, []string{f.Name, f.Summary})
+			}
+			if len([]rune(fname)) > flagLen {
+				flagLen = len([]rune(fname))
+			}
+		}
+		for _, f := range flagsList {
+			fmt.Fprintf(w, "  --%s%s    %s\n", f[0], strings.Repeat(" ", flagLen-len([]rune(f[0]))), f[1])
+		}
+
+		fmt.Fprintf(w, "\n")
+		fmt.Fprintf(w, "COMMANDS:\n")
+
+		var cmdsList [][]string
+		var cmdLen int = 0
+
+		for _, c := range app.Commands {
+			cmdsList = append(cmdsList, []string{c.Name, c.Summary})
+
+			if len([]rune(c.Name)) > cmdLen {
+				cmdLen = len([]rune(c.Name))
+			}
+		}
+		for _, c := range cmdsList {
+			fmt.Fprintf(w, "  %s%s    %s\n", c[0], strings.Repeat(" ", cmdLen-len([]rune(c[0]))), c[1])
+		}
+
+		fmt.Fprintf(w, "\n")
+		fmt.Fprintf(w, "Run '%s COMMAND --help' for more information on a command\n", app.Name)
+
+		return nil
+	}
+
+	// Show `version` flag details
+	if hasVersion {
+		if err = getVersionTmpl(os.Stdout); err != nil {
+			return err
+		}
+
+		fmt.Print("\n")
+		return nil
 	}
 
 	// Call command handler
