@@ -1,3 +1,5 @@
+BUILD_TIME ?= $(shell date -u '+%Y-%m-%dT%H:%m:%S')
+
 install:
 	@go version
 	@go get -v golang.org/x/lint/golint
@@ -11,7 +13,9 @@ test:
 .PHONY: test
 
 build:
-	@go build -v -ldflags "-s -w -X main.version=0.0.0" -a -o bin/cline ./examples
+	@go build -v \
+		-ldflags "-s -w -X 'main.version=0.0.0' -X 'main.buildTime=$(BUILD_TIME)'" \
+		-a -o bin/cline ./examples
 .PHONY: build
 
 coverage:

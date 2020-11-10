@@ -18,6 +18,8 @@ WIP project under **active** development.
 
 ## Usage
 
+API definition example:
+
 ```go
 package main
 
@@ -28,10 +30,18 @@ import (
 	cli "github.com/joseluisq/cline"
 )
 
+// App version and build time values passed at compile time
+var (
+	versionNumber string = "devel"
+	buildTime     string
+)
+
 func main() {
 	app := cli.New()
 	app.Name = "enve"
 	app.Summary = "Run a program in a modified environment using .env files"
+	app.Version = versionNumber
+	app.BuildTime = buildTime
 	app.Flags = []cli.Flag{
 		cli.FlagString{
 			Name:    "file",
@@ -90,25 +100,35 @@ func main() {
 		os.Exit(1)
 	}
 }
-
-// OUTPUT:
-// 
-// go run examples/main.go -h
-// NAME: enve [OPTIONS] COMMAND
-
-// Run a program in a modified environment using .env files
-
-// OPTIONS:
-//   --file       Load environment variables from a file path
-//   --verbose    Enable more verbose info
-//   --version    Prints version information
-//   --help       Prints help information
-
-// COMMANDS:
-//   info    Show command information
-
-// Run 'enve COMMAND --help' for more information on a command
 ```
+
+Output example:
+
+```sh
+$ go run examples/main.go -h
+# NAME: enve [OPTIONS] COMMAND
+#
+# Run a program in a modified environment using .env files
+#
+# OPTIONS:
+#   --file       Load environment variables from a file path
+#   --verbose    Enable more verbose info
+#   --version    Prints version information
+#   --help       Prints help information
+#
+# COMMANDS:
+#   info    Show command information
+#
+# Run 'enve COMMAND --help' for more information on a command
+
+$ go run examples/main.go -v
+# Version:       0.0.0
+# Go version:    go1.15.4
+# Built:         2020-11-10T21:11:36
+# OS/Arch:       linux/amd64
+```
+
+More details on [examples/main.go](./examples/main.go)
 
 ## Contributions
 

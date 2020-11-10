@@ -7,17 +7,18 @@ import (
 	cli "github.com/joseluisq/cline"
 )
 
-// Application version values
+// App version and build time values passed at compile time
+// See `Makefile` > build
 var (
-	versionNumber string = "devel"
-	buildTime     string
+	version   string = "devel"
+	buildTime string
 )
 
 func main() {
 	app := cli.New()
 	app.Name = "enve"
 	app.Summary = "Run a program in a modified environment using .env files"
-	app.Version = versionNumber
+	app.Version = version
 	app.BuildTime = buildTime
 	app.Flags = []cli.Flag{
 		cli.FlagString{
