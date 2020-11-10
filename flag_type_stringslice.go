@@ -16,8 +16,8 @@ type FlagStringSlice struct {
 	zflagAssigned bool
 }
 
-// setDefaultValue default flag values.
-func (fs *FlagStringSlice) setDefaultValue() {
+// setDefaults default flag values via current the `Value` prop or an environment variable (`EnvVar`).
+func (fs *FlagStringSlice) setDefaults() {
 	val := FlagValue(strings.Join(fs.Value, ","))
 	ev, ok := syscall.Getenv(fs.EnvVar)
 	if ok {

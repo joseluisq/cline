@@ -15,28 +15,28 @@ func checkAndInitFlags(flags []Flag) ([]Flag, error) {
 			if name == "" {
 				return nil, fmt.Errorf("global flag name has empty value")
 			}
-			f.setDefaultValue()
+			f.setDefaults()
 			sFlags = append(sFlags, f)
 		case FlagInt:
 			name := strings.ToLower(strings.TrimSpace(f.Name))
 			if name == "" {
 				return nil, fmt.Errorf("global flag name has empty value")
 			}
-			f.setDefaultValue()
+			f.setDefaults()
 			sFlags = append(sFlags, f)
 		case FlagString:
 			name := strings.ToLower(strings.TrimSpace(f.Name))
 			if name == "" {
 				return nil, fmt.Errorf("global flag name has empty value")
 			}
-			f.setDefaultValue()
+			f.setDefaults()
 			sFlags = append(sFlags, f)
 		case FlagStringSlice:
 			name := strings.ToLower(strings.TrimSpace(f.Name))
 			if name == "" {
 				return nil, fmt.Errorf("global flag name has empty value")
 			}
-			f.setDefaultValue()
+			f.setDefaults()
 			sFlags = append(sFlags, f)
 		default:
 			return nil, fmt.Errorf("global flag has invalid data type value. Use bool, int, string, []string or nil")

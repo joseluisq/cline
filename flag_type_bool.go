@@ -16,8 +16,8 @@ type FlagBool struct {
 	zflagAssigned bool
 }
 
-// setDefaultValue default flag values.
-func (fb *FlagBool) setDefaultValue() {
+// setDefaults default flag values via current the `Value` prop or an environment variable (`EnvVar`).
+func (fb *FlagBool) setDefaults() {
 	val := FlagValue(strconv.FormatBool(fb.Value))
 	ev, ok := syscall.Getenv(fb.EnvVar)
 	if ok {

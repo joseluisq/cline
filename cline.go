@@ -20,9 +20,13 @@ type Cmd struct {
 
 // CmdContext defines command context.
 type CmdContext struct {
-	Cmd        *Cmd
-	Flags      *FlagMap
-	TailArgs   *[]string
+	// Cmd references to current application command.
+	Cmd *Cmd
+	// Flags references to flag input values of current command.
+	Flags *FlagMapValues
+	// TailArgs references to current tail input arguments.
+	TailArgs *[]string
+	// AppContext references to current application context.
 	AppContext *AppContext
 }
 
@@ -42,8 +46,11 @@ type App struct {
 
 // AppContext defines an application context.
 type AppContext struct {
-	App      *App
-	Flags    *FlagMap
+	// App references to current application instance.
+	App *App
+	// Flags references to flag input values of current application (global flags).
+	Flags *FlagMapValues
+	// TailArgs references to current tail input arguments.
 	TailArgs *[]string
 }
 
@@ -55,7 +62,7 @@ func New() *App {
 	return &App{}
 }
 
-// Run executes the application.
+// Run executes the current application.
 func (app *App) Run(vArgs []string) error {
 	// Commands and flags validation
 
@@ -234,13 +241,13 @@ func (app *App) Run(vArgs []string) error {
 	if hasCommand && lastCmd.Handler != nil {
 		return lastCmd.Handler(&CmdContext{
 			Cmd: &lastCmd,
-			Flags: &FlagMap{
+			Flags: &FlagMapValues{
 				flags: lastCmd.Flags,
 			},
 			TailArgs: &tailArgs,
 			AppContext: &AppContext{
 				App: app,
-				Flags: &FlagMap{
+				Flags: &FlagMapValues{
 					flags: app.Flags,
 				},
 			},
@@ -251,7 +258,7 @@ func (app *App) Run(vArgs []string) error {
 	if app.Handler != nil {
 		return app.Handler(&AppContext{
 			App: app,
-			Flags: &FlagMap{
+			Flags: &FlagMapValues{
 				flags: app.Flags,
 			},
 			TailArgs: &tailArgs,

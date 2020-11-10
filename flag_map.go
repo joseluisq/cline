@@ -1,11 +1,12 @@
 package cline
 
-// FlagMap defines a hash map of command flags.
-type FlagMap struct {
+// FlagMapValues defines a hash map of command flags.
+type FlagMapValues struct {
 	flags []Flag
 }
 
-func (fm *FlagMap) findByKey(flagKey string) FlagValue {
+// findByKey finds a `FlagValue` by a string key.
+func (fm *FlagMapValues) findByKey(flagKey string) FlagValue {
 	for _, v := range fm.flags {
 		switch fl := v.(type) {
 		case FlagBool:
@@ -34,21 +35,21 @@ func (fm *FlagMap) findByKey(flagKey string) FlagValue {
 }
 
 // Bool gets current flag value as `bool`.
-func (fm *FlagMap) Bool(flagName string) (bool, error) {
+func (fm *FlagMapValues) Bool(flagName string) (bool, error) {
 	return fm.findByKey(flagName).Bool()
 }
 
 // Int gets current flag value as `int`.
-func (fm *FlagMap) Int(flagName string) (int, error) {
+func (fm *FlagMapValues) Int(flagName string) (int, error) {
 	return fm.findByKey(flagName).Int()
 }
 
 // String gets current flag value as `string`.
-func (fm *FlagMap) String(flagName string) string {
+func (fm *FlagMapValues) String(flagName string) string {
 	return fm.findByKey(flagName).String()
 }
 
 // StringSlice gets current flag value as a string slice.
-func (fm *FlagMap) StringSlice(flagName string) []string {
+func (fm *FlagMapValues) StringSlice(flagName string) []string {
 	return fm.findByKey(flagName).StringSlice()
 }

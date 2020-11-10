@@ -8,22 +8,22 @@ import (
 // FlagValue represents a `bool`, `int`, `string` or `string slice` input value for a command flag.
 type FlagValue string
 
-// Bool converts current flag value to `bool`.
+// Bool converts current flag value into a `bool`.
 func (v FlagValue) Bool() (bool, error) {
 	return strconv.ParseBool(v.String())
 }
 
-// Int converts current flag value to `int`.
+// Int converts current flag value into an `int`.
 func (v FlagValue) Int() (int, error) {
 	return strconv.Atoi(v.String())
 }
 
-// String converts current flag value to `string`.
+// String converts current flag value into a `string`.
 func (v FlagValue) String() string {
 	return string(v)
 }
 
-// StringSlice converts current flag value to a string slice.
+// StringSlice converts current flag value into a string slice.
 func (v FlagValue) StringSlice() []string {
 	var strs []string
 	for _, s := range strings.Split(string(v), ",") {

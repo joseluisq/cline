@@ -13,8 +13,8 @@ type FlagString struct {
 	zflagAssigned bool
 }
 
-// setDefaultValue default flag values.
-func (fs *FlagString) setDefaultValue() {
+// setDefaults default flag values via current the `Value` prop or an environment variable (`EnvVar`).
+func (fs *FlagString) setDefaults() {
 	val := FlagValue(fs.Value)
 	ev, ok := syscall.Getenv(fs.EnvVar)
 	if ok {
