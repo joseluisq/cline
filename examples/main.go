@@ -7,39 +7,47 @@ import (
 	cli "github.com/joseluisq/cline"
 )
 
+// Application version values
+var (
+	versionNumber string = "devel"
+	buildTime     string
+)
+
 func main() {
 	app := cli.New()
 	app.Name = "enve"
-	app.Summary = "run a program in a modified environment using .env files"
+	app.Summary = "Run a program in a modified environment using .env files"
+	app.Version = versionNumber
+	app.BuildTime = buildTime
 	app.Flags = []cli.Flag{
 		cli.FlagString{
 			Name:    "file",
-			Summary: "load environment variables from a file path",
+			Summary: "Load environment variables from a file path",
 			Value:   ".env",
 			Aliases: []string{"f"},
 		},
 		cli.FlagBool{
 			Name:    "verbose",
-			Summary: "load environment variables from a file path",
+			Summary: "Enable more verbose info",
 			Value:   false,
 			Aliases: []string{"v"},
-			EnvVar:  "ENV_FILE",
+			EnvVar:  "ENV_VERBOSE",
 		},
 	}
 	app.Commands = []cli.Cmd{
 		{
 			Name:    "info",
-			Summary: "show command information",
+			Summary: "Show command information",
 			Flags: []cli.Flag{
 				cli.FlagInt{
 					Name:    "version",
-					Summary: "enable more verbose command information",
+					Summary: "Enable more verbose command information",
 					Value:   10,
 					Aliases: []string{"z"},
 				},
 				cli.FlagBool{
 					Name:    "detailed",
-					Summary: "enable info details",
+					Summary: "Enable info details",
 					Value:   true,
 					Aliases: []string{"d"},
 				},
@@ -64,7 +72,7 @@ func main() {
 		fmt.Printf("App Flag `verbose` opted: `%s`\n", ctx.Flags.StringSlice("verbose"))
 		return nil
 	}
-	if err := app.Run(); err != nil {
+	if err := app.Run(os.Args); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
