@@ -7,10 +7,18 @@ import (
 	cli "github.com/joseluisq/cline"
 )
 
+// Application version values
+var (
+	versionNumber string = "devel"
+	buildTime     string
+)
+
 func main() {
 	app := cli.New()
 	app.Name = "enve"
 	app.Summary = "Run a program in a modified environment using .env files"
+	app.Version = versionNumber
+	app.BuildTime = buildTime
 	app.Flags = []cli.Flag{
 		cli.FlagString{
 			Name:    "file",

@@ -4,45 +4,11 @@ package cline
 
 import (
 	"fmt"
-	"html/template"
-	"io"
-	"os"
-	"runtime"
-	"strconv"
 	"strings"
-	"syscall"
-	"text/tabwriter"
 )
 
 // Flag defines a flag generic type.
 type Flag interface{}
-
-// FlagValue represents a `bool`, `int` or `string` input value for a command flag.
-type FlagValue string
-
-// Bool converts current flag value to `bool`.
-func (v FlagValue) Bool() (bool, error) {
-	return strconv.ParseBool(v.String())
-}
-
-// Int converts current flag value to `int`.
-func (v FlagValue) Int() (int, error) {
-	return strconv.Atoi(v.String())
-}
-
-// String converts current flag value to `string`.
-func (v FlagValue) String() string {
-	return string(v)
-}
-
-// StringSlice converts current flag value to a string slice.
-func (v FlagValue) StringSlice() []string {
-	var strs []string
-	for _, s := range strings.Split(string(v), ",") {
-		strs = append(strs, strings.TrimSpace(s))
-	}
-	return strs
-}
 
 // Cmd defines an application command.
 type Cmd struct {
@@ -65,11 +31,13 @@ type CmdHandler func(*CmdContext) error
 
 // App defines application settings
 type App struct {
-	Name     string
-	Summary  string
-	Flags    []Flag
-	Commands []Cmd
-	Handler  AppHandler
+	Name      string
+	Summary   string
+	Version   string
+	BuildTime string
+	Flags     []Flag
+	Commands  []Cmd
+	Handler   AppHandler
 }
 
 // AppContext defines an application context.
@@ -82,192 +50,15 @@ type AppContext struct {
 // AppHandler responds to an application action.
 type AppHandler func(*AppContext) error
 
-// FlagMap defines a hash map of command flags.
-type FlagMap struct {
-	flags []Flag
-}
-
-func (fm *FlagMap) findByKey(flagKey string) FlagValue {
-	for _, v := range fm.flags {
-		switch fl := v.(type) {
-		case FlagBool:
-			if flagKey == fl.Name {
-				return fl.zflag
-			}
-			break
-		case FlagInt:
-			if flagKey == fl.Name {
-				return fl.zflag
-			}
-			break
-		case FlagString:
-			if flagKey == fl.Name {
-				return fl.zflag
-			}
-			break
-		case FlagStringSlice:
-			if flagKey == fl.Name {
-				return fl.zflag
-			}
-			break
-		}
-	}
-	return FlagValue("")
-}
-
-// Bool gets current flag value as `bool`.
-func (fm *FlagMap) Bool(flagName string) (bool, error) {
-	return fm.findByKey(flagName).Bool()
-}
-
-// Int gets current flag value as `int`.
-func (fm *FlagMap) Int(flagName string) (int, error) {
-	return fm.findByKey(flagName).Int()
-}
-
-// String gets current flag value as `string`.
-func (fm *FlagMap) String(flagName string) string {
-	return fm.findByKey(flagName).String()
-}
-
-// StringSlice gets current flag value as a string slice.
-func (fm *FlagMap) StringSlice(flagName string) []string {
-	return fm.findByKey(flagName).StringSlice()
-}
-
-// FlagBool defines a flag with `bool` type.
-type FlagBool struct {
-	Name          string
-	Summary       string
-	Value         bool
-	Aliases       []string
-	EnvVar        string
-	zflag         FlagValue
-	zflagAssigned bool
-}
-
-// setDefaultValue default flag values.
-func (fb *FlagBool) setDefaultValue() {
-	val := FlagValue(strconv.FormatBool(fb.Value))
-	ev, ok := syscall.Getenv(fb.EnvVar)
-	if ok {
-		if b, err := FlagValue(ev).Bool(); err == nil {
-			val = FlagValue(strconv.FormatBool(b))
-		}
-	}
-	fb.zflag = val
-}
-
-// FlagInt defines a flag with `Int` type.
-type FlagInt struct {
-	Name          string
-	Summary       string
-	Value         int
-	Aliases       []string
-	EnvVar        string
-	zflag         FlagValue
-	zflagAssigned bool
-}
-
-// setDefaultValue default flag values.
-func (fi *FlagInt) setDefaultValue() {
-	val := FlagValue(strconv.Itoa(fi.Value))
-	ev, ok := syscall.Getenv(fi.EnvVar)
-	if ok {
-		s := FlagValue(ev)
-		if _, err := s.Int(); err == nil {
-			val = s
-		}
-	}
-	fi.zflag = val
-}
-
-// FlagString defines a flag with `String` type.
-type FlagString struct {
-	Name          string
-	Summary       string
-	Value         string
-	Aliases       []string
-	EnvVar        string
-	zflag         FlagValue
-	zflagAssigned bool
-}
-
-// setDefaultValue default flag values.
-func (fs *FlagString) setDefaultValue() {
-	val := FlagValue(fs.Value)
-	ev, ok := syscall.Getenv(fs.EnvVar)
-	if ok {
-		val = FlagValue(ev)
-	}
-	fs.zflag = val
-}
-
-// FlagStringSlice defines a flag with string slice type.
-type FlagStringSlice struct {
-	Name          string
-	Summary       string
-	Value         []string
-	Aliases       []string
-	EnvVar        string
-	zflag         FlagValue
-	zflagAssigned bool
-}
-
-// setDefaultValue default flag values.
-func (fs *FlagStringSlice) setDefaultValue() {
-	val := FlagValue(strings.Join(fs.Value, ","))
-	ev, ok := syscall.Getenv(fs.EnvVar)
-	if ok {
-		val = FlagValue(ev)
-	}
-	fs.zflag = val
-}
-
-// Application version values
-var (
-	versionNumber string = "devel"
-	buildTime     string
-)
-
-var versionTemplate = `Version:      {{.Version}}
-Go version:   {{.GoVersion}}
-Built:        {{.BuildTime}}
-OS/Arch:      {{.Os}}/{{.Arch}}`
-
 // New creates a new application instance.
 func New() *App {
 	return &App{}
 }
 
-// getVersionTmpl write the version template
-func getVersionTmpl(wr io.Writer) error {
-	tmpl, err := template.New("").Parse(versionTemplate)
-
-	if err != nil {
-		return err
-	}
-
-	v := struct {
-		Version   string
-		GoVersion string
-		BuildTime string
-		Os        string
-		Arch      string
-	}{
-		Version:   versionNumber,
-		GoVersion: runtime.Version(),
-		BuildTime: buildTime,
-		Os:        runtime.GOOS,
-		Arch:      runtime.GOARCH,
-	}
-
-	return tmpl.Execute(wr, v)
-}
-
 // Run executes the application.
 func (app *App) Run(vArgs []string) error {
 	// Commands and flags validation
+
 	// 1. Check application flags
 	aflags, err := checkAndInitFlags(app.Flags)
 	if err != nil {
@@ -301,6 +92,7 @@ func (app *App) Run(vArgs []string) error {
 
 	for i := 1; i < len(vArgs); i++ {
 		arg := strings.ToLower(strings.TrimSpace(vArgs[i]))
+
 		// Check for no supported arguments (remaining)
 		if len(tailArgs) > 0 {
 			tailArgs = append(tailArgs, arg)
@@ -316,7 +108,7 @@ func (app *App) Run(vArgs []string) error {
 				continue
 			}
 
-			// Process special flags (help,version)
+			// Process special flags (help and version)
 			switch flagKey {
 			case "help", "h":
 				hasHelp = true
@@ -334,6 +126,7 @@ func (app *App) Run(vArgs []string) error {
 			} else {
 				flags = app.Flags
 			}
+
 			// Find argument key flag on flag list
 			flag := findFlagByKey(flagKey, flags)
 			if flag == nil {
@@ -428,81 +221,12 @@ func (app *App) Run(vArgs []string) error {
 
 	// Show `help` flag details
 	if hasHelp {
-		fmt.Printf("NAME: %s [OPTIONS] COMMAND\n\n", app.Name)
-		fmt.Printf("%s\n\n", app.Summary)
-
-		w := new(tabwriter.Writer)
-		w.Init(os.Stdout, 8, 8, 0, ' ', 0)
-		defer w.Flush()
-
-		fmt.Fprintf(w, "OPTIONS:\n")
-
-		var flagsList [][]string
-		var flagLen int = 0
-
-		for _, fl := range app.Flags {
-			fname := ""
-			switch f := fl.(type) {
-			case FlagBool:
-				fname = f.Name
-				flagsList = append(flagsList, []string{f.Name, f.Summary})
-			case FlagInt:
-				fname = f.Name
-				flagsList = append(flagsList, []string{f.Name, f.Summary})
-			case FlagString:
-				fname = f.Name
-				flagsList = append(flagsList, []string{f.Name, f.Summary})
-			case FlagStringSlice:
-				fname = f.Name
-				flagsList = append(flagsList, []string{f.Name, f.Summary})
-			}
-			if len([]rune(fname)) > flagLen {
-				flagLen = len([]rune(fname))
-			}
-		}
-		if len([]rune("version")) > flagLen {
-			flagLen = len([]rune("version"))
-		}
-		if len([]rune("help")) > flagLen {
-			flagLen = len([]rune("help"))
-		}
-		for _, f := range flagsList {
-			fmt.Fprintf(w, "  --%s%s    %s\n", f[0], strings.Repeat(" ", flagLen-len([]rune(f[0]))), f[1])
-		}
-		// Additional flags
-		fmt.Fprintf(w, "  --%s%s    %s\n", "version", strings.Repeat(" ", flagLen-len([]rune("version"))), "Prints version information")
-		fmt.Fprintf(w, "  --%s%s    %s\n", "help", strings.Repeat(" ", flagLen-len([]rune("help"))), "Prints help information")
-
-		fmt.Fprintf(w, "\n")
-		fmt.Fprintf(w, "COMMANDS:\n")
-
-		var cmdsList [][]string
-		var cmdLen int = 0
-
-		for _, c := range app.Commands {
-			cmdsList = append(cmdsList, []string{c.Name, c.Summary})
-
-			if len([]rune(c.Name)) > cmdLen {
-				cmdLen = len([]rune(c.Name))
-			}
-		}
-		for _, c := range cmdsList {
-			fmt.Fprintf(w, "  %s%s    %s\n", c[0], strings.Repeat(" ", cmdLen-len([]rune(c[0]))), c[1])
-		}
-
-		fmt.Fprintf(w, "\n")
-		fmt.Fprintf(w, "Run '%s COMMAND --help' for more information on a command\n", app.Name)
-
-		return nil
+		return app.printHelp()
 	}
 
 	// Show `version` flag details
 	if hasVersion {
-		if err = getVersionTmpl(os.Stdout); err != nil {
-			return err
-		}
-
-		fmt.Print("\n")
+		app.printVersion()
 		return nil
 	}
 
@@ -534,96 +258,5 @@ func (app *App) Run(vArgs []string) error {
 		})
 	}
 
-	return nil
-}
-
-func checkAndInitFlags(flags []Flag) ([]Flag, error) {
-	var rflags []Flag
-	for _, v := range flags {
-		switch f := v.(type) {
-		case FlagBool:
-			name := strings.ToLower(strings.TrimSpace(f.Name))
-			if name == "" {
-				return nil, fmt.Errorf("global flag name has empty value")
-			}
-			f.setDefaultValue()
-			rflags = append(rflags, f)
-		case FlagInt:
-			name := strings.ToLower(strings.TrimSpace(f.Name))
-			if name == "" {
-				return nil, fmt.Errorf("global flag name has empty value")
-			}
-			f.setDefaultValue()
-			rflags = append(rflags, f)
-		case FlagString:
-			name := strings.ToLower(strings.TrimSpace(f.Name))
-			if name == "" {
-				return nil, fmt.Errorf("global flag name has empty value")
-			}
-			f.setDefaultValue()
-			rflags = append(rflags, f)
-		case FlagStringSlice:
-			name := strings.ToLower(strings.TrimSpace(f.Name))
-			if name == "" {
-				return nil, fmt.Errorf("global flag name has empty value")
-			}
-			f.setDefaultValue()
-			rflags = append(rflags, f)
-		default:
-			return nil, fmt.Errorf("global flag has invalid data type value. Use bool, int, string, []string or nil")
-		}
-	}
-	return rflags, nil
-}
-
-func findFlagByKey(key string, flags []Flag) Flag {
-	for _, f := range flags {
-		switch fl := f.(type) {
-		case FlagBool:
-			// Check for long named flags
-			if key == fl.Name {
-				return fl
-			}
-			// Check for short named flags
-			for _, s := range fl.Aliases {
-				if key == s {
-					return fl
-				}
-			}
-		case FlagInt:
-			// Check for long named flags
-			if key == fl.Name {
-				return fl
-			}
-			// Check for short named flags
-			for _, s := range fl.Aliases {
-				if key == s {
-					return fl
-				}
-			}
-		case FlagString:
-			// Check for long named flags
-			if key == fl.Name {
-				return fl
-			}
-			// Check for short named flags
-			for _, s := range fl.Aliases {
-				if key == s {
-					return fl
-				}
-			}
-		case FlagStringSlice:
-			// Check for long named flags
-			if key == fl.Name {
-				return fl
-			}
-			// Check for short named flags
-			for _, s := range fl.Aliases {
-				if key == s {
-					return fl
-				}
-			}
-		}
-	}
 	return nil
 }
