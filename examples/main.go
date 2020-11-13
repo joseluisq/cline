@@ -31,7 +31,7 @@ func main() {
 			Name:    "verbose",
 			Summary: "Enable more verbose info",
 			Value:   false,
-			Aliases: []string{"v"},
+			Aliases: []string{"V"},
 			EnvVar:  "ENV_VERBOSE",
 		},
 	}
@@ -41,10 +41,10 @@ func main() {
 			Summary: "Show command information",
 			Flags: []cli.Flag{
 				cli.FlagInt{
-					Name:    "version",
-					Summary: "Enable more verbose command information",
+					Name:    "trace",
+					Summary: "Enable tracing mode",
 					Value:   10,
-					Aliases: []string{"z"},
+					Aliases: []string{"t"},
 				},
 				cli.FlagBool{
 					Name:    "detailed",
@@ -61,6 +61,9 @@ func main() {
 					os.Exit(1)
 				}
 				fmt.Printf("Cmd Flag `version` opted: `%d` (%T)\n", i, i)
+
+				d := ctx.Flags.String("detailed")
+				fmt.Printf("Cmd Flag `detailed` opted: `%s` (%T)\n", d, d)
 				fmt.Printf("Cmd Tail arguments: %#v\n", ctx.TailArgs)
 				return nil
 			},
@@ -70,7 +73,10 @@ func main() {
 		fmt.Printf("App `%s` executed!\n", ctx.App.Name)
 		fmt.Printf("App Tail arguments: %#v\n", ctx.TailArgs)
 		fmt.Printf("App Flag `file` opted: `%s`\n", ctx.Flags.StringSlice("file"))
-		fmt.Printf("App Flag `verbose` opted: `%s`\n", ctx.Flags.StringSlice("verbose"))
+
+		b, _ := ctx.Flags.Bool("verbose")
+
+		fmt.Printf("App Flag `verbose` opted: `%v`\n", b)
 		return nil
 	}
 	if err := app.Run(os.Args); err != nil {

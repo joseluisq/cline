@@ -62,43 +62,54 @@ func New() *App {
 	return &App{}
 }
 
-// Run executes the current application.
-func (app *App) Run(vArgs []string) error {
-	// Commands and flags validation
-
-	// 1. Check application flags
-	aflags, err := checkAndInitFlags(app.Flags)
-	if err != nil {
-		return err
-	}
-	app.Flags = aflags
-
-	// 2. Check commands and their flags
+// validateCommands checks if a command is valid and initialize it
+func validateCommands(commands []Cmd) ([]Cmd, error) {
 	var cmds []Cmd
-	for _, c := range app.Commands {
-		name := strings.ToLower(strings.TrimSpace(c.Name))
+	for _, c := range commands {
+		name := strings.TrimSpace(c.Name)
 		if name == "" {
-			return fmt.Errorf("command name has empty value")
+			return nil, fmt.Errorf("command name has empty value")
 		}
-		cflags, err := checkAndInitFlags(c.Flags)
+		cflags, err := validateAndInitFlags(c.Flags)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		c.Flags = cflags
 		cmds = append(cmds, c)
 	}
-	app.Commands = cmds
+	return cmds, nil
+}
+
+// Run executes the current application.
+func (app *App) Run(vArgs []string) error {
+	// Commands and flags validation
+
+	// 1. Check application global flags
+	vflags, err := validateAndInitFlags(app.Flags)
+	if err != nil {
+		return err
+	}
+	app.Flags = vflags
+
+	// 2. Check commands and their flags
+	vcmds, err := validateCommands(app.Commands)
+	if err != nil {
+		return err
+	}
+	app.Commands = vcmds
 
 	// 3. Process commands and flags
 	var lastCmd Cmd
 	var lastFlag Flag
+	var lastFlagIndex int = -1
+	// var lastCmdFlagList []Flag
 	var tailArgs []string
-	var hasCommand = false
+	var hasCmd = false
 	var hasHelp = false
 	var hasVersion = false
 
 	for i := 1; i < len(vArgs); i++ {
-		arg := strings.ToLower(strings.TrimSpace(vArgs[i]))
+		arg := strings.TrimSpace(vArgs[i])
 
 		// Check for no supported arguments (remaining)
 		if len(tailArgs) > 0 {
@@ -110,7 +121,7 @@ func (app *App) Run(vArgs []string) error {
 		if strings.HasPrefix(arg, "-") {
 			flagKey := strings.TrimPrefix(strings.TrimPrefix(arg, "-"), "-")
 			// Skip unsupported fags
-			if strings.HasPrefix(flagKey, "-") {
+			if flagKey == "" || strings.HasPrefix(flagKey, "-") {
 				tailArgs = append(tailArgs, arg)
 				continue
 			}
@@ -120,7 +131,9 @@ func (app *App) Run(vArgs []string) error {
 			case "help", "h":
 				hasHelp = true
 			case "version", "v":
-				hasVersion = true
+				if !hasCmd {
+					hasVersion = true
+				}
 			}
 			if hasHelp || hasVersion {
 				break
@@ -128,32 +141,63 @@ func (app *App) Run(vArgs []string) error {
 
 			// Assign flag default values
 			var flags []Flag
-			if hasCommand {
+			if hasCmd {
 				flags = lastCmd.Flags
 			} else {
 				flags = app.Flags
 			}
 
 			// Find argument key flag on flag list
-			flag := findFlagByKey(flagKey, flags)
+			i, flag := findFlagByKey(flagKey, flags)
 			if flag == nil {
 				return fmt.Errorf("argument `%s` is not recognised", arg)
 			}
 			lastFlag = flag
+			lastFlagIndex = i
+
+			switch fl := lastFlag.(type) {
+			case FlagBool:
+				if fl.Name != "" {
+					if fl.zflagAssigned {
+						tailArgs = append(tailArgs, arg)
+						continue
+					}
+
+					// If bool flag is defined is assumed as `true`
+					s := FlagValue("1")
+					fl.zflag = s
+					fl.zflagAssigned = true
+					lastFlag = fl
+
+					if hasCmd {
+						if len(lastCmd.Flags) > 0 && lastFlagIndex > -1 {
+							lastCmd.Flags[lastFlagIndex] = fl
+						}
+					} else {
+						if len(app.Flags) > 0 && lastFlagIndex > -1 {
+							app.Flags[lastFlagIndex] = fl
+						}
+					}
+
+					tailArgs = append(tailArgs, arg)
+					continue
+				}
+			}
+
 			continue
 		}
 
 		// 3.2. Commands
 		// 3.2.1 Check for a valid command (first time)
-		if !hasCommand {
+		if !hasCmd {
 			for _, c := range app.Commands {
 				if c.Name == arg {
-					hasCommand = true
+					hasCmd = true
 					lastCmd = c
 					break
 				}
 			}
-			if hasCommand {
+			if hasCmd {
 				continue
 			}
 		}
@@ -172,14 +216,24 @@ func (app *App) Run(vArgs []string) error {
 					tailArgs = append(tailArgs, arg)
 					continue
 				}
-				s := FlagValue(arg)
-				if _, err := s.Bool(); err == nil {
-					fl.zflag = s
-					fl.zflagAssigned = true
-					lastFlag = fl
+
+				// If bool flag is defined is assumed as `true`
+				s := FlagValue("1")
+				fl.zflag = s
+				fl.zflagAssigned = true
+				lastFlag = fl
+
+				if hasCmd {
+					if len(lastCmd.Flags) > 0 && lastFlagIndex > -1 {
+						lastCmd.Flags[lastFlagIndex] = fl
+					}
 				} else {
-					tailArgs = append(tailArgs, arg)
+					if len(app.Flags) > 0 && lastFlagIndex > -1 {
+						app.Flags[lastFlagIndex] = fl
+					}
 				}
+
+				tailArgs = append(tailArgs, arg)
 				continue
 			}
 		case FlagInt:
@@ -193,6 +247,16 @@ func (app *App) Run(vArgs []string) error {
 					fl.zflag = s
 					fl.zflagAssigned = true
 					lastFlag = fl
+
+					if hasCmd {
+						if len(lastCmd.Flags) > 0 && lastFlagIndex > -1 {
+							lastCmd.Flags[lastFlagIndex] = fl
+						}
+					} else {
+						if len(app.Flags) > 0 && lastFlagIndex > -1 {
+							app.Flags[lastFlagIndex] = fl
+						}
+					}
 				} else {
 					tailArgs = append(tailArgs, arg)
 				}
@@ -207,6 +271,16 @@ func (app *App) Run(vArgs []string) error {
 				fl.zflag = FlagValue(arg)
 				fl.zflagAssigned = true
 				lastFlag = fl
+
+				if hasCmd {
+					if len(lastCmd.Flags) > 0 && lastFlagIndex > -1 {
+						lastCmd.Flags[lastFlagIndex] = fl
+					}
+				} else {
+					if len(app.Flags) > 0 && lastFlagIndex > -1 {
+						app.Flags[lastFlagIndex] = fl
+					}
+				}
 				continue
 			}
 		case FlagStringSlice:
@@ -218,6 +292,16 @@ func (app *App) Run(vArgs []string) error {
 				fl.zflag = FlagValue(arg)
 				fl.zflagAssigned = true
 				lastFlag = fl
+
+				if hasCmd {
+					if len(lastCmd.Flags) > 0 && lastFlagIndex > -1 {
+						lastCmd.Flags[lastFlagIndex] = fl
+					}
+				} else {
+					if len(app.Flags) > 0 && lastFlagIndex > -1 {
+						app.Flags[lastFlagIndex] = fl
+					}
+				}
 				continue
 			}
 		default:
@@ -228,7 +312,11 @@ func (app *App) Run(vArgs []string) error {
 
 	// Show `help` flag details
 	if hasHelp {
-		return app.printHelp()
+		if hasCmd {
+			return printHelp(app, &lastCmd)
+		}
+
+		return printHelp(app, nil)
 	}
 
 	// Show `version` flag details
@@ -238,7 +326,7 @@ func (app *App) Run(vArgs []string) error {
 	}
 
 	// Call command handler
-	if hasCommand && lastCmd.Handler != nil {
+	if hasCmd && lastCmd.Handler != nil {
 		return lastCmd.Handler(&CmdContext{
 			Cmd: &lastCmd,
 			Flags: &FlagMapValues{

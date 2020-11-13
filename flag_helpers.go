@@ -5,8 +5,8 @@ import (
 	"strings"
 )
 
-// checkAndInitFlags checks for a flag and initialize it
-func checkAndInitFlags(flags []Flag) ([]Flag, error) {
+// validateAndInitFlags checks for a flag and initialize it
+func validateAndInitFlags(flags []Flag) ([]Flag, error) {
 	var sFlags []Flag
 	for _, v := range flags {
 		switch f := v.(type) {
@@ -46,54 +46,54 @@ func checkAndInitFlags(flags []Flag) ([]Flag, error) {
 }
 
 // findFlagByKey finds a flag item in a flag's array by key.
-func findFlagByKey(key string, flags []Flag) Flag {
-	for _, f := range flags {
+func findFlagByKey(key string, flags []Flag) (int, Flag) {
+	for i, f := range flags {
 		switch fl := f.(type) {
 		case FlagBool:
 			// Check for long named flags
 			if key == fl.Name {
-				return fl
+				return i, fl
 			}
 			// Check for short named flags
 			for _, s := range fl.Aliases {
 				if key == s {
-					return fl
+					return i, fl
 				}
 			}
 		case FlagInt:
 			// Check for long named flags
 			if key == fl.Name {
-				return fl
+				return i, fl
 			}
 			// Check for short named flags
 			for _, s := range fl.Aliases {
 				if key == s {
-					return fl
+					return i, fl
 				}
 			}
 		case FlagString:
 			// Check for long named flags
 			if key == fl.Name {
-				return fl
+				return i, fl
 			}
 			// Check for short named flags
 			for _, s := range fl.Aliases {
 				if key == s {
-					return fl
+					return i, fl
 				}
 			}
 		case FlagStringSlice:
 			// Check for long named flags
 			if key == fl.Name {
-				return fl
+				return i, fl
 			}
 			// Check for short named flags
 			for _, s := range fl.Aliases {
 				if key == s {
-					return fl
+					return i, fl
 				}
 			}
 		}
 	}
-	return nil
+	return -1, nil
 }
