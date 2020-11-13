@@ -55,12 +55,14 @@ func main() {
 			},
 			Handler: func(ctx *cli.CmdContext) error {
 				fmt.Printf("Cmd `%s` executed!\n", ctx.Cmd.Name)
-				i, err := ctx.Flags.Int("version")
+				fmt.Printf("App Flag `file` opted: `%s`\n", ctx.AppContext.Flags.StringSlice("file"))
+
+				i, err := ctx.Flags.Int("trace")
 				if err != nil {
 					fmt.Println(err)
 					os.Exit(1)
 				}
-				fmt.Printf("Cmd Flag `version` opted: `%d` (%T)\n", i, i)
+				fmt.Printf("Cmd Flag `trace` opted: `%d` (%T)\n", i, i)
 
 				d := ctx.Flags.String("detailed")
 				fmt.Printf("Cmd Flag `detailed` opted: `%s` (%T)\n", d, d)
