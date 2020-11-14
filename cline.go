@@ -23,7 +23,7 @@ type CmdContext struct {
 	// Cmd references to current application command.
 	Cmd *Cmd
 	// Flags references to flag input values of current command.
-	Flags *FlagMapValues
+	Flags *FlagValueMap
 	// TailArgs references to current tail input arguments.
 	TailArgs *[]string
 	// AppContext references to current application context.
@@ -49,7 +49,7 @@ type AppContext struct {
 	// App references to current application instance.
 	App *App
 	// Flags references to flag input values of current application (global flags).
-	Flags *FlagMapValues
+	Flags *FlagValueMap
 	// TailArgs references to current tail input arguments.
 	TailArgs *[]string
 }
@@ -60,24 +60,6 @@ type AppHandler func(*AppContext) error
 // New creates a new application instance.
 func New() *App {
 	return &App{}
-}
-
-// validateCommands checks if a command is valid and initialize it
-func validateCommands(commands []Cmd) ([]Cmd, error) {
-	var cmds []Cmd
-	for _, c := range commands {
-		name := strings.TrimSpace(c.Name)
-		if name == "" {
-			return nil, fmt.Errorf("command name has empty value")
-		}
-		cflags, err := validateAndInitFlags(c.Flags)
-		if err != nil {
-			return nil, err
-		}
-		c.Flags = cflags
-		cmds = append(cmds, c)
-	}
-	return cmds, nil
 }
 
 // Run executes the current application.
@@ -102,7 +84,6 @@ func (app *App) Run(vArgs []string) error {
 	var lastCmd Cmd
 	var lastFlag Flag
 	var lastFlagIndex int = -1
-	// var lastCmdFlagList []Flag
 	var tailArgs []string
 	var hasCmd = false
 	var hasHelp = false
@@ -315,7 +296,6 @@ func (app *App) Run(vArgs []string) error {
 		if hasCmd {
 			return printHelp(app, &lastCmd)
 		}
-
 		return printHelp(app, nil)
 	}
 
@@ -329,13 +309,13 @@ func (app *App) Run(vArgs []string) error {
 	if hasCmd && lastCmd.Handler != nil {
 		return lastCmd.Handler(&CmdContext{
 			Cmd: &lastCmd,
-			Flags: &FlagMapValues{
+			Flags: &FlagValueMap{
 				flags: lastCmd.Flags,
 			},
 			TailArgs: &tailArgs,
 			AppContext: &AppContext{
 				App: app,
-				Flags: &FlagMapValues{
+				Flags: &FlagValueMap{
 					flags: app.Flags,
 				},
 			},
@@ -346,7 +326,7 @@ func (app *App) Run(vArgs []string) error {
 	if app.Handler != nil {
 		return app.Handler(&AppContext{
 			App: app,
-			Flags: &FlagMapValues{
+			Flags: &FlagValueMap{
 				flags: app.Flags,
 			},
 			TailArgs: &tailArgs,
