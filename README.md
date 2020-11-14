@@ -14,7 +14,7 @@ WIP project under **active** development.
 - Convenient context for function handlers (global and commands) with build-in types conversion API.
 - Optional environment variable names for flags.
 - [POSIX-compliant](https://www.gnu.org/software/libc/manual/html_node/Argument-Syntax.html) flags for short and long versions (WIP)
-- Automatic `--help` (`-h`) and `--version` (`-v`) generation flags. (WIP)
+- Automatic `--help` (`-h`) and `--version` (`-v`) generation flags.
 
 ## Usage
 
