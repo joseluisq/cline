@@ -67,7 +67,7 @@ func (app *App) Run(vArgs []string) error {
 	// Commands and flags validation
 
 	// 1. Check application global flags
-	vflags, err := validateAndInitFlags(app.Flags)
+	vflags, err := validateFlagsAndInit(app.Flags)
 	if err != nil {
 		return err
 	}

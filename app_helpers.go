@@ -13,102 +13,102 @@ func validateCommands(commands []Cmd) ([]Cmd, error) {
 		if name == "" {
 			return nil, fmt.Errorf("command name has empty value")
 		}
-		cflags, err := validateAndInitFlags(c.Flags)
+		vflags, err := validateFlagsAndInit(c.Flags)
 		if err != nil {
 			return nil, err
 		}
-		c.Flags = cflags
+		c.Flags = vflags
 		cmds = append(cmds, c)
 	}
 	return cmds, nil
 }
 
-// validateAndInitFlags checks for a flag and initialize it
-func validateAndInitFlags(flags []Flag) ([]Flag, error) {
-	var sFlags []Flag
+// validateFlagsAndInit validates flags and initialize them
+func validateFlagsAndInit(flags []Flag) ([]Flag, error) {
+	var vFlags []Flag
 	for _, v := range flags {
 		switch f := v.(type) {
 		case FlagBool:
 			name := strings.ToLower(strings.TrimSpace(f.Name))
 			if name == "" {
-				return nil, fmt.Errorf("global flag name has empty value")
+				return nil, fmt.Errorf("flag name has empty value")
 			}
 			f.initialize()
-			sFlags = append(sFlags, f)
+			vFlags = append(vFlags, f)
 		case FlagInt:
 			name := strings.ToLower(strings.TrimSpace(f.Name))
 			if name == "" {
-				return nil, fmt.Errorf("global flag name has empty value")
+				return nil, fmt.Errorf("flag name has empty value")
 			}
 			f.initialize()
-			sFlags = append(sFlags, f)
+			vFlags = append(vFlags, f)
 		case FlagString:
 			name := strings.ToLower(strings.TrimSpace(f.Name))
 			if name == "" {
-				return nil, fmt.Errorf("global flag name has empty value")
+				return nil, fmt.Errorf("flag name has empty value")
 			}
 			f.initialize()
-			sFlags = append(sFlags, f)
+			vFlags = append(vFlags, f)
 		case FlagStringSlice:
 			name := strings.ToLower(strings.TrimSpace(f.Name))
 			if name == "" {
-				return nil, fmt.Errorf("global flag name has empty value")
+				return nil, fmt.Errorf("flag name has empty value")
 			}
 			f.initialize()
-			sFlags = append(sFlags, f)
+			vFlags = append(vFlags, f)
 		default:
-			return nil, fmt.Errorf("global flag has invalid data type value. Use bool, int, string, []string or nil")
+			return nil, fmt.Errorf("flag has invalid data type value. Use bool, int, string, []string or nil")
 		}
 	}
-	return sFlags, nil
+	return vFlags, nil
 }
 
-// findFlagByKey finds a flag item in a flag's array by key.
+// findFlagByKey finds a flag item with its index in a flag's array by key.
 func findFlagByKey(key string, flags []Flag) (int, Flag) {
-	for i, f := range flags {
-		switch fl := f.(type) {
+	for i, v := range flags {
+		switch f := v.(type) {
 		case FlagBool:
 			// Check for long named flags
-			if key == fl.Name {
-				return i, fl
+			if key == f.Name {
+				return i, f
 			}
 			// Check for short named flags
-			for _, s := range fl.Aliases {
+			for _, s := range f.Aliases {
 				if key == s {
-					return i, fl
+					return i, f
 				}
 			}
 		case FlagInt:
 			// Check for long named flags
-			if key == fl.Name {
-				return i, fl
+			if key == f.Name {
+				return i, f
 			}
 			// Check for short named flags
-			for _, s := range fl.Aliases {
+			for _, s := range f.Aliases {
 				if key == s {
-					return i, fl
+					return i, f
 				}
 			}
 		case FlagString:
 			// Check for long named flags
-			if key == fl.Name {
-				return i, fl
+			if key == f.Name {
+				return i, f
 			}
 			// Check for short named flags
-			for _, s := range fl.Aliases {
+			for _, s := range f.Aliases {
 				if key == s {
-					return i, fl
+					return i, f
 				}
 			}
 		case FlagStringSlice:
 			// Check for long named flags
-			if key == fl.Name {
-				return i, fl
+			if key == f.Name {
+				return i, f
 			}
 			// Check for short named flags
-			for _, s := range fl.Aliases {
+			for _, s := range f.Aliases {
 				if key == s {
-					return i, fl
+					return i, f
 				}
 			}
 		}
