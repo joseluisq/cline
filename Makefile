@@ -20,5 +20,5 @@ build:
 .PHONY: build
 
 coverage:
-	# @bash -c "bash <(curl -s https://codecov.io/bash)"
+	@bash -c "bash <(curl -s https://codecov.io/bash)"
 .PHONY: coverage
