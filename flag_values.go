@@ -45,22 +45,18 @@ func (fm *FlagValueMap) findByKey(flagKey string) FlagValue {
 			if flagKey == fl.Name {
 				return fl.zflag
 			}
-			break
 		case FlagInt:
 			if flagKey == fl.Name {
 				return fl.zflag
 			}
-			break
 		case FlagString:
 			if flagKey == fl.Name {
 				return fl.zflag
 			}
-			break
 		case FlagStringSlice:
 			if flagKey == fl.Name {
 				return fl.zflag
 			}
-			break
 		}
 	}
 	return FlagValue("")
