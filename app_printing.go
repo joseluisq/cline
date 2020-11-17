@@ -8,6 +8,10 @@ import (
 
 // printHelp prints current application flags and commands info (--help).
 func printHelp(app *App, cmd *Cmd) error {
+	if app == nil {
+		return fmt.Errorf("application instance not found")
+	}
+
 	var summary string
 	var flags []Flag
 
@@ -107,14 +111,17 @@ func printHelp(app *App, cmd *Cmd) error {
 		fmt.Printf("\n")
 		fmt.Printf("Run '%s %s COMMAND --help' for more information on a command\n", app.Name, cmd.Name)
 	}
-
 	return nil
 }
 
 // printVersion prints current application version (--version).
-func (app *App) printVersion() {
+func (app *App) printVersion() error {
+	if app == nil {
+		return fmt.Errorf("application instance not found")
+	}
 	fmt.Printf("Version:       %s\n", app.Version)
 	fmt.Printf("Go version:    %s\n", runtime.Version())
 	fmt.Printf("Built:         %s\n", app.BuildTime)
 	fmt.Printf("OS/Arch:       %s/%s\n", runtime.GOOS, runtime.GOARCH)
+	return nil
 }
