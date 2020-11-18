@@ -12,22 +12,22 @@ func newApp() (app *App) {
 	app.BuildTime = ""
 	app.Flags = []Flag{
 		FlagString{
-			Name:    "A",
+			Name:    "AA",
 			Value:   ".env",
 			Aliases: []string{"a"},
 		},
 		FlagBool{
-			Name:    "B",
+			Name:    "BB",
 			Value:   false,
 			Aliases: []string{"b"},
 		},
 		FlagInt{
-			Name:    "C",
+			Name:    "CC",
 			Value:   32,
 			Aliases: []string{"c"},
 		},
 		FlagStringSlice{
-			Name:    "D",
+			Name:    "DD",
 			Value:   nil,
 			Aliases: []string{"d"},
 		},
@@ -38,16 +38,33 @@ func newApp() (app *App) {
 			Summary: "Show command information",
 			Flags: []Flag{
 				FlagInt{
-					Name:    "E",
-					Value:   10,
-					Aliases: []string{"e"},
+					Name:    "GG",
+					Value:   32,
+					Aliases: []string{"g"},
+				},
+				FlagBool{
+					Name:    "ZZ",
+					Value:   false,
+					Aliases: []string{"z"},
 				},
 				FlagString{
-					Name:    "F",
+					Name:    "FF",
+					Value:   ".env",
 					Aliases: []string{"f"},
 				},
+				FlagStringSlice{
+					Name:    "II",
+					Value:   []string{"q", "r", "s"},
+					Aliases: []string{"i"},
+				},
+			},
+			Handler: func(ctx *CmdContext) error {
+				return nil
 			},
 		},
+	}
+	app.Handler = func(ctx *AppContext) error {
+		return nil
 	}
 	return app
 }
