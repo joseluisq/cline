@@ -42,7 +42,6 @@ func TestApp_Run(t *testing.T) {
 		c.Name = ""
 		appEmptyCommmands.Commands[i] = c
 	}
-
 	type args struct {
 		vArgs []string
 	}

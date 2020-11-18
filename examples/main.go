@@ -52,6 +52,16 @@ func main() {
 					Value:   true,
 					Aliases: []string{"d"},
 				},
+				cli.FlagString{
+					Name:    "FF",
+					Value:   ".env",
+					Aliases: []string{"f"},
+				},
+				cli.FlagStringSlice{
+					Name:    "II",
+					Value:   []string{"q", "r", "s"},
+					Aliases: []string{"i"},
+				},
 			},
 			Handler: func(ctx *cli.CmdContext) error {
 				fmt.Printf("Cmd `%s` executed!\n", ctx.Cmd.Name)

@@ -136,6 +136,7 @@ func (app *App) Run(vArgs []string) error {
 			lastFlag = flag
 			lastFlagIndex = i
 
+			// Handle bool flags and values
 			switch fl := lastFlag.(type) {
 			case FlagBool:
 				if fl.Name != "" {
@@ -189,34 +190,8 @@ func (app *App) Run(vArgs []string) error {
 			continue
 		}
 
-		// 5. Process command flag Values
+		// 5. Process command flag values
 		switch fl := lastFlag.(type) {
-		case FlagBool:
-			if fl.Name != "" {
-				if fl.zflagAssigned {
-					tailArgs = append(tailArgs, arg)
-					continue
-				}
-
-				// If bool flag is defined is assumed as `true`
-				s := FlagValue("1")
-				fl.zflag = s
-				fl.zflagAssigned = true
-				lastFlag = fl
-
-				if hasCmd {
-					if len(lastCmd.Flags) > 0 && lastFlagIndex > -1 {
-						lastCmd.Flags[lastFlagIndex] = fl
-					}
-				} else {
-					if len(app.Flags) > 0 && lastFlagIndex > -1 {
-						app.Flags[lastFlagIndex] = fl
-					}
-				}
-
-				tailArgs = append(tailArgs, arg)
-				continue
-			}
 		case FlagInt:
 			if fl.Name != "" {
 				if fl.zflagAssigned {
@@ -285,9 +260,6 @@ func (app *App) Run(vArgs []string) error {
 				}
 				continue
 			}
-		default:
-			tailArgs = append(tailArgs, arg)
-			continue
 		}
 	}
 

@@ -23,7 +23,6 @@ func newApp() (app *App) {
 		},
 		FlagInt{
 			Name:    "CC",
-			Value:   32,
 			Aliases: []string{"c"},
 		},
 		FlagStringSlice{
@@ -39,7 +38,6 @@ func newApp() (app *App) {
 			Flags: []Flag{
 				FlagInt{
 					Name:    "GG",
-					Value:   32,
 					Aliases: []string{"g"},
 				},
 				FlagBool{
