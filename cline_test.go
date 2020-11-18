@@ -42,6 +42,10 @@ func TestApp_Run(t *testing.T) {
 		c.Name = ""
 		appEmptyCommmands.Commands[i] = c
 	}
+	appInvalidHandlers := newApp()
+	appInvalidHandlers.Handler = nil
+	appInvalidHandlers.Commands[0].Handler = nil
+
 	type args struct {
 		vArgs []string
 	}
@@ -181,6 +185,13 @@ func TestApp_Run(t *testing.T) {
 		{
 			name: "run valid command int flag",
 			app:  app,
+			args: args{
+				vArgs: []string{"", "info", "-g", "0", "-z"},
+			},
+		},
+		{
+			name: "run null handlers",
+			app:  appInvalidHandlers,
 			args: args{
 				vArgs: []string{"", "info", "-g", "0", "-z"},
 			},
