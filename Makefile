@@ -9,9 +9,8 @@ test:
 	@go version
 	@golint -set_exit_status ./...
 	@go vet ./...
-	@bash -c "go test \
-		$$(go list ./... | grep -v /examples) \
-		-v -timeout 30s -race -coverprofile=coverage.txt -covermode=atomic"
+	@go test $$(go list ./... | grep -v /examples) \
+		-v -timeout 30s -race -coverprofile=coverage.txt -covermode=atomic
 .PHONY: test
 
 build:
