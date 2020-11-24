@@ -27,10 +27,15 @@ func main() {
 			Value:   ".env",
 			Aliases: []string{"f"},
 		},
+		cli.FlagInt{
+			Name:    "int",
+			Summary: "Int value",
+			Value:   5,
+			Aliases: []string{"b"},
+		},
 		cli.FlagBool{
 			Name:    "verbose",
 			Summary: "Enable more verbose info",
-			Value:   false,
 			Aliases: []string{"V"},
 			EnvVar:  "ENV_VERBOSE",
 		},
@@ -65,17 +70,17 @@ func main() {
 			},
 			Handler: func(ctx *cli.CmdContext) error {
 				fmt.Printf("Cmd `%s` executed!\n", ctx.Cmd.Name)
-				fmt.Printf("App Flag `file` opted: `%s`\n", ctx.AppContext.Flags.StringSlice("file"))
+				fmt.Printf("App Flag `file`: `%s`\n", ctx.AppContext.Flags.StringSlice("file"))
 
 				i, err := ctx.Flags.Int("trace")
 				if err != nil {
 					fmt.Println(err)
 					os.Exit(1)
 				}
-				fmt.Printf("Cmd Flag `trace` opted: `%d` (%T)\n", i, i)
+				fmt.Printf("Cmd Flag `trace`: `%d` (%T)\n", i, i)
 
 				d := ctx.Flags.String("detailed")
-				fmt.Printf("Cmd Flag `detailed` opted: `%s` (%T)\n", d, d)
+				fmt.Printf("Cmd Flag `detailed`: `%s` (%T)\n", d, d)
 				fmt.Printf("Cmd Tail arguments: %#v\n", ctx.TailArgs)
 				return nil
 			},
@@ -83,12 +88,11 @@ func main() {
 	}
 	app.Handler = func(ctx *cli.AppContext) error {
 		fmt.Printf("App `%s` executed!\n", ctx.App.Name)
-		fmt.Printf("App Tail arguments: %#v\n", ctx.TailArgs)
-		fmt.Printf("App Flag `file` opted: `%s`\n", ctx.Flags.StringSlice("file"))
-
+		fmt.Printf("App Flag `file`: `%s`\n", ctx.Flags.String("file"))
+		fmt.Printf("App Flag `int`: `%v`\n", ctx.Flags.String("int"))
 		b, _ := ctx.Flags.Bool("verbose")
-
-		fmt.Printf("App Flag `verbose` opted: `%v`\n", b)
+		fmt.Printf("App Flag `verbose`: `%v`\n", b)
+		fmt.Printf("App Tail arguments: %#v\n", ctx.TailArgs)
 		return nil
 	}
 	if err := app.Run(os.Args); err != nil {

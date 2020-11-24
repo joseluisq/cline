@@ -88,9 +88,10 @@ func (app *App) Run(vArgs []string) error {
 	var hasCmd = false
 	var hasHelp = false
 	var hasVersion = false
+	var vArgsLen = len(vArgs)
 
-	for i := 1; i < len(vArgs); i++ {
-		arg := strings.TrimSpace(vArgs[i])
+	for argIndex := 1; argIndex < vArgsLen; argIndex++ {
+		arg := strings.TrimSpace(vArgs[argIndex])
 
 		// Check for no supported arguments (remaining)
 		if len(tailArgs) > 0 {
@@ -137,32 +138,32 @@ func (app *App) Run(vArgs []string) error {
 			lastFlagIndex = i
 
 			// Handle bool flags and values
-			switch fl := lastFlag.(type) {
-			case FlagBool:
-				if fl.Name != "" {
-					if fl.zflagAssigned {
-						tailArgs = append(tailArgs, arg)
+			if argIndex == vArgsLen-1 {
+				switch fl := lastFlag.(type) {
+				case FlagBool:
+					if fl.Name != "" {
+						if fl.zflagAssigned {
+							tailArgs = append(tailArgs, arg)
+							continue
+						}
+
+						// If bool flag is defined is assumed as `true`
+						fl.zflag = FlagValue("1")
+						fl.zflagAssigned = true
+						lastFlag = fl
+
+						if hasCmd {
+							if len(lastCmd.Flags) > 0 && lastFlagIndex > -1 {
+								lastCmd.Flags[lastFlagIndex] = fl
+							}
+						} else {
+							if len(app.Flags) > 0 && lastFlagIndex > -1 {
+								app.Flags[lastFlagIndex] = fl
+							}
+						}
+
 						continue
 					}
-
-					// If bool flag is defined is assumed as `true`
-					s := FlagValue("1")
-					fl.zflag = s
-					fl.zflagAssigned = true
-					lastFlag = fl
-
-					if hasCmd {
-						if len(lastCmd.Flags) > 0 && lastFlagIndex > -1 {
-							lastCmd.Flags[lastFlagIndex] = fl
-						}
-					} else {
-						if len(app.Flags) > 0 && lastFlagIndex > -1 {
-							app.Flags[lastFlagIndex] = fl
-						}
-					}
-
-					tailArgs = append(tailArgs, arg)
-					continue
 				}
 			}
 
@@ -190,8 +191,42 @@ func (app *App) Run(vArgs []string) error {
 			continue
 		}
 
-		// 5. Process command flag values
+		// 5. Process app or command flag values
 		switch fl := lastFlag.(type) {
+		case FlagBool:
+			if fl.Name != "" {
+				if fl.zflagAssigned {
+					tailArgs = append(tailArgs, arg)
+					continue
+				}
+
+				s := FlagValue(arg)
+				_, err := s.Bool()
+				if err != nil {
+					tailArgs = append(tailArgs, arg)
+				}
+
+				// If bool flag is defined is assumed as `true`
+				if err != nil {
+					s = FlagValue("1")
+				}
+
+				fl.zflag = s
+				fl.zflagAssigned = true
+				lastFlag = fl
+
+				if hasCmd {
+					if len(lastCmd.Flags) > 0 && lastFlagIndex > -1 {
+						lastCmd.Flags[lastFlagIndex] = fl
+					}
+				} else {
+					if len(app.Flags) > 0 && lastFlagIndex > -1 {
+						app.Flags[lastFlagIndex] = fl
+					}
+				}
+
+				continue
+			}
 		case FlagInt:
 			if fl.Name != "" {
 				if fl.zflagAssigned {
@@ -213,10 +248,10 @@ func (app *App) Run(vArgs []string) error {
 							app.Flags[lastFlagIndex] = fl
 						}
 					}
+					continue
 				} else {
-					tailArgs = append(tailArgs, arg)
+					return fmt.Errorf("--%s: invalid integer value", fl.Name)
 				}
-				continue
 			}
 		case FlagString:
 			if fl.Name != "" {
