@@ -24,8 +24,8 @@ type CmdContext struct {
 	Cmd *Cmd
 	// Flags references to flag input values of current command.
 	Flags *FlagValueMap
-	// TailArgs references to current tail input arguments.
-	TailArgs *[]string
+	// TailArgs contains current tail input arguments.
+	TailArgs []string
 	// AppContext references to current application context.
 	AppContext *AppContext
 }
@@ -50,8 +50,8 @@ type AppContext struct {
 	App *App
 	// Flags references to flag input values of current application (global flags).
 	Flags *FlagValueMap
-	// TailArgs references to current tail input arguments.
-	TailArgs *[]string
+	// TailArgs contains current tail input arguments.
+	TailArgs []string
 }
 
 // AppHandler responds to an application action.
@@ -319,7 +319,7 @@ func (app *App) Run(vArgs []string) error {
 			Flags: &FlagValueMap{
 				flags: lastCmd.Flags,
 			},
-			TailArgs: &tailArgs,
+			TailArgs: tailArgs,
 			AppContext: &AppContext{
 				App: app,
 				Flags: &FlagValueMap{
@@ -336,7 +336,7 @@ func (app *App) Run(vArgs []string) error {
 			Flags: &FlagValueMap{
 				flags: app.Flags,
 			},
-			TailArgs: &tailArgs,
+			TailArgs: tailArgs,
 		})
 	}
 
