@@ -6,19 +6,21 @@ import (
 	"strings"
 )
 
+type flagStruct struct {
+	name    string
+	aliases []string
+	summary string
+}
+
 // printHelp prints current application flags and commands info (--help).
 func printHelp(app *App, cmd *Cmd) error {
 	if app == nil {
 		return fmt.Errorf("application instance not found")
 	}
 
-	var summary string
-	var flags []Flag
-
-	if cmd == nil {
-		summary = app.Summary
-		flags = app.Flags
-	} else {
+	summary := app.Summary
+	flags := app.Flags
+	if cmd != nil {
 		summary = cmd.Summary
 		flags = cmd.Flags
 	}
@@ -34,60 +36,83 @@ func printHelp(app *App, cmd *Cmd) error {
 	// Print options
 	fmt.Printf("OPTIONS:\n")
 
-	var vflags [][]string
-	var flagLen int = 0
+	var vflags []struct {
+		name    string
+		aliases []string
+		summary string
+	}
+	var fLen int = 0
+	var aliasMaxLen = 0
+
+	// Append help and version flags
+	flags = append(flags, FlagString{
+		Name: "help", Aliases: []string{"h"}, Summary: "Prints help information",
+	})
+	flags = append(flags, FlagString{
+		Name: "version", Aliases: []string{"v"}, Summary: "Prints version information",
+	})
+
+	// Calculate app or command flags positions
 	for _, fl := range flags {
+		var vFlag flagStruct
 		fname := ""
+
 		switch f := fl.(type) {
 		case FlagBool:
 			fname = f.Name
-			vflags = append(vflags, []string{f.Name, f.Summary})
+			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary}
 		case FlagInt:
 			fname = f.Name
-			vflags = append(vflags, []string{f.Name, f.Summary})
+			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary}
 		case FlagString:
 			fname = f.Name
-			vflags = append(vflags, []string{f.Name, f.Summary})
+			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary}
 		case FlagStringSlice:
 			fname = f.Name
-			vflags = append(vflags, []string{f.Name, f.Summary})
+			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary}
 		}
-		if len([]rune(fname)) > flagLen {
-			flagLen = len([]rune(fname))
+		if len([]rune(fname)) > fLen {
+			fLen = len([]rune(fname))
 		}
-	}
-	if len([]rune("version")) > flagLen {
-		flagLen = len([]rune("version"))
-	}
-	if len([]rune("help")) > flagLen {
-		flagLen = len([]rune("help"))
-	}
-	for _, f := range vflags {
-		fmt.Printf(
-			"  --%s%s    %s\n",
-			f[0],
-			strings.Repeat(" ", flagLen-len([]rune(f[0]))),
-			f[1],
-		)
+
+		var aliases []string
+		for _, a := range vFlag.aliases {
+			s := "-" + a
+			aliases = append(aliases, s)
+		}
+		aliasesLen := len([]rune(strings.Join(aliases, ",")))
+		if aliasesLen > aliasMaxLen {
+			aliasMaxLen = aliasesLen
+		}
+
+		vFlag.aliases = aliases
+		vflags = append(vflags, vFlag)
 	}
 
-	// App with commands
+	// Print app or command flags
+	for _, v := range vflags {
+		shorts := strings.Join(v.aliases, ",")
+
+		repeatLeft := aliasMaxLen - len([]rune(shorts))
+		marginLeftRepeat := strings.Repeat(" ", repeatLeft)
+
+		repeatRight := fLen - len([]rune(v.name))
+		marginRightRepeat := strings.Repeat(" ", repeatRight)
+
+		line := fmt.Sprintf(
+			"  %s%s --%s%s    %s\n",
+			marginLeftRepeat,
+			shorts,
+			v.name,
+			marginRightRepeat,
+			v.summary,
+		)
+
+		fmt.Printf(line)
+	}
+
+	// Print app commands
 	if cmd == nil {
-		// Print special flags
-		fmt.Printf(
-			"  --%s%s    %s\n",
-			"version",
-			strings.Repeat(" ", flagLen-len([]rune("version"))),
-			"Prints version information",
-		)
-		fmt.Printf(
-			"  --%s%s    %s\n",
-			"help",
-			strings.Repeat(" ", flagLen-len([]rune("help"))),
-			"Prints help information",
-		)
-
-		// Print commands
 		if len(app.Commands) > 0 {
 			fmt.Printf("\n")
 			fmt.Printf("COMMANDS:\n")
@@ -102,10 +127,13 @@ func printHelp(app *App, cmd *Cmd) error {
 			}
 			for _, c := range vcmds {
 				fmt.Printf(
-					"  %s%s    %s\n", c[0],
+					"  %s%s%s    %s\n",
+					"",
+					c[0],
 					strings.Repeat(
 						" ", cmdLen-len([]rune(c[0])),
-					), c[1],
+					),
+					c[1],
 				)
 			}
 
