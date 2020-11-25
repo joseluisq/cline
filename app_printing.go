@@ -88,29 +88,36 @@ func printHelp(app *App, cmd *Cmd) error {
 		)
 
 		// Print commands
-		fmt.Printf("\n")
-		fmt.Printf("COMMANDS:\n")
+		if len(app.Commands) > 0 {
+			fmt.Printf("\n")
+			fmt.Printf("COMMANDS:\n")
 
-		var vcmds [][]string
-		var cmdLen int = 0
-		for _, c := range app.Commands {
-			vcmds = append(vcmds, []string{c.Name, c.Summary})
-			if len([]rune(c.Name)) > cmdLen {
-				cmdLen = len([]rune(c.Name))
+			var vcmds [][]string
+			var cmdLen int = 0
+			for _, c := range app.Commands {
+				vcmds = append(vcmds, []string{c.Name, c.Summary})
+				if len([]rune(c.Name)) > cmdLen {
+					cmdLen = len([]rune(c.Name))
+				}
 			}
-		}
-		for _, c := range vcmds {
-			fmt.Printf("  %s%s    %s\n", c[0], strings.Repeat(
-				" ", cmdLen-len([]rune(c[0]))), c[1],
-			)
-		}
+			for _, c := range vcmds {
+				fmt.Printf(
+					"  %s%s    %s\n", c[0],
+					strings.Repeat(
+						" ", cmdLen-len([]rune(c[0])),
+					), c[1],
+				)
+			}
 
-		fmt.Printf("\n")
-		fmt.Printf("Run '%s COMMAND --help' for more information on a command\n", app.Name)
+			fmt.Printf("\n")
+			fmt.Printf("Run '%s COMMAND --help' for more information on a command\n", app.Name)
+		}
 	} else {
 		fmt.Printf("\n")
 		fmt.Printf("Run '%s %s COMMAND --help' for more information on a command\n", app.Name, cmd.Name)
 	}
+
+	fmt.Printf("\n")
 	return nil
 }
 
