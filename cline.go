@@ -62,7 +62,7 @@ func New() *App {
 	return &App{}
 }
 
-// Run executes the current application.
+// Run executes the current application with given arguments. Note that the first argument is always skipped.
 func (app *App) Run(vArgs []string) error {
 	// Commands and flags validation
 
@@ -89,6 +89,8 @@ func (app *App) Run(vArgs []string) error {
 	var hasHelp = false
 	var hasVersion = false
 	var vArgsLen = len(vArgs)
+	var appProvidedFlags []string
+	var cmdProvidedFlags []string
 
 	for argIndex := 1; argIndex < vArgsLen; argIndex++ {
 		arg := strings.TrimSpace(vArgs[argIndex])
@@ -136,6 +138,34 @@ func (app *App) Run(vArgs []string) error {
 			}
 			lastFlag = flag
 			lastFlagIndex = i
+
+			// Check provided incoming flags
+			switch v := lastFlag.(type) {
+			case FlagBool:
+				if hasCmd {
+					cmdProvidedFlags = append(cmdProvidedFlags, v.Name)
+				} else {
+					appProvidedFlags = append(appProvidedFlags, v.Name)
+				}
+			case FlagInt:
+				if hasCmd {
+					cmdProvidedFlags = append(cmdProvidedFlags, v.Name)
+				} else {
+					appProvidedFlags = append(appProvidedFlags, v.Name)
+				}
+			case FlagString:
+				if hasCmd {
+					cmdProvidedFlags = append(cmdProvidedFlags, v.Name)
+				} else {
+					appProvidedFlags = append(appProvidedFlags, v.Name)
+				}
+			case FlagStringSlice:
+				if hasCmd {
+					cmdProvidedFlags = append(cmdProvidedFlags, v.Name)
+				} else {
+					appProvidedFlags = append(appProvidedFlags, v.Name)
+				}
+			}
 
 			// Handle bool flags and values
 			if argIndex == vArgsLen-1 {
@@ -317,13 +347,15 @@ func (app *App) Run(vArgs []string) error {
 		return lastCmd.Handler(&CmdContext{
 			Cmd: &lastCmd,
 			Flags: &FlagValueMap{
-				flags: lastCmd.Flags,
+				zFlags:         lastCmd.Flags,
+				zProvidedFlags: cmdProvidedFlags,
 			},
 			TailArgs: tailArgs,
 			AppContext: &AppContext{
 				App: app,
 				Flags: &FlagValueMap{
-					flags: app.Flags,
+					zFlags:         app.Flags,
+					zProvidedFlags: appProvidedFlags,
 				},
 			},
 		})
@@ -334,7 +366,8 @@ func (app *App) Run(vArgs []string) error {
 		return app.Handler(&AppContext{
 			App: app,
 			Flags: &FlagValueMap{
-				flags: app.Flags,
+				zFlags:         app.Flags,
+				zProvidedFlags: appProvidedFlags,
 			},
 			TailArgs: tailArgs,
 		})
