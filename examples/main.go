@@ -70,6 +70,9 @@ func main() {
 			},
 			Handler: func(ctx *cli.CmdContext) error {
 				fmt.Printf("Cmd `%s` executed!\n", ctx.Cmd.Name)
+				fmt.Printf("App provided flags: %s\n", ctx.AppContext.Flags.ProvidedFlags())
+				fmt.Printf("Cmd provided flags: %s\n", ctx.Flags.ProvidedFlags())
+
 				fmt.Printf("App Flag `file`: `%s`\n", ctx.AppContext.Flags.StringSlice("file"))
 
 				i, err := ctx.Flags.Int("trace")
@@ -88,6 +91,7 @@ func main() {
 	}
 	app.Handler = func(ctx *cli.AppContext) error {
 		fmt.Printf("App `%s` executed!\n", ctx.App.Name)
+		fmt.Printf("App provided flags: %s\n", ctx.Flags.ProvidedFlags())
 		fmt.Printf("App Flag `file`: `%s`\n", ctx.Flags.String("file"))
 		fmt.Printf("App Flag `int`: `%v`\n", ctx.Flags.String("int"))
 		b, _ := ctx.Flags.Bool("verbose")

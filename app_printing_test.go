@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func newApp() (app *App) {
+func newApp(appHandler func(ctx *AppContext) error, cmdHandler func(ctx *CmdContext) error) (app *App) {
 	app = New()
 	app.Name = "enve"
 	app.Summary = "Run a program in a modified environment using .env files"
@@ -57,11 +57,17 @@ func newApp() (app *App) {
 				},
 			},
 			Handler: func(ctx *CmdContext) error {
+				if cmdHandler != nil {
+					return cmdHandler(ctx)
+				}
 				return nil
 			},
 		},
 	}
 	app.Handler = func(ctx *AppContext) error {
+		if appHandler != nil {
+			return appHandler(ctx)
+		}
 		return nil
 	}
 	return app
@@ -72,7 +78,7 @@ func Test_printHelp(t *testing.T) {
 		app *App
 		cmd *Cmd
 	}
-	app := newApp()
+	app := newApp(nil, nil)
 	tests := []struct {
 		name    string
 		args    args
@@ -107,7 +113,7 @@ func Test_printHelp(t *testing.T) {
 }
 
 func TestApp_printVersion(t *testing.T) {
-	app := newApp()
+	app := newApp(nil, nil)
 	tests := []struct {
 		name    string
 		app     *App

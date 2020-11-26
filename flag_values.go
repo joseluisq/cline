@@ -34,12 +34,18 @@ func (v FlagValue) StringSlice() []string {
 
 // FlagValueMap defines a hash map of command input flags with their values.
 type FlagValueMap struct {
-	flags []Flag
+	zFlags         []Flag
+	zProvidedFlags []string
+}
+
+// ProvidedFlags gets a list of flag keys with the provided input flags only.
+func (fm *FlagValueMap) ProvidedFlags() []string {
+	return fm.zProvidedFlags
 }
 
 // findByKey finds a `FlagValue` by a string key.
 func (fm *FlagValueMap) findByKey(flagKey string) FlagValue {
-	for _, v := range fm.flags {
+	for _, v := range fm.zFlags {
 		switch fl := v.(type) {
 		case FlagBool:
 			if flagKey == fl.Name {

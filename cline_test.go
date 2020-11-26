@@ -27,7 +27,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestApp_Run(t *testing.T) {
-	appEmptyFlags := newApp()
+	appEmptyFlags := newApp(nil, nil)
 	for i, v := range appEmptyFlags.Flags {
 		switch f := v.(type) {
 		case FlagBool:
@@ -35,12 +35,12 @@ func TestApp_Run(t *testing.T) {
 			appEmptyFlags.Flags[i] = f
 		}
 	}
-	appEmptyCommmands := newApp()
+	appEmptyCommmands := newApp(nil, nil)
 	for i, c := range appEmptyFlags.Commands {
 		c.Name = ""
 		appEmptyCommmands.Commands[i] = c
 	}
-	appInvalidHandlers := newApp()
+	appInvalidHandlers := newApp(nil, nil)
 	appInvalidHandlers.Handler = nil
 	appInvalidHandlers.Commands[0].Handler = nil
 
@@ -55,7 +55,7 @@ func TestApp_Run(t *testing.T) {
 	}{
 		{
 			name: "not recognized argument",
-			app:  newApp(),
+			app:  newApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "--unknown", "123"},
 			},
@@ -63,14 +63,14 @@ func TestApp_Run(t *testing.T) {
 		},
 		{
 			name: "run an app instance and flags",
-			app:  newApp(),
+			app:  newApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "--AA", "sdev.env", "--BB", "--CC", "22", "-d", "xyz"},
 			},
 		},
 		{
 			name: "run an app instance and command flags",
-			app:  newApp(),
+			app:  newApp(nil, nil),
 			args: args{
 				vArgs: []string{
 					"", "--AA", "sdev.env", "--BB", "-c", "22", "-d", "2,2",
@@ -80,7 +80,7 @@ func TestApp_Run(t *testing.T) {
 		},
 		{
 			name: "run an app instance and command flags with tail args",
-			app:  newApp(),
+			app:  newApp(nil, nil),
 			args: args{
 				vArgs: []string{
 					"", "info", "--FF", ".env2", "-g", "11", "--ZZ", "-i", "a,b", "sdasdas",
@@ -89,21 +89,21 @@ func TestApp_Run(t *testing.T) {
 		},
 		{
 			name: "run version flag",
-			app:  newApp(),
+			app:  newApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "--version"},
 			},
 		},
 		{
 			name: "run help flag",
-			app:  newApp(),
+			app:  newApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "--help"},
 			},
 		},
 		{
 			name: "run command help flag",
-			app:  newApp(),
+			app:  newApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "info", "--help"},
 			},
@@ -118,28 +118,28 @@ func TestApp_Run(t *testing.T) {
 		},
 		{
 			name: "run valid command bool flag short",
-			app:  newApp(),
+			app:  newApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "info", "--ZZ"},
 			},
 		},
 		{
 			name: "run valid command bool flag long",
-			app:  newApp(),
+			app:  newApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "info", "--ZZ", "true"},
 			},
 		},
 		{
 			name: "run invalid command bool flag long",
-			app:  newApp(),
+			app:  newApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "info", "--ZZ", "1f9"},
 			},
 		},
 		{
 			name: "run command tail args",
-			app:  newApp(),
+			app:  newApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "info", "zzz", "yyy"},
 			},
@@ -154,35 +154,35 @@ func TestApp_Run(t *testing.T) {
 		},
 		{
 			name: "run invalid argument flags",
-			app:  newApp(),
+			app:  newApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "---unknown", "123"},
 			},
 		},
 		{
 			name: "run valid bool flag short",
-			app:  newApp(),
+			app:  newApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "--BB"},
 			},
 		},
 		{
 			name: "run valid bool flag long",
-			app:  newApp(),
+			app:  newApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "--BB", "false"},
 			},
 		},
 		{
 			name: "run valid int flag",
-			app:  newApp(),
+			app:  newApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "--CC", "2"},
 			},
 		},
 		{
 			name: "run invalid int flag value",
-			app:  newApp(),
+			app:  newApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "--CC", "s1f0"},
 			},
@@ -190,28 +190,28 @@ func TestApp_Run(t *testing.T) {
 		},
 		{
 			name: "run valid string slice flag",
-			app:  newApp(),
+			app:  newApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "-d", "2,4,5"},
 			},
 		},
 		{
 			name: "run valid command string slice flag",
-			app:  newApp(),
+			app:  newApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "info", "--II", "2,4,5"},
 			},
 		},
 		{
 			name: "run valid command string slice and bool flags",
-			app:  newApp(),
+			app:  newApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "info", "--II", "2,4,5", "-z"},
 			},
 		},
 		{
 			name: "run valid command int flag",
-			app:  newApp(),
+			app:  newApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "info", "-g", "0", "-z"},
 			},
