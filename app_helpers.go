@@ -64,54 +64,60 @@ func validateFlagsAndInit(flags []Flag) ([]Flag, error) {
 }
 
 // findFlagByKey finds a flag item with its index in a flag's array by key.
-func findFlagByKey(key string, flags []Flag) (int, Flag) {
+// It also checks if was a short flag or not.
+func findFlagByKey(key string, flags []Flag) (int, Flag, bool) {
+	var short bool = false
 	for i, v := range flags {
 		switch f := v.(type) {
 		case FlagBool:
 			// Check for long named flags
 			if key == f.Name {
-				return i, f
+				return i, f, short
 			}
 			// Check for short named flags
 			for _, s := range f.Aliases {
 				if key == s {
-					return i, f
+					short = true
+					return i, f, short
 				}
 			}
 		case FlagInt:
 			// Check for long named flags
 			if key == f.Name {
-				return i, f
+				return i, f, short
 			}
 			// Check for short named flags
 			for _, s := range f.Aliases {
 				if key == s {
-					return i, f
+					short = true
+					return i, f, short
 				}
 			}
 		case FlagString:
 			// Check for long named flags
 			if key == f.Name {
-				return i, f
+				return i, f, short
 			}
 			// Check for short named flags
 			for _, s := range f.Aliases {
 				if key == s {
-					return i, f
+					short = true
+					return i, f, short
 				}
 			}
 		case FlagStringSlice:
 			// Check for long named flags
 			if key == f.Name {
-				return i, f
+				return i, f, short
 			}
 			// Check for short named flags
 			for _, s := range f.Aliases {
 				if key == s {
-					return i, f
+					short = true
+					return i, f, short
 				}
 			}
 		}
 	}
-	return -1, nil
+	return -1, nil, short
 }

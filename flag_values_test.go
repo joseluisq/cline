@@ -131,7 +131,7 @@ func TestFlagValue_StringSlice(t *testing.T) {
 	}
 }
 
-func TestFlagValueMap_findByKey(t *testing.T) {
+func TestFlagMapping_findByKey(t *testing.T) {
 	type fields struct {
 		flags []Flag
 	}
@@ -275,17 +275,17 @@ func TestFlagValueMap_findByKey(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fm := &FlagValueMap{
+			fm := &FlagMapping{
 				zFlags: tt.fields.flags,
 			}
 			if got := fm.findByKey(tt.args.flagKey); got != tt.want {
-				t.Errorf("FlagValueMap.findByKey() = %v, want %v", got, tt.want)
+				t.Errorf("FlagMapping.findByKey() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestFlagValueMap_Bool(t *testing.T) {
+func TestFlagMapping_Bool(t *testing.T) {
 	type fields struct {
 		flags []Flag
 	}
@@ -334,22 +334,22 @@ func TestFlagValueMap_Bool(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fm := &FlagValueMap{
+			fm := &FlagMapping{
 				zFlags: tt.fields.flags,
 			}
 			got, err := fm.Bool(tt.args.flagName)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("FlagValueMap.Bool() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("FlagMapping.Bool() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("FlagValueMap.Bool() = %v, want %v", got, tt.want)
+				t.Errorf("FlagMapping.Bool() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestFlagValueMap_Int(t *testing.T) {
+func TestFlagMapping_Int(t *testing.T) {
 	type fields struct {
 		flags []Flag
 	}
@@ -398,22 +398,22 @@ func TestFlagValueMap_Int(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fm := &FlagValueMap{
+			fm := &FlagMapping{
 				zFlags: tt.fields.flags,
 			}
 			got, err := fm.Int(tt.args.flagName)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("FlagValueMap.Int() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("FlagMapping.Int() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("FlagValueMap.Int() = %v, want %v", got, tt.want)
+				t.Errorf("FlagMapping.Int() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestFlagValueMap_String(t *testing.T) {
+func TestFlagMapping_String(t *testing.T) {
 	type fields struct {
 		flags []Flag
 	}
@@ -460,17 +460,17 @@ func TestFlagValueMap_String(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fm := &FlagValueMap{
+			fm := &FlagMapping{
 				zFlags: tt.fields.flags,
 			}
 			if got := fm.String(tt.args.flagName); got != tt.want {
-				t.Errorf("FlagValueMap.String() = %v, want %v", got, tt.want)
+				t.Errorf("FlagMapping.String() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestFlagValueMap_StringSlice(t *testing.T) {
+func TestFlagMapping_StringSlice(t *testing.T) {
 	type fields struct {
 		flags []Flag
 	}
@@ -517,49 +517,44 @@ func TestFlagValueMap_StringSlice(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fm := &FlagValueMap{
+			fm := &FlagMapping{
 				zFlags: tt.fields.flags,
 			}
 			if got := fm.StringSlice(tt.args.flagName); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("FlagValueMap.StringSlice() = %v, want %v", got, tt.want)
+				t.Errorf("FlagMapping.StringSlice() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestFlagValueMap_ProvidedFlags(t *testing.T) {
-	type fields struct {
-		zFlags         []Flag
-		zProvidedFlags []string
-	}
+func TestFlagMapInput_GetProvidedFlags(t *testing.T) {
 	tests := []struct {
 		name    string
 		vArgs   []string
-		fields  fields
-		want    []string
+		want    []FlagProvided
 		wantErr bool
 	}{
 		{
 			name:  "valid app provided flags",
 			vArgs: []string{"", "--AA", "abc", "-b"},
-			want:  []string{"AA", "BB"},
+			want:  []FlagProvided{{Name: "AA", IsAlias: false}, {Name: "BB", IsAlias: true}},
 		},
 		{
 			name:  "valid command provided flags",
 			vArgs: []string{"", "info", "--FF", "abc", "-z"},
-			want:  []string{"FF", "ZZ"},
+			want:  []FlagProvided{{Name: "FF", IsAlias: false}, {Name: "ZZ", IsAlias: true}},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			app := newApp(func(ctx *AppContext) error {
-				if got := ctx.Flags.ProvidedFlags(); !reflect.DeepEqual(got, tt.want) {
-					t.Errorf("FlagValueMap.ProvidedFlags() = %v, want %v", got, tt.want)
+				if got := ctx.Flags.GetProvidedFlags(); !reflect.DeepEqual(got, tt.want) {
+					t.Errorf("FlagMapping.ProvidedFlags() = %v, want %v", got, tt.want)
 				}
 				return nil
 			}, func(ctx *CmdContext) error {
-				if got := ctx.Flags.ProvidedFlags(); !reflect.DeepEqual(got, tt.want) {
-					t.Errorf("FlagValueMap.ProvidedFlags() = %v, want %v", got, tt.want)
+				if got := ctx.Flags.GetProvidedFlags(); !reflect.DeepEqual(got, tt.want) {
+					t.Errorf("FlagMapping.ProvidedFlags() = %v, want %v", got, tt.want)
 				}
 				return nil
 			})

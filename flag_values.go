@@ -32,35 +32,67 @@ func (v FlagValue) StringSlice() []string {
 	return strs
 }
 
-// FlagValueMap defines a hash map of command input flags with their values.
-type FlagValueMap struct {
-	zFlags         []Flag
-	zProvidedFlags []string
+// FlagProvided defines a provided input flag (passed from stdin only) and if it was an alias or not.
+type FlagProvided struct {
+	Name    string
+	IsAlias bool
 }
 
-// ProvidedFlags gets a list of flag keys with the provided input flags only.
-func (fm *FlagValueMap) ProvidedFlags() []string {
-	return fm.zProvidedFlags
+// isFlagProvided checks for a provided flag and check alias named ones as well.
+func (fm *FlagMapping) isFlagProvided(flagName string, checkAlias bool, aliasValue bool) bool {
+	for _, p := range fm.zFlagsProvided {
+		if flagName == p.Name {
+			if checkAlias {
+				return aliasValue == p.IsAlias
+			}
+			return true
+		}
+	}
+	return false
+}
+
+// GetProvidedFlags gets a list of provided input flags (only those passed from stdin).
+func (fm *FlagMapping) GetProvidedFlags() []FlagProvided {
+	return fm.zFlagsProvided
+}
+
+// IsProvidedFlag checks if a flag was provided (only those passed from stdin).
+// `flagName` specifies the long flag name.
+func (fm *FlagMapping) IsProvidedFlag(flagName string) bool {
+	return fm.isFlagProvided(flagName, false, false)
+}
+
+// IsLongProvidedFlag checks if a flag was provided (only those passed from stdin) using its long name.
+// `flagName` specifies the long flag name.
+func (fm *FlagMapping) IsLongProvidedFlag(flagName string) bool {
+	return fm.isFlagProvided(flagName, true, false)
+}
+
+// IsShortProvidedFlag checks if a flag was provided (only those passed from stdin) using its short name.
+// `flagName` specifies the long flag name.
+func (fm *FlagMapping) IsShortProvidedFlag(flagName string) bool {
+	return fm.isFlagProvided(flagName, true, true)
 }
 
 // findByKey finds a `FlagValue` by a string key.
-func (fm *FlagValueMap) findByKey(flagKey string) FlagValue {
+// `flagName` specifies the long flag name.
+func (fm *FlagMapping) findByKey(flagName string) FlagValue {
 	for _, v := range fm.zFlags {
 		switch fl := v.(type) {
 		case FlagBool:
-			if flagKey == fl.Name {
+			if flagName == fl.Name {
 				return fl.zflag
 			}
 		case FlagInt:
-			if flagKey == fl.Name {
+			if flagName == fl.Name {
 				return fl.zflag
 			}
 		case FlagString:
-			if flagKey == fl.Name {
+			if flagName == fl.Name {
 				return fl.zflag
 			}
 		case FlagStringSlice:
-			if flagKey == fl.Name {
+			if flagName == fl.Name {
 				return fl.zflag
 			}
 		}
@@ -68,22 +100,32 @@ func (fm *FlagValueMap) findByKey(flagKey string) FlagValue {
 	return FlagValue("")
 }
 
+// FlagMapping defines a hash map of command input flags with their values.
+type FlagMapping struct {
+	zFlags         []Flag
+	zFlagsProvided []FlagProvided
+}
+
 // Bool gets current flag value as `bool`.
-func (fm *FlagValueMap) Bool(flagName string) (bool, error) {
+// `flagName` specifies the long flag name.
+func (fm *FlagMapping) Bool(flagName string) (bool, error) {
 	return fm.findByKey(flagName).Bool()
 }
 
 // Int gets current flag value as `int`.
-func (fm *FlagValueMap) Int(flagName string) (int, error) {
+// `flagName` specifies the long flag name.
+func (fm *FlagMapping) Int(flagName string) (int, error) {
 	return fm.findByKey(flagName).Int()
 }
 
 // String gets current flag value as `string`.
-func (fm *FlagValueMap) String(flagName string) string {
+// `flagName` specifies the long flag name.
+func (fm *FlagMapping) String(flagName string) string {
 	return fm.findByKey(flagName).String()
 }
 
 // StringSlice gets current flag value as a string slice.
-func (fm *FlagValueMap) StringSlice(flagName string) []string {
+// `flagName` specifies the long flag name.
+func (fm *FlagMapping) StringSlice(flagName string) []string {
 	return fm.findByKey(flagName).StringSlice()
 }

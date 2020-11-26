@@ -23,7 +23,7 @@ type CmdContext struct {
 	// Cmd references to current application command.
 	Cmd *Cmd
 	// Flags references to flag input values of current command.
-	Flags *FlagValueMap
+	Flags *FlagMapping
 	// TailArgs contains current tail input arguments.
 	TailArgs []string
 	// AppContext references to current application context.
@@ -49,7 +49,7 @@ type AppContext struct {
 	// App references to current application instance.
 	App *App
 	// Flags references to flag input values of current application (global flags).
-	Flags *FlagValueMap
+	Flags *FlagMapping
 	// TailArgs contains current tail input arguments.
 	TailArgs []string
 }
@@ -89,8 +89,8 @@ func (app *App) Run(vArgs []string) error {
 	var hasHelp = false
 	var hasVersion = false
 	var vArgsLen = len(vArgs)
-	var appProvidedFlags []string
-	var cmdProvidedFlags []string
+	var appProvidedFlags []FlagProvided
+	var cmdProvidedFlags []FlagProvided
 
 	for argIndex := 1; argIndex < vArgsLen; argIndex++ {
 		arg := strings.TrimSpace(vArgs[argIndex])
@@ -132,7 +132,7 @@ func (app *App) Run(vArgs []string) error {
 			}
 
 			// Find argument key flag on flag list
-			i, flag := findFlagByKey(flagKey, flags)
+			i, flag, isAlias := findFlagByKey(flagKey, flags)
 			if flag == nil {
 				return fmt.Errorf("argument `%s` is not recognised", arg)
 			}
@@ -143,27 +143,27 @@ func (app *App) Run(vArgs []string) error {
 			switch v := lastFlag.(type) {
 			case FlagBool:
 				if hasCmd {
-					cmdProvidedFlags = append(cmdProvidedFlags, v.Name)
+					cmdProvidedFlags = append(cmdProvidedFlags, FlagProvided{Name: v.Name, IsAlias: isAlias})
 				} else {
-					appProvidedFlags = append(appProvidedFlags, v.Name)
+					appProvidedFlags = append(appProvidedFlags, FlagProvided{Name: v.Name, IsAlias: isAlias})
 				}
 			case FlagInt:
 				if hasCmd {
-					cmdProvidedFlags = append(cmdProvidedFlags, v.Name)
+					cmdProvidedFlags = append(cmdProvidedFlags, FlagProvided{Name: v.Name, IsAlias: isAlias})
 				} else {
-					appProvidedFlags = append(appProvidedFlags, v.Name)
+					appProvidedFlags = append(appProvidedFlags, FlagProvided{Name: v.Name, IsAlias: isAlias})
 				}
 			case FlagString:
 				if hasCmd {
-					cmdProvidedFlags = append(cmdProvidedFlags, v.Name)
+					cmdProvidedFlags = append(cmdProvidedFlags, FlagProvided{Name: v.Name, IsAlias: isAlias})
 				} else {
-					appProvidedFlags = append(appProvidedFlags, v.Name)
+					appProvidedFlags = append(appProvidedFlags, FlagProvided{Name: v.Name, IsAlias: isAlias})
 				}
 			case FlagStringSlice:
 				if hasCmd {
-					cmdProvidedFlags = append(cmdProvidedFlags, v.Name)
+					cmdProvidedFlags = append(cmdProvidedFlags, FlagProvided{Name: v.Name, IsAlias: isAlias})
 				} else {
-					appProvidedFlags = append(appProvidedFlags, v.Name)
+					appProvidedFlags = append(appProvidedFlags, FlagProvided{Name: v.Name, IsAlias: isAlias})
 				}
 			}
 
@@ -346,16 +346,16 @@ func (app *App) Run(vArgs []string) error {
 	if hasCmd && lastCmd.Handler != nil {
 		return lastCmd.Handler(&CmdContext{
 			Cmd: &lastCmd,
-			Flags: &FlagValueMap{
+			Flags: &FlagMapping{
 				zFlags:         lastCmd.Flags,
-				zProvidedFlags: cmdProvidedFlags,
+				zFlagsProvided: cmdProvidedFlags,
 			},
 			TailArgs: tailArgs,
 			AppContext: &AppContext{
 				App: app,
-				Flags: &FlagValueMap{
+				Flags: &FlagMapping{
 					zFlags:         app.Flags,
-					zProvidedFlags: appProvidedFlags,
+					zFlagsProvided: appProvidedFlags,
 				},
 			},
 		})
@@ -365,9 +365,9 @@ func (app *App) Run(vArgs []string) error {
 	if app.Handler != nil {
 		return app.Handler(&AppContext{
 			App: app,
-			Flags: &FlagValueMap{
+			Flags: &FlagMapping{
 				zFlags:         app.Flags,
-				zProvidedFlags: appProvidedFlags,
+				zFlagsProvided: appProvidedFlags,
 			},
 			TailArgs: tailArgs,
 		})
