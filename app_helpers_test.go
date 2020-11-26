@@ -324,10 +324,11 @@ func Test_findFlagByKey(t *testing.T) {
 		flags []Flag
 	}
 	tests := []struct {
-		name      string
-		args      args
-		wantIndex int
-		wantItem  Flag
+		name          string
+		args          args
+		wantIndex     int
+		wantItem      Flag
+		wantFlagShort bool
 	}{
 		{
 			name: "search on empty flag array",
@@ -381,6 +382,7 @@ func Test_findFlagByKey(t *testing.T) {
 				zflag:         FlagValue(""),
 				zflagAssigned: false,
 			},
+			wantFlagShort: true,
 		},
 		{
 			name: "search a valid FlagString by name",
@@ -425,6 +427,7 @@ func Test_findFlagByKey(t *testing.T) {
 				zflag:         FlagValue(""),
 				zflagAssigned: false,
 			},
+			wantFlagShort: true,
 		},
 		{
 			name: "search a valid FlagBool by name",
@@ -469,6 +472,7 @@ func Test_findFlagByKey(t *testing.T) {
 				zflag:         FlagValue(""),
 				zflagAssigned: false,
 			},
+			wantFlagShort: true,
 		},
 		{
 			name: "search a valid FlagInt by name",
@@ -513,16 +517,20 @@ func Test_findFlagByKey(t *testing.T) {
 				zflag:         FlagValue(""),
 				zflagAssigned: false,
 			},
+			wantFlagShort: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1 := findFlagByKey(tt.args.key, tt.args.flags)
+			got, got1, got2 := findFlagByKey(tt.args.key, tt.args.flags)
 			if got != tt.wantIndex {
 				t.Errorf("findFlagByKey() got = %v, want %v", got, tt.wantIndex)
 			}
 			if !reflect.DeepEqual(got1, tt.wantItem) {
 				t.Errorf("findFlagByKey() got1 = %v, want %v", got1, tt.wantItem)
+			}
+			if got2 != tt.wantFlagShort {
+				t.Errorf("findFlagByKey() got2 = %v, want %v", got2, tt.wantFlagShort)
 			}
 		})
 	}
