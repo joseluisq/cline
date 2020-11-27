@@ -564,3 +564,193 @@ func TestFlagMapInput_GetProvidedFlags(t *testing.T) {
 		})
 	}
 }
+
+func TestFlagMapping_IsProvidedFlag(t *testing.T) {
+	type fields struct {
+		zFlags         []Flag
+		zFlagsProvided []FlagProvided
+	}
+	type args struct {
+		flagName string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   bool
+	}{
+		{
+			name: "not provided flag",
+			fields: fields{
+				zFlags: []Flag{
+					FlagInt{Name: "int", Aliases: []string{"i"}},
+				},
+			},
+			args: args{
+				flagName: "int",
+			},
+		},
+		{
+			name: "provided flag",
+			fields: fields{
+				zFlags: []Flag{
+					FlagBool{Name: "bool", Aliases: []string{"b"}},
+				},
+				zFlagsProvided: []FlagProvided{
+					{Name: "bool"},
+				},
+			},
+			args: args{
+				flagName: "bool",
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fm := &FlagMapping{
+				zFlags:         tt.fields.zFlags,
+				zFlagsProvided: tt.fields.zFlagsProvided,
+			}
+			if got := fm.IsProvidedFlag(tt.args.flagName); got != tt.want {
+				t.Errorf("FlagMapping.IsProvidedFlag() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestFlagMapping_IsLongProvidedFlag(t *testing.T) {
+	type fields struct {
+		zFlags         []Flag
+		zFlagsProvided []FlagProvided
+	}
+	type args struct {
+		flagName string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   bool
+	}{
+		{
+			name: "not provided flag",
+			fields: fields{
+				zFlags: []Flag{
+					FlagInt{Name: "int", Aliases: []string{"i"}},
+				},
+			},
+			args: args{
+				flagName: "int",
+			},
+		},
+		{
+			name: "provided long name flag",
+			fields: fields{
+				zFlags: []Flag{
+					FlagBool{Name: "bool", Aliases: []string{"b"}},
+				},
+				zFlagsProvided: []FlagProvided{
+					{Name: "bool"},
+				},
+			},
+			args: args{
+				flagName: "bool",
+			},
+			want: true,
+		},
+		{
+			name: "provided short name flag (alias)",
+			fields: fields{
+				zFlags: []Flag{
+					FlagBool{Name: "int", Aliases: []string{"b"}},
+				},
+				zFlagsProvided: []FlagProvided{
+					{Name: "int", IsAlias: true},
+				},
+			},
+			args: args{
+				flagName: "int",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fm := &FlagMapping{
+				zFlags:         tt.fields.zFlags,
+				zFlagsProvided: tt.fields.zFlagsProvided,
+			}
+			if got := fm.IsLongProvidedFlag(tt.args.flagName); got != tt.want {
+				t.Errorf("FlagMapping.IsLongProvidedFlag() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestFlagMapping_IsShortProvidedFlag(t *testing.T) {
+	type fields struct {
+		zFlags         []Flag
+		zFlagsProvided []FlagProvided
+	}
+	type args struct {
+		flagName string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   bool
+	}{
+		{
+			name: "not provided flag",
+			fields: fields{
+				zFlags: []Flag{
+					FlagStringSlice{Name: "strs", Aliases: []string{"s"}},
+				},
+			},
+			args: args{
+				flagName: "strs",
+			},
+		},
+		{
+			name: "provided long name flag",
+			fields: fields{
+				zFlags: []Flag{
+					FlagString{Name: "str", Aliases: []string{"s"}},
+				},
+				zFlagsProvided: []FlagProvided{
+					{Name: "str"},
+				},
+			},
+			args: args{
+				flagName: "str",
+			},
+		},
+		{
+			name: "provided short name flag (alias)",
+			fields: fields{
+				zFlags: []Flag{
+					FlagBool{Name: "int", Aliases: []string{"i"}},
+				},
+				zFlagsProvided: []FlagProvided{
+					{Name: "int", IsAlias: true},
+				},
+			},
+			args: args{
+				flagName: "int",
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fm := &FlagMapping{
+				zFlags:         tt.fields.zFlags,
+				zFlagsProvided: tt.fields.zFlagsProvided,
+			}
+			if got := fm.IsShortProvidedFlag(tt.args.flagName); got != tt.want {
+				t.Errorf("FlagMapping.IsShortProvidedFlag() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
