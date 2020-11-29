@@ -7,9 +7,10 @@ import (
 )
 
 type flagStruct struct {
-	name    string
-	aliases []string
-	summary string
+	name     string
+	aliases  []string
+	summary  string
+	defaults string
 }
 
 // printHelp prints current application flags and commands info (--help).
@@ -36,11 +37,7 @@ func printHelp(app *App, cmd *Cmd) error {
 	// Print options
 	fmt.Printf("OPTIONS:\n")
 
-	var vflags []struct {
-		name    string
-		aliases []string
-		summary string
-	}
+	var vflags []flagStruct
 	var fLen int = 0
 	var aliasMaxLen = 0
 
@@ -60,16 +57,16 @@ func printHelp(app *App, cmd *Cmd) error {
 		switch f := fl.(type) {
 		case FlagBool:
 			fname = f.Name
-			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary}
+			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.zflag.String()}
 		case FlagInt:
 			fname = f.Name
-			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary}
+			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.zflag.String()}
 		case FlagString:
 			fname = f.Name
-			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary}
+			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.zflag.String()}
 		case FlagStringSlice:
 			fname = f.Name
-			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary}
+			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.zflag.String()}
 		}
 		if len([]rune(fname)) > fLen {
 			fLen = len([]rune(fname))
@@ -99,13 +96,19 @@ func printHelp(app *App, cmd *Cmd) error {
 		repeatRight := fLen - len([]rune(v.name))
 		marginRightRepeat := strings.Repeat(" ", repeatRight)
 
+		defaultVal := strings.TrimSpace(v.defaults)
+		if defaultVal != "" {
+			defaultVal = " (default: " + defaultVal + ")"
+		}
+
 		line := fmt.Sprintf(
-			"  %s%s --%s%s    %s\n",
+			"  %s%s --%s%s    %s%s\n",
 			marginLeftRepeat,
 			shorts,
 			v.name,
 			marginRightRepeat,
 			v.summary,
+			defaultVal,
 		)
 
 		fmt.Printf(line)
