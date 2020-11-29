@@ -11,6 +11,7 @@ type flagStruct struct {
 	aliases  []string
 	summary  string
 	defaults string
+	envVar   string
 }
 
 // printHelp prints current application flags and commands info (--help).
@@ -57,16 +58,17 @@ func printHelp(app *App, cmd *Cmd) error {
 		switch f := fl.(type) {
 		case FlagBool:
 			fname = f.Name
-			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.zflag.String()}
+			vFlag = flagStruct{
+				name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.zflag.String(), envVar: f.EnvVar}
 		case FlagInt:
 			fname = f.Name
-			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.zflag.String()}
+			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.zflag.String(), envVar: f.EnvVar}
 		case FlagString:
 			fname = f.Name
-			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.zflag.String()}
+			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.zflag.String(), envVar: f.EnvVar}
 		case FlagStringSlice:
 			fname = f.Name
-			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.zflag.String()}
+			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.zflag.String(), envVar: f.EnvVar}
 		}
 		if len([]rune(fname)) > fLen {
 			fLen = len([]rune(fname))
@@ -98,17 +100,22 @@ func printHelp(app *App, cmd *Cmd) error {
 
 		defaultVal := strings.TrimSpace(v.defaults)
 		if defaultVal != "" {
-			defaultVal = " (default: " + defaultVal + ")"
+			defaultVal = " [default: " + defaultVal + "]"
+		}
+		envVar := strings.TrimSpace(v.envVar)
+		if envVar != "" {
+			envVar = " [env: " + envVar + "]"
 		}
 
 		line := fmt.Sprintf(
-			"  %s%s --%s%s    %s%s\n",
+			"  %s%s --%s%s    %s%s%s\n",
 			marginLeftRepeat,
 			shorts,
 			v.name,
 			marginRightRepeat,
 			v.summary,
 			defaultVal,
+			envVar,
 		)
 
 		fmt.Printf(line)

@@ -49,6 +49,7 @@ func newApp(appHandler func(ctx *AppContext) error, cmdHandler func(ctx *CmdCont
 					Name:    "FF",
 					Value:   ".env",
 					Aliases: []string{"f"},
+					EnvVar:  "FF_ENV_VAR",
 				},
 				FlagStringSlice{
 					Name:    "II",
