@@ -6,15 +6,18 @@ WIP project under **active** development.
 
 ## Features
 
-- No external dependencies.
-- Compact API.
-- `bool`, `int`, `string` and `[]string` data types only.
-- Global and local flags support.
+- No external dependencies more than few [Go's stdlib](https://golang.org/pkg/#stdlib) ones.
+- Compact but concise API.
+- Global and command flags support.
+- `bool`, `int`, `string` and `[]string` flag's data types.
 - Flag aliases and default values support.
-- Convenient context for function handlers (global and commands) with build-in types conversion API.
+- Convenient contexts for function handlers (global and command flags)
+- Context built-in types conversion API for `bool`, `int`, `string` and `[]string` flag values.
+- Convenient API to detect provided (passed) flags only with thier props.
 - Optional environment variable names for flags.
-- Automatic `--help` (`-h`) and `--version` (`-v`) generation flags.
-- [POSIX-compliant](https://github.com/joseluisq/cline/issues/3) flags for short and long versions (WIP)
+- Automatic `--help` (`-h`) flag for global flags and commands.
+- Automatic `--version` (`-v`) flag with relevant info like app version, Go version, build datetime and OS/Arch.
+- POSIX-compliant flags (partial but [WIP](https://github.com/joseluisq/cline/issues/3))
 
 ## Usage
 
