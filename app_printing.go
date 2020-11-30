@@ -46,20 +46,21 @@ func printHelp(app *App, cmd *Cmd) error {
 	flags = append(flags, FlagString{
 		Name: "help", Aliases: []string{"h"}, Summary: "Prints help information",
 	})
-	flags = append(flags, FlagString{
-		Name: "version", Aliases: []string{"v"}, Summary: "Prints version information",
-	})
+	if cmd == nil {
+		flags = append(flags, FlagString{
+			Name: "version", Aliases: []string{"v"}, Summary: "Prints version information",
+		})
+	}
 
 	// Calculate app or command flags positions
 	for _, fl := range flags {
 		var vFlag flagStruct
-		fname := ""
 
+		fname := ""
 		switch f := fl.(type) {
 		case FlagBool:
 			fname = f.Name
-			vFlag = flagStruct{
-				name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.zflag.String(), envVar: f.EnvVar}
+			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.zflag.String(), envVar: f.EnvVar}
 		case FlagInt:
 			fname = f.Name
 			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.zflag.String(), envVar: f.EnvVar}
