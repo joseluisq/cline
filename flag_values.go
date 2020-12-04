@@ -1,30 +1,32 @@
 package cline
 
 import (
+	"fmt"
+	"os"
 	"strconv"
 	"strings"
 )
 
-// FlagValue represents a `bool`, `int`, `string` or `string slice` input value for a command flag.
-type FlagValue string
+// AnyValue is an alias of string type which represents an input value for a command flag.
+type AnyValue string
 
-// Bool converts current flag value into a `bool`.
-func (v FlagValue) Bool() (bool, error) {
-	return strconv.ParseBool(v.String())
+// ToBool converts current flag value into a `bool`.
+func (v AnyValue) ToBool() (bool, error) {
+	return strconv.ParseBool(v.ToString())
 }
 
-// Int converts current flag value into an `int`.
-func (v FlagValue) Int() (int, error) {
-	return strconv.Atoi(v.String())
+// ToInt converts current flag value into an `int`.
+func (v AnyValue) ToInt() (int, error) {
+	return strconv.Atoi(v.ToString())
 }
 
-// String converts current flag value into a `string`.
-func (v FlagValue) String() string {
+// ToString converts current flag value into a `string`.
+func (v AnyValue) ToString() string {
 	return string(v)
 }
 
-// StringSlice converts current flag value into a string slice.
-func (v FlagValue) StringSlice() []string {
+// ToStringSlice converts current flag value into a string slice.
+func (v AnyValue) ToStringSlice() []string {
 	var strs []string
 	for _, s := range strings.Split(string(v), ",") {
 		strs = append(strs, strings.TrimSpace(s))
@@ -32,100 +34,220 @@ func (v FlagValue) StringSlice() []string {
 	return strs
 }
 
-// FlagProvided defines a provided input flag (passed from stdin only) and if it was an alias or not.
-type FlagProvided struct {
-	Name    string
-	IsAlias bool
+// FlagBoolValue represents a flag value bool type.
+type FlagBoolValue struct {
+	flag FlagBool
 }
 
-// isFlagProvided checks for a provided flag and check alias named ones as well.
-func (fm *FlagMapping) isFlagProvided(flagName string, checkAlias bool, aliasValue bool) bool {
-	for _, p := range fm.zFlagsProvided {
-		if flagName == p.Name {
-			if checkAlias {
-				return aliasValue == p.IsAlias
-			}
-			return true
-		}
-	}
-	return false
+// Value unwraps the plain bool value of the current flag.
+func (v *FlagBoolValue) Value() (bool, error) {
+	return v.flag.flagValue.ToBool()
 }
 
-// GetProvidedFlags gets a list of provided input flags (only those passed from stdin).
-func (fm *FlagMapping) GetProvidedFlags() []FlagProvided {
-	return fm.zFlagsProvided
+// IsProvided checks if current bool flag was provided from stdin.
+func (v *FlagBoolValue) IsProvided() bool {
+	return v.flag.flagProvided
 }
 
-// IsProvidedFlag checks if a flag was provided (only those passed from stdin).
-// `flagName` specifies the long flag name.
-func (fm *FlagMapping) IsProvidedFlag(flagName string) bool {
-	return fm.isFlagProvided(flagName, false, false)
+// IsProvidedShort checks if current bool flag was provided from stdin but using its short name.
+func (v *FlagBoolValue) IsProvidedShort() bool {
+	return v.flag.flagProvided && v.flag.flagProvidedAsAlias
 }
 
-// IsLongProvidedFlag checks if a flag was provided (only those passed from stdin) using its long name.
-// `flagName` specifies the long flag name.
-func (fm *FlagMapping) IsLongProvidedFlag(flagName string) bool {
-	return fm.isFlagProvided(flagName, true, false)
+// IsProvidedLong checks if current bool flag was provided from stdin but using its long name.
+func (v *FlagBoolValue) IsProvidedLong() bool {
+	return v.flag.flagProvided && !v.flag.flagProvidedAsAlias
 }
 
-// IsShortProvidedFlag checks if a flag was provided (only those passed from stdin) using its short name.
-// `flagName` specifies the long flag name.
-func (fm *FlagMapping) IsShortProvidedFlag(flagName string) bool {
-	return fm.isFlagProvided(flagName, true, true)
+// GetFlagType returns the associated flag type.
+func (v *FlagBoolValue) GetFlagType() FlagBool {
+	return v.flag
 }
 
-// findByKey finds a `FlagValue` by a string key.
-// `flagName` specifies the long flag name.
-func (fm *FlagMapping) findByKey(flagName string) FlagValue {
-	for _, v := range fm.zFlags {
-		switch fl := v.(type) {
+// FlagIntValue represents a flag value int type.
+type FlagIntValue struct {
+	flag FlagInt
+}
+
+// Value unwraps the plain int value of the current flag.
+func (v *FlagIntValue) Value() (int, error) {
+	return v.flag.flagValue.ToInt()
+}
+
+// IsProvided checks if current int flag was provided from stdin.
+func (v *FlagIntValue) IsProvided() bool {
+	return v.flag.flagProvided
+}
+
+// IsProvidedShort checks if current int flag was provided from stdin but using its short name.
+func (v *FlagIntValue) IsProvidedShort() bool {
+	return v.flag.flagProvided && v.flag.flagProvidedAsAlias
+}
+
+// IsProvidedLong checks if current int flag was provided from stdin but using its long name.
+func (v *FlagIntValue) IsProvidedLong() bool {
+	return v.flag.flagProvided && !v.flag.flagProvidedAsAlias
+}
+
+// GetFlagType returns the associated flag type.
+func (v *FlagIntValue) GetFlagType() FlagInt {
+	return v.flag
+}
+
+// FlagStringValue represents a flag value string type.
+type FlagStringValue struct {
+	flag FlagString
+}
+
+// Value unwraps the plain string value of the current flag.
+func (v *FlagStringValue) Value() string {
+	return v.flag.flagValue.ToString()
+}
+
+// IsProvided checks if current string flag was provided from stdin.
+func (v *FlagStringValue) IsProvided() bool {
+	return v.flag.flagProvided
+}
+
+// IsProvidedShort checks if current string flag was provided from stdin but using its short name.
+func (v *FlagStringValue) IsProvidedShort() bool {
+	return v.flag.flagProvided && v.flag.flagProvidedAsAlias
+}
+
+// IsProvidedLong checks if current string flag was provided from stdin but using its long name.
+func (v *FlagStringValue) IsProvidedLong() bool {
+	return v.flag.flagProvided && !v.flag.flagProvidedAsAlias
+}
+
+// GetFlagType returns the associated flag type.
+func (v *FlagStringValue) GetFlagType() FlagString {
+	return v.flag
+}
+
+// FlagStringSliceValue represents a flag value string slice type.
+type FlagStringSliceValue struct {
+	flag FlagStringSlice
+}
+
+// Value unwraps the plain string slice value of the current flag.
+func (v *FlagStringSliceValue) Value() []string {
+	return v.flag.flagValue.ToStringSlice()
+}
+
+// IsProvided checks if current string slice flag was provided from stdin.
+func (v *FlagStringSliceValue) IsProvided() bool {
+	return v.flag.flagProvided
+}
+
+// IsProvidedShort checks if current string slice flag was provided from stdin but using its short name.
+func (v *FlagStringSliceValue) IsProvidedShort() bool {
+	return v.flag.flagProvided && v.flag.flagProvidedAsAlias
+}
+
+// IsProvidedLong checks if current string slice flag was provided from stdin but using its long name.
+func (v *FlagStringSliceValue) IsProvidedLong() bool {
+	return v.flag.flagProvided && !v.flag.flagProvidedAsAlias
+}
+
+// GetFlagType returns the associated flag type.
+func (v *FlagStringSliceValue) GetFlagType() FlagStringSlice {
+	return v.flag
+}
+
+// FlagValues defines list of flag values.
+type FlagValues struct {
+	flags []Flag
+}
+
+// findByKey finds a `Flag` by its string key.
+func (v *FlagValues) findByKey(longFlagName string) Flag {
+	for _, f := range v.flags {
+		switch fl := f.(type) {
 		case FlagBool:
-			if flagName == fl.Name {
-				return fl.zflag
+			if longFlagName == fl.Name {
+				return fl
 			}
 		case FlagInt:
-			if flagName == fl.Name {
-				return fl.zflag
+			if longFlagName == fl.Name {
+				return fl
 			}
 		case FlagString:
-			if flagName == fl.Name {
-				return fl.zflag
+			if longFlagName == fl.Name {
+				return fl
 			}
 		case FlagStringSlice:
-			if flagName == fl.Name {
-				return fl.zflag
+			if longFlagName == fl.Name {
+				return fl
 			}
 		}
 	}
-	return FlagValue("")
+	return nil
 }
 
-// FlagMapping defines a hash map of command input flags with their values.
-type FlagMapping struct {
-	zFlags         []Flag
-	zFlagsProvided []FlagProvided
+// Any finds a flag value but ignoring its type. The result value is convertible to other supported types.
+// Since `AnyValue` is just a `string` alias type, it can be converted easily with `string(AnyValue)`.
+func (v *FlagValues) Any(longFlagName string) AnyValue {
+	switch f := v.findByKey(longFlagName).(type) {
+	case FlagBool:
+		return f.flagValue
+	case FlagInt:
+		return f.flagValue
+	case FlagString:
+		return f.flagValue
+	case FlagStringSlice:
+		return f.flagValue
+	}
+	return AnyValue("")
 }
 
-// Bool gets current flag value as `bool`.
-// `flagName` specifies the long flag name.
-func (fm *FlagMapping) Bool(flagName string) (bool, error) {
-	return fm.findByKey(flagName).Bool()
+// Bool finds a `bool` flag value. It's type should match with its flag definition type.
+func (v *FlagValues) Bool(longFlagName string) *FlagBoolValue {
+	switch f := v.findByKey(longFlagName).(type) {
+	case FlagBool:
+		return &FlagBoolValue{flag: f}
+	default:
+		t := strings.ReplaceAll(fmt.Sprintf("%T", f), "cline.", "")
+		fmt.Printf("error: flag `--%s` value used as `FlagBoolValue` but declared as `%s`.\n", longFlagName, t)
+		os.Exit(1)
+	}
+	return nil
 }
 
-// Int gets current flag value as `int`.
-// `flagName` specifies the long flag name.
-func (fm *FlagMapping) Int(flagName string) (int, error) {
-	return fm.findByKey(flagName).Int()
+// Int finds a `int` flag value. It's type should match with its flag definition type.
+func (v *FlagValues) Int(longFlagName string) *FlagIntValue {
+	switch f := v.findByKey(longFlagName).(type) {
+	case FlagInt:
+		return &FlagIntValue{flag: f}
+	default:
+		t := strings.ReplaceAll(fmt.Sprintf("%T", f), "cline.", "")
+		fmt.Printf("error: flag `--%s` value used as `FlagIntValue` but declared as `%s`.\n", longFlagName, t)
+		os.Exit(1)
+	}
+	return nil
 }
 
-// String gets current flag value as `string`.
-// `flagName` specifies the long flag name.
-func (fm *FlagMapping) String(flagName string) string {
-	return fm.findByKey(flagName).String()
+// String finds a `string` flag value. It's type should match with its flag definition type.
+func (v *FlagValues) String(longFlagName string) *FlagStringValue {
+	switch f := v.findByKey(longFlagName).(type) {
+	case FlagString:
+		return &FlagStringValue{flag: f}
+	default:
+		t := strings.ReplaceAll(fmt.Sprintf("%T", f), "cline.", "")
+		fmt.Printf("error: flag `--%s` value used as `FlagStringValue` but declared as `%s`.\n", longFlagName, t)
+		os.Exit(1)
+	}
+	return nil
 }
 
-// StringSlice gets current flag value as a string slice.
-// `flagName` specifies the long flag name.
-func (fm *FlagMapping) StringSlice(flagName string) []string {
-	return fm.findByKey(flagName).StringSlice()
+// StringSlice finds a string slice. It's type should match with its flag definition type.
+func (v *FlagValues) StringSlice(longFlagName string) *FlagStringSliceValue {
+	switch f := v.findByKey(longFlagName).(type) {
+	case FlagStringSlice:
+		return &FlagStringSliceValue{flag: f}
+	default:
+		t := strings.ReplaceAll(fmt.Sprintf("%T", f), "cline.", "")
+		fmt.Printf("error: flag `--%s` value used as `FlagStringSliceValue` but declared as `%s`.\n", longFlagName, t)
+		os.Exit(1)
+	}
+	return nil
 }

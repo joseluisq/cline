@@ -70,19 +70,16 @@ func main() {
 			},
 			Handler: func(ctx *cli.CmdContext) error {
 				fmt.Printf("Cmd `%s` executed!\n", ctx.Cmd.Name)
-				fmt.Printf("App provided flags: %v\n", ctx.AppContext.Flags.GetProvidedFlags())
-				fmt.Printf("Cmd provided flags: %v\n", ctx.Flags.GetProvidedFlags())
+				fmt.Printf("App Flag `file`: `%s`\n", ctx.AppContext.Flags.StringSlice("file").Value())
 
-				fmt.Printf("App Flag `file`: `%s`\n", ctx.AppContext.Flags.StringSlice("file"))
-
-				i, err := ctx.Flags.Int("trace")
+				i, err := ctx.Flags.Int("trace").Value()
 				if err != nil {
 					fmt.Println(err)
 					os.Exit(1)
 				}
 				fmt.Printf("Cmd Flag `trace`: `%d` (%T)\n", i, i)
 
-				d := ctx.Flags.String("detailed")
+				d := ctx.Flags.String("detailed").Value()
 				fmt.Printf("Cmd Flag `detailed`: `%s` (%T)\n", d, d)
 				fmt.Printf("Cmd Tail arguments: %#v\n", ctx.TailArgs)
 				return nil
@@ -91,10 +88,9 @@ func main() {
 	}
 	app.Handler = func(ctx *cli.AppContext) error {
 		fmt.Printf("App `%s` executed!\n", ctx.App.Name)
-		fmt.Printf("App provided flags: %v\n", ctx.Flags.GetProvidedFlags())
-		fmt.Printf("App Flag `file`: `%s`\n", ctx.Flags.String("file"))
-		fmt.Printf("App Flag `int`: `%v`\n", ctx.Flags.String("int"))
-		b, _ := ctx.Flags.Bool("verbose")
+		fmt.Printf("App Flag `file`: `%s`\n", ctx.Flags.String("file").Value())
+		fmt.Printf("App Flag `int`: `%v`\n", ctx.Flags.Any("int"))
+		b, _ := ctx.Flags.Bool("verbose").Value()
 		fmt.Printf("App Flag `verbose`: `%v`\n", b)
 		fmt.Printf("App Tail arguments: %#v\n", ctx.TailArgs)
 		return nil

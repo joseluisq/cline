@@ -7,13 +7,13 @@ import (
 
 func TestFlagInt_initialize(t *testing.T) {
 	type fields struct {
-		Name          string
-		Summary       string
-		Value         int
-		Aliases       []string
-		EnvVar        string
-		zflag         FlagValue
-		zflagAssigned bool
+		Name         string
+		Summary      string
+		Value        int
+		Aliases      []string
+		EnvVar       string
+		flagValue    AnyValue
+		flagAssigned bool
 	}
 	// env variables for test purposes
 	os.Setenv("ENV_INT_VAR_OK", "1")
@@ -55,13 +55,13 @@ func TestFlagInt_initialize(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			fi := &FlagInt{
-				Name:          tt.fields.Name,
-				Summary:       tt.fields.Summary,
-				Value:         tt.fields.Value,
-				Aliases:       tt.fields.Aliases,
-				EnvVar:        tt.fields.EnvVar,
-				zflag:         tt.fields.zflag,
-				zflagAssigned: tt.fields.zflagAssigned,
+				Name:         tt.fields.Name,
+				Summary:      tt.fields.Summary,
+				Value:        tt.fields.Value,
+				Aliases:      tt.fields.Aliases,
+				EnvVar:       tt.fields.EnvVar,
+				flagValue:    tt.fields.flagValue,
+				flagAssigned: tt.fields.flagAssigned,
 			}
 			fi.initialize()
 		})
@@ -70,13 +70,13 @@ func TestFlagInt_initialize(t *testing.T) {
 
 func TestFlagBool_initialize(t *testing.T) {
 	type fields struct {
-		Name          string
-		Summary       string
-		Value         bool
-		Aliases       []string
-		EnvVar        string
-		zflag         FlagValue
-		zflagAssigned bool
+		Name         string
+		Summary      string
+		Value        bool
+		Aliases      []string
+		EnvVar       string
+		flagValue    AnyValue
+		flagAssigned bool
 	}
 	// env variables for test purposes
 	os.Setenv("ENV_BOOL_VAR_OK", "true")
@@ -118,13 +118,13 @@ func TestFlagBool_initialize(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			fb := &FlagBool{
-				Name:          tt.fields.Name,
-				Summary:       tt.fields.Summary,
-				Value:         tt.fields.Value,
-				Aliases:       tt.fields.Aliases,
-				EnvVar:        tt.fields.EnvVar,
-				zflag:         tt.fields.zflag,
-				zflagAssigned: tt.fields.zflagAssigned,
+				Name:         tt.fields.Name,
+				Summary:      tt.fields.Summary,
+				Value:        tt.fields.Value,
+				Aliases:      tt.fields.Aliases,
+				EnvVar:       tt.fields.EnvVar,
+				flagValue:    tt.fields.flagValue,
+				flagAssigned: tt.fields.flagAssigned,
 			}
 			fb.initialize()
 		})
@@ -133,13 +133,13 @@ func TestFlagBool_initialize(t *testing.T) {
 
 func TestFlagString_initialize(t *testing.T) {
 	type fields struct {
-		Name          string
-		Summary       string
-		Value         string
-		Aliases       []string
-		EnvVar        string
-		zflag         FlagValue
-		zflagAssigned bool
+		Name         string
+		Summary      string
+		Value        string
+		Aliases      []string
+		EnvVar       string
+		flagValue    AnyValue
+		flagAssigned bool
 	}
 	// env variables for test purposes
 	os.Setenv("ENV_STRING_VAR_OK", "str")
@@ -171,13 +171,13 @@ func TestFlagString_initialize(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			fs := &FlagString{
-				Name:          tt.fields.Name,
-				Summary:       tt.fields.Summary,
-				Value:         tt.fields.Value,
-				Aliases:       tt.fields.Aliases,
-				EnvVar:        tt.fields.EnvVar,
-				zflag:         tt.fields.zflag,
-				zflagAssigned: tt.fields.zflagAssigned,
+				Name:         tt.fields.Name,
+				Summary:      tt.fields.Summary,
+				Value:        tt.fields.Value,
+				Aliases:      tt.fields.Aliases,
+				EnvVar:       tt.fields.EnvVar,
+				flagValue:    tt.fields.flagValue,
+				flagAssigned: tt.fields.flagAssigned,
 			}
 			fs.initialize()
 		})
@@ -186,13 +186,13 @@ func TestFlagString_initialize(t *testing.T) {
 
 func TestFlagStringSlice_initialize(t *testing.T) {
 	type fields struct {
-		Name          string
-		Summary       string
-		Value         []string
-		Aliases       []string
-		EnvVar        string
-		zflag         FlagValue
-		zflagAssigned bool
+		Name         string
+		Summary      string
+		Value        []string
+		Aliases      []string
+		EnvVar       string
+		flagValue    AnyValue
+		flagAssigned bool
 	}
 	// env variables for test purposes
 	os.Setenv("ENV_STRING_SLICE_VAR_OK", "A,b,C,d,E")
@@ -224,13 +224,13 @@ func TestFlagStringSlice_initialize(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			fs := &FlagStringSlice{
-				Name:          tt.fields.Name,
-				Summary:       tt.fields.Summary,
-				Value:         tt.fields.Value,
-				Aliases:       tt.fields.Aliases,
-				EnvVar:        tt.fields.EnvVar,
-				zflag:         tt.fields.zflag,
-				zflagAssigned: tt.fields.zflagAssigned,
+				Name:         tt.fields.Name,
+				Summary:      tt.fields.Summary,
+				Value:        tt.fields.Value,
+				Aliases:      tt.fields.Aliases,
+				EnvVar:       tt.fields.EnvVar,
+				flagValue:    tt.fields.flagValue,
+				flagAssigned: tt.fields.flagAssigned,
 			}
 			fs.initialize()
 		})

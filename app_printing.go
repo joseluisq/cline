@@ -60,16 +60,16 @@ func printHelp(app *App, cmd *Cmd) error {
 		switch f := fl.(type) {
 		case FlagBool:
 			fname = f.Name
-			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.zflag.String(), envVar: f.EnvVar}
+			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.flagValue.ToString(), envVar: f.EnvVar}
 		case FlagInt:
 			fname = f.Name
-			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.zflag.String(), envVar: f.EnvVar}
+			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.flagValue.ToString(), envVar: f.EnvVar}
 		case FlagString:
 			fname = f.Name
-			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.zflag.String(), envVar: f.EnvVar}
+			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.flagValue.ToString(), envVar: f.EnvVar}
 		case FlagStringSlice:
 			fname = f.Name
-			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.zflag.String(), envVar: f.EnvVar}
+			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.flagValue.ToString(), envVar: f.EnvVar}
 		}
 		if len([]rune(fname)) > fLen {
 			fLen = len([]rune(fname))

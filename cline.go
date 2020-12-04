@@ -23,7 +23,7 @@ type CmdContext struct {
 	// Cmd references to current application command.
 	Cmd *Cmd
 	// Flags references to flag input values of current command.
-	Flags *FlagMapping
+	Flags *FlagValues
 	// TailArgs contains current tail input arguments.
 	TailArgs []string
 	// AppContext references to current application context.
@@ -49,7 +49,7 @@ type AppContext struct {
 	// App references to current application instance.
 	App *App
 	// Flags references to flag input values of current application (global flags).
-	Flags *FlagMapping
+	Flags *FlagValues
 	// TailArgs contains current tail input arguments.
 	TailArgs []string
 }
@@ -89,8 +89,6 @@ func (app *App) Run(vArgs []string) error {
 	var hasHelp = false
 	var hasVersion = false
 	var vArgsLen = len(vArgs)
-	var appProvidedFlags []FlagProvided
-	var cmdProvidedFlags []FlagProvided
 
 	for argIndex := 1; argIndex < vArgsLen; argIndex++ {
 		arg := strings.TrimSpace(vArgs[argIndex])
@@ -142,29 +140,21 @@ func (app *App) Run(vArgs []string) error {
 			// Check provided incoming flags
 			switch v := lastFlag.(type) {
 			case FlagBool:
-				if hasCmd {
-					cmdProvidedFlags = append(cmdProvidedFlags, FlagProvided{Name: v.Name, IsAlias: isAlias})
-				} else {
-					appProvidedFlags = append(appProvidedFlags, FlagProvided{Name: v.Name, IsAlias: isAlias})
-				}
+				v.flagProvided = true
+				v.flagProvidedAsAlias = isAlias
+				lastFlag = v
 			case FlagInt:
-				if hasCmd {
-					cmdProvidedFlags = append(cmdProvidedFlags, FlagProvided{Name: v.Name, IsAlias: isAlias})
-				} else {
-					appProvidedFlags = append(appProvidedFlags, FlagProvided{Name: v.Name, IsAlias: isAlias})
-				}
+				v.flagProvided = true
+				v.flagProvidedAsAlias = isAlias
+				lastFlag = v
 			case FlagString:
-				if hasCmd {
-					cmdProvidedFlags = append(cmdProvidedFlags, FlagProvided{Name: v.Name, IsAlias: isAlias})
-				} else {
-					appProvidedFlags = append(appProvidedFlags, FlagProvided{Name: v.Name, IsAlias: isAlias})
-				}
+				v.flagProvided = true
+				v.flagProvidedAsAlias = isAlias
+				lastFlag = v
 			case FlagStringSlice:
-				if hasCmd {
-					cmdProvidedFlags = append(cmdProvidedFlags, FlagProvided{Name: v.Name, IsAlias: isAlias})
-				} else {
-					appProvidedFlags = append(appProvidedFlags, FlagProvided{Name: v.Name, IsAlias: isAlias})
-				}
+				v.flagProvided = true
+				v.flagProvidedAsAlias = isAlias
+				lastFlag = v
 			}
 
 			// Handle bool flags and values
@@ -172,14 +162,14 @@ func (app *App) Run(vArgs []string) error {
 				switch fl := lastFlag.(type) {
 				case FlagBool:
 					if fl.Name != "" {
-						if fl.zflagAssigned {
+						if fl.flagAssigned {
 							tailArgs = append(tailArgs, arg)
 							continue
 						}
 
 						// If bool flag is defined is assumed as `true`
-						fl.zflag = FlagValue("1")
-						fl.zflagAssigned = true
+						fl.flagValue = AnyValue("1")
+						fl.flagAssigned = true
 						lastFlag = fl
 
 						if hasCmd {
@@ -225,24 +215,24 @@ func (app *App) Run(vArgs []string) error {
 		switch fl := lastFlag.(type) {
 		case FlagBool:
 			if fl.Name != "" {
-				if fl.zflagAssigned {
+				if fl.flagAssigned {
 					tailArgs = append(tailArgs, arg)
 					continue
 				}
 
-				s := FlagValue(arg)
-				_, err := s.Bool()
+				s := AnyValue(arg)
+				_, err := s.ToBool()
 				if err != nil {
 					tailArgs = append(tailArgs, arg)
 				}
 
 				// If bool flag is defined is assumed as `true`
 				if err != nil {
-					s = FlagValue("1")
+					s = AnyValue("1")
 				}
 
-				fl.zflag = s
-				fl.zflagAssigned = true
+				fl.flagValue = s
+				fl.flagAssigned = true
 				lastFlag = fl
 
 				if hasCmd {
@@ -259,14 +249,14 @@ func (app *App) Run(vArgs []string) error {
 			}
 		case FlagInt:
 			if fl.Name != "" {
-				if fl.zflagAssigned {
+				if fl.flagAssigned {
 					tailArgs = append(tailArgs, arg)
 					continue
 				}
-				s := FlagValue(arg)
-				if _, err := s.Int(); err == nil {
-					fl.zflag = s
-					fl.zflagAssigned = true
+				s := AnyValue(arg)
+				if _, err := s.ToInt(); err == nil {
+					fl.flagValue = s
+					fl.flagAssigned = true
 					lastFlag = fl
 
 					if hasCmd {
@@ -285,12 +275,12 @@ func (app *App) Run(vArgs []string) error {
 			}
 		case FlagString:
 			if fl.Name != "" {
-				if fl.zflagAssigned {
+				if fl.flagAssigned {
 					tailArgs = append(tailArgs, arg)
 					continue
 				}
-				fl.zflag = FlagValue(arg)
-				fl.zflagAssigned = true
+				fl.flagValue = AnyValue(arg)
+				fl.flagAssigned = true
 				lastFlag = fl
 
 				if hasCmd {
@@ -306,12 +296,12 @@ func (app *App) Run(vArgs []string) error {
 			}
 		case FlagStringSlice:
 			if fl.Name != "" {
-				if fl.zflagAssigned {
+				if fl.flagAssigned {
 					tailArgs = append(tailArgs, arg)
 					continue
 				}
-				fl.zflag = FlagValue(arg)
-				fl.zflagAssigned = true
+				fl.flagValue = AnyValue(arg)
+				fl.flagAssigned = true
 				lastFlag = fl
 
 				if hasCmd {
@@ -346,16 +336,14 @@ func (app *App) Run(vArgs []string) error {
 	if hasCmd && lastCmd.Handler != nil {
 		return lastCmd.Handler(&CmdContext{
 			Cmd: &lastCmd,
-			Flags: &FlagMapping{
-				zFlags:         lastCmd.Flags,
-				zFlagsProvided: cmdProvidedFlags,
+			Flags: &FlagValues{
+				flags: lastCmd.Flags,
 			},
 			TailArgs: tailArgs,
 			AppContext: &AppContext{
 				App: app,
-				Flags: &FlagMapping{
-					zFlags:         app.Flags,
-					zFlagsProvided: appProvidedFlags,
+				Flags: &FlagValues{
+					flags: app.Flags,
 				},
 			},
 		})
@@ -365,9 +353,8 @@ func (app *App) Run(vArgs []string) error {
 	if app.Handler != nil {
 		return app.Handler(&AppContext{
 			App: app,
-			Flags: &FlagMapping{
-				zFlags:         app.Flags,
-				zFlagsProvided: appProvidedFlags,
+			Flags: &FlagValues{
+				flags: app.Flags,
 			},
 			TailArgs: tailArgs,
 		})
