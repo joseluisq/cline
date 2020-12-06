@@ -97,6 +97,7 @@ func main() {
 		fmt.Printf("App Flag `verbose`: `%v`\n", b)
 		fmt.Printf("App Tail arguments: %#v\n", ctx.TailArgs)
 		fmt.Printf("App Provided flags: %v\n", ctx.Flags.GetProvided())
+		fmt.Printf("App Provided flags (long): %v\n", ctx.Flags.GetProvidedLong())
 		return nil
 	}
 	if err := app.Run(os.Args); err != nil {

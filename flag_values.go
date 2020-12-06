@@ -210,6 +210,32 @@ func (v *FlagValues) GetProvided() []Flag {
 	return flags
 }
 
+// GetProvidedLong returns all flags that were provided from stdin but using long names only.
+func (v *FlagValues) GetProvidedLong() []Flag {
+	var flags []Flag
+	for _, e := range v.flags {
+		switch f := e.(type) {
+		case FlagBool:
+			if f.flagProvided && !f.flagProvidedAsAlias {
+				flags = append(flags, f)
+			}
+		case FlagInt:
+			if f.flagProvided && !f.flagProvidedAsAlias {
+				flags = append(flags, f)
+			}
+		case FlagString:
+			if f.flagProvided && !f.flagProvidedAsAlias {
+				flags = append(flags, f)
+			}
+		case FlagStringSlice:
+			if f.flagProvided && !f.flagProvidedAsAlias {
+				flags = append(flags, f)
+			}
+		}
+	}
+	return flags
+}
+
 // Any finds a flag value but ignoring its type. The result value is convertible to other supported types.
 // Since `AnyValue` is just a `string` alias type, it can be converted easily with `string(AnyValue)`.
 func (v *FlagValues) Any(longFlagName string) AnyValue {
