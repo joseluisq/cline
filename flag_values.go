@@ -184,25 +184,69 @@ func (v *FlagValues) findByKey(longFlagName string) Flag {
 	return nil
 }
 
-// GetProvided returns all flags that were provided from stdin only.
-func (v *FlagValues) GetProvided() []Flag {
+// getProvidedFlags returns provided flags by specified filters.
+func (v *FlagValues) getProvidedFlags(providedOnly bool, aliasOnly bool) []Flag {
 	var flags []Flag
 	for _, e := range v.flags {
 		switch f := e.(type) {
 		case FlagBool:
-			if f.flagProvided {
+			if !f.flagProvided {
+				continue
+			}
+			if providedOnly {
+				flags = append(flags, f)
+				continue
+			}
+			if aliasOnly && f.flagProvidedAsAlias {
+				flags = append(flags, f)
+				continue
+			}
+			if !aliasOnly && !f.flagProvidedAsAlias {
 				flags = append(flags, f)
 			}
 		case FlagInt:
-			if f.flagProvided {
+			if !f.flagProvided {
+				continue
+			}
+			if providedOnly {
+				flags = append(flags, f)
+				continue
+			}
+			if aliasOnly && f.flagProvidedAsAlias {
+				flags = append(flags, f)
+				continue
+			}
+			if !aliasOnly && !f.flagProvidedAsAlias {
 				flags = append(flags, f)
 			}
 		case FlagString:
-			if f.flagProvided {
+			if !f.flagProvided {
+				continue
+			}
+			if providedOnly {
+				flags = append(flags, f)
+				continue
+			}
+			if aliasOnly && f.flagProvidedAsAlias {
+				flags = append(flags, f)
+				continue
+			}
+			if !aliasOnly && !f.flagProvidedAsAlias {
 				flags = append(flags, f)
 			}
 		case FlagStringSlice:
-			if f.flagProvided {
+			if !f.flagProvided {
+				continue
+			}
+			if providedOnly {
+				flags = append(flags, f)
+				continue
+			}
+			if aliasOnly && f.flagProvidedAsAlias {
+				flags = append(flags, f)
+				continue
+			}
+			if !aliasOnly && !f.flagProvidedAsAlias {
 				flags = append(flags, f)
 			}
 		}
@@ -210,30 +254,19 @@ func (v *FlagValues) GetProvided() []Flag {
 	return flags
 }
 
+// GetProvided returns all flags that were provided from stdin only.
+func (v *FlagValues) GetProvided() []Flag {
+	return v.getProvidedFlags(true, false)
+}
+
 // GetProvidedLong returns all flags that were provided from stdin but using long names only.
 func (v *FlagValues) GetProvidedLong() []Flag {
-	var flags []Flag
-	for _, e := range v.flags {
-		switch f := e.(type) {
-		case FlagBool:
-			if f.flagProvided && !f.flagProvidedAsAlias {
-				flags = append(flags, f)
-			}
-		case FlagInt:
-			if f.flagProvided && !f.flagProvidedAsAlias {
-				flags = append(flags, f)
-			}
-		case FlagString:
-			if f.flagProvided && !f.flagProvidedAsAlias {
-				flags = append(flags, f)
-			}
-		case FlagStringSlice:
-			if f.flagProvided && !f.flagProvidedAsAlias {
-				flags = append(flags, f)
-			}
-		}
-	}
-	return flags
+	return v.getProvidedFlags(false, false)
+}
+
+// GetProvidedShort returns all flags that were provided from stdin but using short names (alias) only.
+func (v *FlagValues) GetProvidedShort() []Flag {
+	return v.getProvidedFlags(false, true)
 }
 
 // Any finds a flag value but ignoring its type. The result value is convertible to other supported types.

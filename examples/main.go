@@ -98,6 +98,7 @@ func main() {
 		fmt.Printf("App Tail arguments: %#v\n", ctx.TailArgs)
 		fmt.Printf("App Provided flags: %v\n", ctx.Flags.GetProvided())
 		fmt.Printf("App Provided flags (long): %v\n", ctx.Flags.GetProvidedLong())
+		fmt.Printf("App Provided flags (short): %v\n", ctx.Flags.GetProvidedShort())
 		return nil
 	}
 	if err := app.Run(os.Args); err != nil {
