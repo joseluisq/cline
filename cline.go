@@ -157,33 +157,34 @@ func (app *App) Run(vArgs []string) error {
 				lastFlag = v
 			}
 
-			// Handle bool flags and values
-			if argIndex == vArgsLen-1 {
-				switch fl := lastFlag.(type) {
-				case FlagBool:
-					if fl.Name != "" {
-						if fl.flagAssigned {
-							tailArgs = append(tailArgs, arg)
-							continue
-						}
-
-						// If bool flag is defined is assumed as `true`
-						fl.flagValue = AnyValue("1")
-						fl.flagAssigned = true
-						lastFlag = fl
-
-						if hasCmd {
-							if len(lastCmd.Flags) > 0 && lastFlagIndex > -1 {
-								lastCmd.Flags[lastFlagIndex] = fl
-							}
-						} else {
-							if len(app.Flags) > 0 && lastFlagIndex > -1 {
-								app.Flags[lastFlagIndex] = fl
-							}
-						}
-
+			// Check for bool flags and values early
+			switch fl := lastFlag.(type) {
+			case FlagBool:
+				if fl.Name != "" {
+					if fl.flagAssigned {
+						tailArgs = append(tailArgs, arg)
 						continue
 					}
+
+					// If bool flag is defined is assumed as `true`
+					fl.flagValue = AnyValue("1")
+					// Check if we are at the last arg's item
+					if argIndex == vArgsLen-1 {
+						fl.flagAssigned = true
+					}
+					lastFlag = fl
+
+					if hasCmd {
+						if len(lastCmd.Flags) > 0 && lastFlagIndex > -1 {
+							lastCmd.Flags[lastFlagIndex] = fl
+						}
+					} else {
+						if len(app.Flags) > 0 && lastFlagIndex > -1 {
+							app.Flags[lastFlagIndex] = fl
+						}
+					}
+
+					continue
 				}
 			}
 

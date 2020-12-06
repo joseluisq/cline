@@ -36,6 +36,7 @@ func main() {
 		cli.FlagBool{
 			Name:    "verbose",
 			Summary: "Enable more verbose info",
+			Value:   true,
 			Aliases: []string{"V"},
 			EnvVar:  "ENV_VERBOSE",
 		},
@@ -70,7 +71,9 @@ func main() {
 			},
 			Handler: func(ctx *cli.CmdContext) error {
 				fmt.Printf("Cmd `%s` executed!\n", ctx.Cmd.Name)
-				fmt.Printf("App Flag `file`: `%s`\n", ctx.AppContext.Flags.StringSlice("file").Value())
+				fmt.Printf("App Flag `file`: `%s`\n", ctx.AppContext.Flags.String("file").Value())
+				b, _ := ctx.AppContext.Flags.Bool("verbose").Value()
+				fmt.Printf("App Flag `verbose`: `%v`\n", b)
 
 				i, err := ctx.Flags.Int("trace").Value()
 				if err != nil {
@@ -79,8 +82,8 @@ func main() {
 				}
 				fmt.Printf("Cmd Flag `trace`: `%d` (%T)\n", i, i)
 
-				d := ctx.Flags.String("detailed").Value()
-				fmt.Printf("Cmd Flag `detailed`: `%s` (%T)\n", d, d)
+				d, _ := ctx.Flags.Bool("detailed").Value()
+				fmt.Printf("Cmd Flag `detailed`: `%v` (%T)\n", d, d)
 				fmt.Printf("Cmd Tail arguments: %#v\n", ctx.TailArgs)
 				return nil
 			},
