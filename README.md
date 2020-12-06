@@ -79,17 +79,17 @@ func main() {
 			},
 			Handler: func(ctx *cli.CmdContext) error {
 				fmt.Printf("Cmd `%s` executed!\n", ctx.Cmd.Name)
-				fmt.Printf("App Flag `file` opted: `%s`\n", ctx.AppContext.Flags.StringSlice("file"))
+				fmt.Printf("App Flag `file` opted: `%s`\n", ctx.AppContext.Flags.Any("file"))
 
-				i, err := ctx.Flags.Int("trace")
+				i, err := ctx.Flags.Int("trace").Value()
 				if err != nil {
 					fmt.Println(err)
 					os.Exit(1)
 				}
 				fmt.Printf("Cmd Flag `trace` opted: `%d` (%T)\n", i, i)
 
-				d := ctx.Flags.String("detailed")
-				fmt.Printf("Cmd Flag `detailed` opted: `%s` (%T)\n", d, d)
+				d, _ := ctx.Flags.Bool("detailed").Value()
+				fmt.Printf("Cmd Flag `detailed` opted: `%v` (%T)\n", d, d)
 				fmt.Printf("Cmd Tail arguments: %#v\n", ctx.TailArgs)
 				return nil
 			},
@@ -98,9 +98,9 @@ func main() {
 	app.Handler = func(ctx *cli.AppContext) error {
 		fmt.Printf("App `%s` executed!\n", ctx.App.Name)
 		fmt.Printf("App Tail arguments: %#v\n", ctx.TailArgs)
-		fmt.Printf("App Flag `file` opted: `%s`\n", ctx.Flags.StringSlice("file"))
+		fmt.Printf("App Flag `file` opted: `%v`\n", ctx.Flags.StringSlice("file"))
 
-		b, _ := ctx.Flags.Bool("verbose")
+		b, _ := ctx.Flags.Bool("verbose").Value()
 
 		fmt.Printf("App Flag `verbose` opted: `%v`\n", b)
 		return nil
@@ -117,18 +117,18 @@ Output example:
 ```sh
 $ go run examples/main.go -h
 # NAME: enve [OPTIONS] COMMAND
-#
+
 # Run a program in a modified environment using .env files
-#
+
 # OPTIONS:
-#   --file       Load environment variables from a file path
-#   --verbose    Enable more verbose info
-#   --version    Prints version information
-#   --help       Prints help information
-#
+#   -f --file       Load environment variables from a file path [default: .env]
+#   -V --verbose    Enable more verbose info [default: false] [env: ENV_VERBOSE]
+#   -h --help       Prints help information
+#   -v --version    Prints version information
+
 # COMMANDS:
 #   info    Show command information
-#
+
 # Run 'enve COMMAND --help' for more information on a command
 
 $ go run examples/main.go -v

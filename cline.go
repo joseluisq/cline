@@ -1,5 +1,4 @@
 // Package cline is a fast and lightweight CLI package for Go.
-//
 package cline
 
 import (
