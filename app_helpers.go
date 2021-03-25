@@ -5,119 +5,119 @@ import (
 	"strings"
 )
 
-// validateCommands checks if a command is valid and initialize it
-func validateCommands(commands []Cmd) ([]Cmd, error) {
-	var cmds []Cmd
+// It checks if a list of commands and initialize them if they are valid.
+func validateCommands(commands []Cmd) (cmds []Cmd, err error) {
 	for _, c := range commands {
 		name := strings.TrimSpace(c.Name)
 		if name == "" {
-			return nil, fmt.Errorf("command name has empty value")
+			err = fmt.Errorf("one command name has empty value")
+			return
 		}
-		vflags, err := validateFlagsAndInit(c.Flags)
-		if err != nil {
-			return nil, err
+		flags, errf := validateFlagsAndInit(c.Flags)
+		if errf != nil {
+			err = errf
+			return
 		}
-		c.Flags = vflags
+		c.Flags = flags
 		cmds = append(cmds, c)
 	}
-	return cmds, nil
+	return
 }
 
-// validateFlagsAndInit validates flags and initialize them
-func validateFlagsAndInit(flags []Flag) ([]Flag, error) {
-	var vFlags []Flag
+// It checks a list of flags and initialize them if they are valid.
+func validateFlagsAndInit(flags []Flag) (vflags []Flag, err error) {
 	for _, v := range flags {
 		switch f := v.(type) {
 		case FlagBool:
-			name := strings.ToLower(strings.TrimSpace(f.Name))
-			if name == "" {
-				return nil, fmt.Errorf("flag name has empty value")
+			if name := strings.ToLower(strings.TrimSpace(f.Name)); name == "" {
+				err = fmt.Errorf("bool flag name has an empty value")
+				return
 			}
 			f.initialize()
-			vFlags = append(vFlags, f)
+			vflags = append(vflags, f)
+
 		case FlagInt:
-			name := strings.ToLower(strings.TrimSpace(f.Name))
-			if name == "" {
-				return nil, fmt.Errorf("flag name has empty value")
+			if name := strings.ToLower(strings.TrimSpace(f.Name)); name == "" {
+				err = fmt.Errorf("int flag name has an empty value")
+				return
 			}
 			f.initialize()
-			vFlags = append(vFlags, f)
+			vflags = append(vflags, f)
+
 		case FlagString:
-			name := strings.ToLower(strings.TrimSpace(f.Name))
-			if name == "" {
-				return nil, fmt.Errorf("flag name has empty value")
+			if name := strings.ToLower(strings.TrimSpace(f.Name)); name == "" {
+				err = fmt.Errorf("string flag name has an empty value")
+				return
 			}
 			f.initialize()
-			vFlags = append(vFlags, f)
+			vflags = append(vflags, f)
+
 		case FlagStringSlice:
-			name := strings.ToLower(strings.TrimSpace(f.Name))
-			if name == "" {
-				return nil, fmt.Errorf("flag name has empty value")
+			if name := strings.ToLower(strings.TrimSpace(f.Name)); name == "" {
+				err = fmt.Errorf("string slice flag name has an empty value")
+				return
 			}
 			f.initialize()
-			vFlags = append(vFlags, f)
+			vflags = append(vflags, f)
+
 		default:
-			return nil, fmt.Errorf("flag has invalid data type value. Use bool, int, string, []string or nil")
+			err = fmt.Errorf("one flag has invalid data type value. Use a bool, int, string, []string or nil value")
+			return
 		}
 	}
-	return vFlags, nil
+	return
 }
 
-// findFlagByKey finds a flag item with its index in a flag's array by key.
-// It also checks if was a short flag or not.
+// It finds a flag item with its index in a given flags array by key
+// then checks if every flag is a short flag or not.
 func findFlagByKey(key string, flags []Flag) (int, Flag, bool) {
-	var short bool = false
 	for i, v := range flags {
 		switch f := v.(type) {
 		case FlagBool:
 			// Check for long named flags
-			if key == f.Name {
-				return i, f, short
+			if f.Name == key {
+				return i, f, false
 			}
 			// Check for short named flags
 			for _, s := range f.Aliases {
-				if key == s {
-					short = true
-					return i, f, short
+				if s == key {
+					return i, f, true
 				}
 			}
 		case FlagInt:
 			// Check for long named flags
-			if key == f.Name {
-				return i, f, short
+			if f.Name == key {
+				return i, f, false
 			}
 			// Check for short named flags
 			for _, s := range f.Aliases {
-				if key == s {
-					short = true
-					return i, f, short
+				if s == key {
+					return i, f, true
 				}
 			}
 		case FlagString:
 			// Check for long named flags
-			if key == f.Name {
-				return i, f, short
+			if f.Name == key {
+				return i, f, false
 			}
 			// Check for short named flags
 			for _, s := range f.Aliases {
-				if key == s {
-					short = true
-					return i, f, short
+				if s == key {
+					return i, f, true
 				}
 			}
 		case FlagStringSlice:
 			// Check for long named flags
-			if key == f.Name {
-				return i, f, short
+			if f.Name == key {
+				return i, f, false
 			}
 			// Check for short named flags
 			for _, s := range f.Aliases {
-				if key == s {
-					short = true
-					return i, f, short
+				if s == key {
+					return i, f, true
 				}
 			}
 		}
 	}
-	return -1, nil, short
+	return -1, nil, false
 }

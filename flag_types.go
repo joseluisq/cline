@@ -6,20 +6,30 @@ import (
 	"syscall"
 )
 
-// FlagInt defines a flag with `Int` type.
+// FlagInt defines an `Int` type flag.
 type FlagInt struct {
-	Name                string
-	Summary             string
-	Value               int
-	Aliases             []string
-	EnvVar              string
+	// Name of the flag containing alphanumeric characters and dashes
+	// but without leading dashes, spaces or any kind of special chars.
+	Name string
+	// An optional summary for the flag.
+	Summary string
+	// An optional default value for the flag.
+	Value int
+	// An optional list of flag aliases containing single alphanumeric characters
+	// but without dashes, spaces or any special chars.
+	Aliases []string
+	// An optional environment variable containing uppercase alphanumeric characters
+	// and underscores but without dashes, spaces or any kind of special chars.
+	EnvVar string
+
 	flagValue           AnyValue
 	flagAssigned        bool
 	flagProvided        bool
 	flagProvidedAsAlias bool
 }
 
-// initialize sets a default flag value via associated `Value` prop or an environment variable (`EnvVar`).
+// It sets a default flag value via its associated `Value` prop
+// or its environment variable (`EnvVar`) if so.
 func (fi *FlagInt) initialize() {
 	val := AnyValue(strconv.Itoa(fi.Value))
 	ev, ok := syscall.Getenv(fi.EnvVar)
@@ -32,20 +42,30 @@ func (fi *FlagInt) initialize() {
 	fi.flagValue = val
 }
 
-// FlagBool defines a flag with `bool` type.
+// FlagBool defines a `bool` type flag.
 type FlagBool struct {
-	Name                string
-	Summary             string
-	Value               bool
-	Aliases             []string
-	EnvVar              string
+	// Name of the flag containing alphanumeric characters and dashes
+	// but without leading dashes, spaces or any kind of special chars.
+	Name string
+	// An optional summary for the flag.
+	Summary string
+	// An optional default value for the flag.
+	Value bool
+	// An optional list of flag aliases containing single alphanumeric characters
+	// but without dashes, spaces or any special chars.
+	Aliases []string
+	// An optional environment variable containing uppercase alphanumeric characters
+	// and underscores but without dashes, spaces or any kind of special chars.
+	EnvVar string
+
 	flagValue           AnyValue
 	flagAssigned        bool
 	flagProvided        bool
 	flagProvidedAsAlias bool
 }
 
-// initialize sets a default flag value via associated `Value` prop or an environment variable (`EnvVar`).
+// It sets a default flag value via its associated `Value` prop
+// or its environment variable (`EnvVar`) if so.
 func (fb *FlagBool) initialize() {
 	val := AnyValue(strconv.FormatBool(fb.Value))
 	ev, ok := syscall.Getenv(fb.EnvVar)
@@ -57,20 +77,30 @@ func (fb *FlagBool) initialize() {
 	fb.flagValue = val
 }
 
-// FlagString defines a flag with `String` type.
+// FlagString defines a `String` type flag.
 type FlagString struct {
-	Name                string
-	Summary             string
-	Value               string
-	Aliases             []string
-	EnvVar              string
+	// Name of the flag containing alphanumeric characters and dashes
+	// but without leading dashes, spaces or any kind of special chars.
+	Name string
+	// An optional summary for the flag.
+	Summary string
+	// An optional default value for the flag.
+	Value string
+	// An optional list of flag aliases containing single alphanumeric characters
+	// but without dashes, spaces or any special chars.
+	Aliases []string
+	// An optional environment variable containing uppercase alphanumeric characters
+	// and underscores but without dashes, spaces or any kind of special chars.
+	EnvVar string
+
 	flagValue           AnyValue
 	flagAssigned        bool
 	flagProvided        bool
 	flagProvidedAsAlias bool
 }
 
-// initialize sets a default flag value via associated `Value` prop or an environment variable (`EnvVar`).
+// It sets a default flag value via its associated `Value` prop
+// or its environment variable (`EnvVar`) if so.
 func (fs *FlagString) initialize() {
 	val := AnyValue(fs.Value)
 	ev, ok := syscall.Getenv(fs.EnvVar)
@@ -80,20 +110,30 @@ func (fs *FlagString) initialize() {
 	fs.flagValue = val
 }
 
-// FlagStringSlice defines a flag with string slice type.
+// FlagStringSlice defines a string slice type flag.
 type FlagStringSlice struct {
-	Name                string
-	Summary             string
-	Value               []string
-	Aliases             []string
-	EnvVar              string
+	// Name of the flag containing alphanumeric characters and dashes
+	// but without leading dashes, spaces or any kind of special chars.
+	Name string
+	// An optional default value for the flag.
+	Summary string
+	// An optional default value for the flag.
+	Value []string
+	// An optional list of flag aliases containing single alphanumeric characters
+	// but without dashes, spaces or any special chars.
+	Aliases []string
+	// An optional environment variable containing uppercase alphanumeric characters
+	// and underscores but without dashes, spaces or any kind of special chars.
+	EnvVar string
+
 	flagValue           AnyValue
 	flagAssigned        bool
 	flagProvided        bool
 	flagProvidedAsAlias bool
 }
 
-// initialize sets a default flag value via associated `Value` prop or an environment variable (`EnvVar`).
+// It sets a default flag value via its associated `Value` prop
+// or its environment variable (`EnvVar`) if so.
 func (fs *FlagStringSlice) initialize() {
 	val := AnyValue(strings.Join(fs.Value, ","))
 	ev, ok := syscall.Getenv(fs.EnvVar)

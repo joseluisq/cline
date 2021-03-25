@@ -2,25 +2,25 @@ package cline
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 )
 
-// AnyValue is an alias of string type which represents an input value for a command flag.
+// AnyValue is an string type alias which represents
+// an input value for a command flag.
 type AnyValue string
 
-// ToBool converts current flag value into a `bool`.
+// ToBool converts current flag value into `bool`.
 func (v AnyValue) ToBool() (bool, error) {
 	return strconv.ParseBool(v.ToString())
 }
 
-// ToInt converts current flag value into an `int`.
+// ToInt converts current flag value into `int`.
 func (v AnyValue) ToInt() (int, error) {
 	return strconv.Atoi(v.ToString())
 }
 
-// ToString converts current flag value into a `string`.
+// ToString converts current flag value into `string`.
 func (v AnyValue) ToString() string {
 	return string(v)
 }
@@ -34,27 +34,27 @@ func (v AnyValue) ToStringSlice() []string {
 	return strs
 }
 
-// FlagBoolValue represents a flag value bool type.
+// FlagBoolValue represents a `bool` type flag value.
 type FlagBoolValue struct {
 	flag FlagBool
 }
 
-// Value unwraps the plain bool value of the current flag.
+// Value unwraps the plain `bool` value of the current flag.
 func (v *FlagBoolValue) Value() (bool, error) {
 	return v.flag.flagValue.ToBool()
 }
 
-// IsProvided checks if current bool flag was provided from stdin.
+// IsProvided checks if current `bool` flag was provided from stdin.
 func (v *FlagBoolValue) IsProvided() bool {
 	return v.flag.flagProvided
 }
 
-// IsProvidedShort checks if current bool flag was provided from stdin but using its short name.
+// IsProvidedShort checks if current `bool` flag was provided from stdin but using its short name.
 func (v *FlagBoolValue) IsProvidedShort() bool {
 	return v.flag.flagProvided && v.flag.flagProvidedAsAlias
 }
 
-// IsProvidedLong checks if current bool flag was provided from stdin but using its long name.
+// IsProvidedLong checks if current `bool` flag was provided from stdin but using its long name.
 func (v *FlagBoolValue) IsProvidedLong() bool {
 	return v.flag.flagProvided && !v.flag.flagProvidedAsAlias
 }
@@ -64,27 +64,27 @@ func (v *FlagBoolValue) GetFlagType() FlagBool {
 	return v.flag
 }
 
-// FlagIntValue represents a flag value int type.
+// FlagIntValue represents an `int` type flag value.
 type FlagIntValue struct {
 	flag FlagInt
 }
 
-// Value unwraps the plain int value of the current flag.
+// Value unwraps the plain `int` value of the current flag.
 func (v *FlagIntValue) Value() (int, error) {
 	return v.flag.flagValue.ToInt()
 }
 
-// IsProvided checks if current int flag was provided from stdin.
+// IsProvided checks if current `int` flag was provided from stdin.
 func (v *FlagIntValue) IsProvided() bool {
 	return v.flag.flagProvided
 }
 
-// IsProvidedShort checks if current int flag was provided from stdin but using its short name.
+// IsProvidedShort checks if current `int` flag was provided from stdin but using its short name.
 func (v *FlagIntValue) IsProvidedShort() bool {
 	return v.flag.flagProvided && v.flag.flagProvidedAsAlias
 }
 
-// IsProvidedLong checks if current int flag was provided from stdin but using its long name.
+// IsProvidedLong checks if current `int` flag was provided from stdin but using its long name.
 func (v *FlagIntValue) IsProvidedLong() bool {
 	return v.flag.flagProvided && !v.flag.flagProvidedAsAlias
 }
@@ -94,27 +94,27 @@ func (v *FlagIntValue) GetFlagType() FlagInt {
 	return v.flag
 }
 
-// FlagStringValue represents a flag value string type.
+// FlagStringValue represents a `string` type flag value.
 type FlagStringValue struct {
 	flag FlagString
 }
 
-// Value unwraps the plain string value of the current flag.
+// Value unwraps the plain `string` value of the current flag.
 func (v *FlagStringValue) Value() string {
 	return v.flag.flagValue.ToString()
 }
 
-// IsProvided checks if current string flag was provided from stdin.
+// IsProvided checks if current `string` flag was provided from stdin.
 func (v *FlagStringValue) IsProvided() bool {
 	return v.flag.flagProvided
 }
 
-// IsProvidedShort checks if current string flag was provided from stdin but using its short name.
+// IsProvidedShort checks if current `string` flag was provided from stdin but using its short name.
 func (v *FlagStringValue) IsProvidedShort() bool {
 	return v.flag.flagProvided && v.flag.flagProvidedAsAlias
 }
 
-// IsProvidedLong checks if current string flag was provided from stdin but using its long name.
+// IsProvidedLong checks if current `string` flag was provided from stdin but using its long name.
 func (v *FlagStringValue) IsProvidedLong() bool {
 	return v.flag.flagProvided && !v.flag.flagProvidedAsAlias
 }
@@ -124,7 +124,7 @@ func (v *FlagStringValue) GetFlagType() FlagString {
 	return v.flag
 }
 
-// FlagStringSliceValue represents a flag value string slice type.
+// FlagStringSliceValue represents a string slice type flag value.
 type FlagStringSliceValue struct {
 	flag FlagStringSlice
 }
@@ -159,36 +159,39 @@ type FlagValues struct {
 	flags []Flag
 }
 
-// findByKey finds a `Flag` by its string key.
-func (v *FlagValues) findByKey(longFlagName string) Flag {
-	for _, f := range v.flags {
-		switch fl := f.(type) {
+// It finds a `Flag` by its string key in the inner list.
+func (v *FlagValues) findByKey(longFlagName string) (flag Flag) {
+	for _, fl := range v.flags {
+		switch f := fl.(type) {
 		case FlagBool:
-			if longFlagName == fl.Name {
-				return fl
+			if f.Name == longFlagName {
+				flag = f
+				return
 			}
 		case FlagInt:
-			if longFlagName == fl.Name {
-				return fl
+			if f.Name == longFlagName {
+				flag = f
+				return
 			}
 		case FlagString:
-			if longFlagName == fl.Name {
-				return fl
+			if f.Name == longFlagName {
+				flag = f
+				return
 			}
 		case FlagStringSlice:
-			if longFlagName == fl.Name {
-				return fl
+			if f.Name == longFlagName {
+				flag = f
+				return
 			}
 		}
 	}
-	return nil
+	return
 }
 
-// getProvidedFlags returns provided flags by specified filters.
-func (v *FlagValues) getProvidedFlags(providedOnly bool, aliasOnly bool) []Flag {
-	var flags []Flag
-	for _, e := range v.flags {
-		switch f := e.(type) {
+// It returns provided flags by specified filters.
+func (v *FlagValues) getProvidedFlags(providedOnly bool, aliasOnly bool) (flags []Flag) {
+	for _, fl := range v.flags {
+		switch f := fl.(type) {
 		case FlagBool:
 			if !f.flagProvided {
 				continue
@@ -251,7 +254,7 @@ func (v *FlagValues) getProvidedFlags(providedOnly bool, aliasOnly bool) []Flag 
 			}
 		}
 	}
-	return flags
+	return
 }
 
 // GetProvided returns all flags that were provided from stdin only.
@@ -269,8 +272,10 @@ func (v *FlagValues) GetProvidedShort() []Flag {
 	return v.getProvidedFlags(false, true)
 }
 
-// Any finds a flag value but ignoring its type. The result value is convertible to other supported types.
-// Since `AnyValue` is just a `string` alias type, it can be converted easily with `string(AnyValue)`.
+// Any gets the current flag value but ignoring its type.
+// However, the resulted value is convertible into other supported types.
+// And since the `AnyValue` is just an alias of built-in `string` type
+// it can be easily converted too into string like `string(AnyValue)`.
 func (v *FlagValues) Any(longFlagName string) AnyValue {
 	switch f := v.findByKey(longFlagName).(type) {
 	case FlagBool:
@@ -285,54 +290,71 @@ func (v *FlagValues) Any(longFlagName string) AnyValue {
 	return AnyValue("")
 }
 
-// Bool finds a `bool` flag value. It's type should match with its flag definition type.
+// Bool gets a `bool` flag value which value type should match
+// with its flag definition type, otherwise it just panics.
 func (v *FlagValues) Bool(longFlagName string) *FlagBoolValue {
 	switch f := v.findByKey(longFlagName).(type) {
 	case FlagBool:
 		return &FlagBoolValue{flag: f}
 	default:
 		t := strings.ReplaceAll(fmt.Sprintf("%T", f), "cline.", "")
-		fmt.Printf("error: flag `--%s` value used as `FlagBoolValue` but declared as `%s`.\n", longFlagName, t)
-		os.Exit(1)
+		panic(
+			fmt.Sprintf(
+				"error: flag `--%s` value used as `FlagBoolValue` but declared as `%s`.\n",
+				longFlagName,
+				t),
+		)
 	}
-	return nil
 }
 
-// Int finds a `int` flag value. It's type should match with its flag definition type.
+// Int finds a `int` flag value which value type should match
+// with its flag definition type, otherwise it just panics.
 func (v *FlagValues) Int(longFlagName string) *FlagIntValue {
 	switch f := v.findByKey(longFlagName).(type) {
 	case FlagInt:
 		return &FlagIntValue{flag: f}
 	default:
 		t := strings.ReplaceAll(fmt.Sprintf("%T", f), "cline.", "")
-		fmt.Printf("error: flag `--%s` value used as `FlagIntValue` but declared as `%s`.\n", longFlagName, t)
-		os.Exit(1)
+		panic(
+			fmt.Sprintf(
+				"error: flag `--%s` value used as `FlagIntValue` but declared as `%s`.\n",
+				longFlagName,
+				t,
+			),
+		)
 	}
-	return nil
 }
 
-// String finds a `string` flag value. It's type should match with its flag definition type.
+// String finds a `string` flag value which value type should match
+// with its flag definition type, otherwise it just panics.
 func (v *FlagValues) String(longFlagName string) *FlagStringValue {
 	switch f := v.findByKey(longFlagName).(type) {
 	case FlagString:
 		return &FlagStringValue{flag: f}
 	default:
 		t := strings.ReplaceAll(fmt.Sprintf("%T", f), "cline.", "")
-		fmt.Printf("error: flag `--%s` value used as `FlagStringValue` but declared as `%s`.\n", longFlagName, t)
-		os.Exit(1)
+		panic(fmt.Sprintf(
+			"error: flag `--%s` value used as `FlagStringValue` but declared as `%s`.\n",
+			longFlagName,
+			t,
+		))
 	}
-	return nil
 }
 
-// StringSlice finds a string slice. It's type should match with its flag definition type.
+// StringSlice finds a string slice which value type should match
+// with its flag definition type, otherwise it just panics.
 func (v *FlagValues) StringSlice(longFlagName string) *FlagStringSliceValue {
 	switch f := v.findByKey(longFlagName).(type) {
 	case FlagStringSlice:
 		return &FlagStringSliceValue{flag: f}
 	default:
 		t := strings.ReplaceAll(fmt.Sprintf("%T", f), "cline.", "")
-		fmt.Printf("error: flag `--%s` value used as `FlagStringSliceValue` but declared as `%s`.\n", longFlagName, t)
-		os.Exit(1)
+		panic(
+			fmt.Sprintf(
+				"error: flag `--%s` value used as `FlagStringSliceValue` but declared as `%s`.\n",
+				longFlagName,
+				t,
+			),
+		)
 	}
-	return nil
 }
