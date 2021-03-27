@@ -119,7 +119,7 @@ func printHelp(app *App, cmd *Cmd) error {
 			envVar,
 		)
 
-		fmt.Printf(line)
+		fmt.Println(line)
 	}
 
 	// Print app commands

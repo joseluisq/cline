@@ -161,6 +161,10 @@ type FlagValues struct {
 
 // It finds a `Flag` by its string key in the inner list.
 func (v *FlagValues) findByKey(longFlagName string) (flag Flag) {
+	longFlagName = strings.TrimSpace(longFlagName)
+	if longFlagName == "" {
+		return
+	}
 	for _, fl := range v.flags {
 		switch f := fl.(type) {
 		case FlagBool:
@@ -189,7 +193,11 @@ func (v *FlagValues) findByKey(longFlagName string) (flag Flag) {
 }
 
 // It returns provided flags by specified filters.
-func (v *FlagValues) getProvidedFlags(providedOnly bool, aliasOnly bool) (flags []Flag) {
+func (v *FlagValues) getProvidedFlags(providedOnly bool, providedAliasOnly bool) (flags []Flag) {
+	if !providedOnly && !providedAliasOnly {
+		flags = v.flags
+		return
+	}
 	for _, fl := range v.flags {
 		switch f := fl.(type) {
 		case FlagBool:
@@ -200,12 +208,9 @@ func (v *FlagValues) getProvidedFlags(providedOnly bool, aliasOnly bool) (flags 
 				flags = append(flags, f)
 				continue
 			}
-			if aliasOnly && f.flagProvidedAsAlias {
+			if providedAliasOnly && f.flagProvidedAsAlias {
 				flags = append(flags, f)
 				continue
-			}
-			if !aliasOnly && !f.flagProvidedAsAlias {
-				flags = append(flags, f)
 			}
 		case FlagInt:
 			if !f.flagProvided {
@@ -215,12 +220,9 @@ func (v *FlagValues) getProvidedFlags(providedOnly bool, aliasOnly bool) (flags 
 				flags = append(flags, f)
 				continue
 			}
-			if aliasOnly && f.flagProvidedAsAlias {
+			if providedAliasOnly && f.flagProvidedAsAlias {
 				flags = append(flags, f)
 				continue
-			}
-			if !aliasOnly && !f.flagProvidedAsAlias {
-				flags = append(flags, f)
 			}
 		case FlagString:
 			if !f.flagProvided {
@@ -230,12 +232,9 @@ func (v *FlagValues) getProvidedFlags(providedOnly bool, aliasOnly bool) (flags 
 				flags = append(flags, f)
 				continue
 			}
-			if aliasOnly && f.flagProvidedAsAlias {
+			if providedAliasOnly && f.flagProvidedAsAlias {
 				flags = append(flags, f)
 				continue
-			}
-			if !aliasOnly && !f.flagProvidedAsAlias {
-				flags = append(flags, f)
 			}
 		case FlagStringSlice:
 			if !f.flagProvided {
@@ -245,12 +244,9 @@ func (v *FlagValues) getProvidedFlags(providedOnly bool, aliasOnly bool) (flags 
 				flags = append(flags, f)
 				continue
 			}
-			if aliasOnly && f.flagProvidedAsAlias {
+			if providedAliasOnly && f.flagProvidedAsAlias {
 				flags = append(flags, f)
 				continue
-			}
-			if !aliasOnly && !f.flagProvidedAsAlias {
-				flags = append(flags, f)
 			}
 		}
 	}

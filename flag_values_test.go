@@ -12,7 +12,16 @@ func TestAnyValue_ToBool(t *testing.T) {
 		want    bool
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name:    "invalid value parsing",
+			v:       AnyValue(""),
+			wantErr: true,
+		},
+		{
+			name: "valid value parsing",
+			v:    AnyValue("1"),
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -35,7 +44,16 @@ func TestAnyValue_ToInt(t *testing.T) {
 		want    int
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name:    "invalid value parsing",
+			v:       AnyValue("10.14"),
+			wantErr: true,
+		},
+		{
+			name: "valid value parsing",
+			v:    AnyValue("10"),
+			want: 10,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -57,7 +75,15 @@ func TestAnyValue_ToString(t *testing.T) {
 		v    AnyValue
 		want string
 	}{
-		// TODO: Add test cases.
+		{
+			name: "empty value parsing",
+			want: "",
+		},
+		{
+			name: "no empty value parsing",
+			v:    AnyValue("abc"),
+			want: "abc",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -74,7 +100,21 @@ func TestAnyValue_ToStringSlice(t *testing.T) {
 		v    AnyValue
 		want []string
 	}{
-		// TODO: Add test cases.
+		{
+			name: "empty value",
+			v:    AnyValue(""),
+			want: []string{""},
+		},
+		{
+			name: "list of values",
+			v:    AnyValue("a,b,c,d"),
+			want: []string{"a", "b", "c", "d"},
+		},
+		{
+			name: "list of values with spaces",
+			v:    AnyValue("abc,   ,"),
+			want: []string{"abc", "", ""},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -95,7 +135,25 @@ func TestFlagBoolValue_Value(t *testing.T) {
 		want    bool
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "empty flag value",
+			fields: fields{
+				flag: FlagBool{},
+			},
+			want:    false,
+			wantErr: true,
+		},
+		{
+			name: "non empty value",
+			fields: fields{
+				flag: FlagBool{
+					Name:      "version",
+					Value:     true,
+					flagValue: AnyValue("true"),
+				},
+			},
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -123,7 +181,24 @@ func TestFlagBoolValue_IsProvided(t *testing.T) {
 		fields fields
 		want   bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "no provided flag",
+			fields: fields{
+				flag: FlagBool{},
+			},
+		},
+		{
+			name: "provided flag",
+			fields: fields{
+				flag: FlagBool{
+					Name:         "version",
+					Value:        true,
+					flagValue:    AnyValue("true"),
+					flagProvided: true,
+				},
+			},
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -146,7 +221,25 @@ func TestFlagBoolValue_IsProvidedShort(t *testing.T) {
 		fields fields
 		want   bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "no provided short flag",
+			fields: fields{
+				flag: FlagBool{},
+			},
+		},
+		{
+			name: "provided short flag",
+			fields: fields{
+				flag: FlagBool{
+					Name:                "short",
+					Value:               true,
+					flagValue:           AnyValue("true"),
+					flagProvided:        true,
+					flagProvidedAsAlias: true,
+				},
+			},
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -169,7 +262,25 @@ func TestFlagBoolValue_IsProvidedLong(t *testing.T) {
 		fields fields
 		want   bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "no provided long flag",
+			fields: fields{
+				flag: FlagBool{},
+			},
+		},
+		{
+			name: "provided long flag",
+			fields: fields{
+				flag: FlagBool{
+					Name:                "long",
+					Value:               true,
+					flagValue:           AnyValue("true"),
+					flagProvided:        true,
+					flagProvidedAsAlias: false,
+				},
+			},
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -192,7 +303,13 @@ func TestFlagBoolValue_GetFlagType(t *testing.T) {
 		fields fields
 		want   FlagBool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "get flag type",
+			fields: fields{
+				flag: FlagBool{},
+			},
+			want: FlagBool{},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -215,7 +332,23 @@ func TestFlagStringValue_Value(t *testing.T) {
 		fields fields
 		want   string
 	}{
-		// TODO: Add test cases.
+		{
+			name: "empty flag value",
+			fields: fields{
+				flag: FlagString{},
+			},
+			want: "",
+		},
+		{
+			name: "non empty value",
+			fields: fields{
+				flag: FlagString{
+					Name:      "abc",
+					flagValue: AnyValue("xyz"),
+				},
+			},
+			want: "xyz",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -238,7 +371,22 @@ func TestFlagStringValue_IsProvided(t *testing.T) {
 		fields fields
 		want   bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "no provided flag",
+			fields: fields{
+				flag: FlagString{},
+			},
+		},
+		{
+			name: "provided flag",
+			fields: fields{
+				flag: FlagString{
+					Name:         "alpha",
+					flagProvided: true,
+				},
+			},
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -261,7 +409,23 @@ func TestFlagStringValue_IsProvidedShort(t *testing.T) {
 		fields fields
 		want   bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "no provided flag",
+			fields: fields{
+				flag: FlagString{},
+			},
+		},
+		{
+			name: "provided flag",
+			fields: fields{
+				flag: FlagString{
+					Name:                "alpha",
+					flagProvided:        true,
+					flagProvidedAsAlias: true,
+				},
+			},
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -284,7 +448,25 @@ func TestFlagStringValue_IsProvidedLong(t *testing.T) {
 		fields fields
 		want   bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "no provided long flag",
+			fields: fields{
+				flag: FlagString{},
+			},
+		},
+		{
+			name: "provided long flag",
+			fields: fields{
+				flag: FlagString{
+					Name:                "long",
+					Value:               "cde",
+					flagValue:           AnyValue("cde"),
+					flagProvided:        true,
+					flagProvidedAsAlias: false,
+				},
+			},
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -307,7 +489,13 @@ func TestFlagStringValue_GetFlagType(t *testing.T) {
 		fields fields
 		want   FlagString
 	}{
-		// TODO: Add test cases.
+		{
+			name: "get flag type",
+			fields: fields{
+				flag: FlagString{},
+			},
+			want: FlagString{},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -330,7 +518,23 @@ func TestFlagStringSliceValue_Value(t *testing.T) {
 		fields fields
 		want   []string
 	}{
-		// TODO: Add test cases.
+		{
+			name: "empty flag value",
+			fields: fields{
+				flag: FlagStringSlice{},
+			},
+			want: []string{""},
+		},
+		{
+			name: "non empty value",
+			fields: fields{
+				flag: FlagStringSlice{
+					Name:      "abc",
+					flagValue: AnyValue("xyz, abc"),
+				},
+			},
+			want: []string{"xyz", "abc"},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -353,7 +557,22 @@ func TestFlagStringSliceValue_IsProvided(t *testing.T) {
 		fields fields
 		want   bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "no provided flag",
+			fields: fields{
+				flag: FlagStringSlice{},
+			},
+		},
+		{
+			name: "provided flag",
+			fields: fields{
+				flag: FlagStringSlice{
+					Name:         "alpha",
+					flagProvided: true,
+				},
+			},
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -376,7 +595,32 @@ func TestFlagStringSliceValue_IsProvidedShort(t *testing.T) {
 		fields fields
 		want   bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "no provided short flag",
+			fields: fields{
+				flag: FlagStringSlice{},
+			},
+		},
+		{
+			name: "provided short flag false",
+			fields: fields{
+				flag: FlagStringSlice{
+					Name:         "alpha",
+					flagProvided: true,
+				},
+			},
+		},
+		{
+			name: "provided short flag true",
+			fields: fields{
+				flag: FlagStringSlice{
+					Name:                "alpha",
+					flagProvided:        true,
+					flagProvidedAsAlias: true,
+				},
+			},
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -399,7 +643,22 @@ func TestFlagStringSliceValue_IsProvidedLong(t *testing.T) {
 		fields fields
 		want   bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "no provided long flag",
+			fields: fields{
+				flag: FlagStringSlice{},
+			},
+		},
+		{
+			name: "provided long flag true",
+			fields: fields{
+				flag: FlagStringSlice{
+					Name:         "alpha",
+					flagProvided: true,
+				},
+			},
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -422,7 +681,13 @@ func TestFlagStringSliceValue_GetFlagType(t *testing.T) {
 		fields fields
 		want   FlagStringSlice
 	}{
-		// TODO: Add test cases.
+		{
+			name: "get flag type",
+			fields: fields{
+				flag: FlagStringSlice{},
+			},
+			want: FlagStringSlice{},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -449,7 +714,93 @@ func TestFlagValues_findByKey(t *testing.T) {
 		args     args
 		wantFlag Flag
 	}{
-		// TODO: Add test cases.
+		{
+			name: "lookup on an unsupported type flag list",
+			fields: fields{
+				flags: []Flag{
+					map[string]int{"a": 1, "b": 2},
+				},
+			},
+			args: args{
+				longFlagName: "xyz",
+			},
+			wantFlag: nil,
+		},
+		{
+			name: "lookup using empty flag key",
+			fields: fields{
+				flags: []Flag{
+					FlagInt{},
+					FlagBool{},
+					FlagString{},
+					FlagStringSlice{},
+				},
+			},
+			args: args{
+				longFlagName: "",
+			},
+			wantFlag: nil,
+		},
+		{
+			name: "lookup using valid int flag key",
+			fields: fields{
+				flags: []Flag{
+					FlagInt{Name: "k-int"},
+					FlagBool{Name: "k-bool"},
+					FlagString{Name: "k-string"},
+					FlagStringSlice{Name: "k-string-slice"},
+				},
+			},
+			args: args{
+				longFlagName: "k-int",
+			},
+			wantFlag: FlagInt{Name: "k-int"},
+		},
+		{
+			name: "lookup using valid bool flag key",
+			fields: fields{
+				flags: []Flag{
+					FlagInt{Name: "k-int"},
+					FlagBool{Name: "k-bool"},
+					FlagString{Name: "k-string"},
+					FlagStringSlice{Name: "k-string-slice"},
+				},
+			},
+			args: args{
+				longFlagName: "k-bool",
+			},
+			wantFlag: FlagBool{Name: "k-bool"},
+		},
+		{
+			name: "lookup using valid string flag key",
+			fields: fields{
+				flags: []Flag{
+					FlagInt{Name: "k-int"},
+					FlagBool{Name: "k-bool"},
+					FlagString{Name: "k-string"},
+					FlagStringSlice{Name: "k-string-slice"},
+				},
+			},
+			args: args{
+				longFlagName: "k-string",
+			},
+			wantFlag: FlagString{Name: "k-string"},
+		},
+		{
+			name: "lookup using valid string-slice flag key",
+			fields: fields{
+				flags: []Flag{
+					FlagInt{Name: "k-int"},
+					FlagBool{Name: "k-bool"},
+					FlagString{Name: "k-string"},
+					FlagStringSlice{Name: "k-string-slice"},
+				},
+			},
+			args: args{
+				longFlagName: "k-string-slice",
+			},
+			wantFlag: FlagStringSlice{Name: "k-string-slice"},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -477,7 +828,116 @@ func TestFlagValues_getProvidedFlags(t *testing.T) {
 		args      args
 		wantFlags []Flag
 	}{
-		// TODO: Add test cases.
+		{
+			name: "return all flags",
+			fields: fields{
+				flags: []Flag{
+					FlagInt{Name: "k-int"},
+					FlagBool{Name: "k-bool"},
+					FlagString{Name: "k-string"},
+					FlagStringSlice{Name: "k-string-slice"},
+				},
+			},
+			args: args{},
+			wantFlags: []Flag{
+				FlagInt{Name: "k-int"},
+				FlagBool{Name: "k-bool"},
+				FlagString{Name: "k-string"},
+				FlagStringSlice{Name: "k-string-slice"},
+			},
+		},
+		{
+			name: "return empty list of flags",
+			fields: fields{
+				flags: []Flag{
+					FlagInt{Name: "k-int"},
+					FlagBool{Name: "k-bool"},
+					FlagString{Name: "k-string"},
+					FlagStringSlice{Name: "k-string-slice"},
+				},
+			},
+			args: args{
+				providedOnly: true,
+			},
+			wantFlags: nil,
+		},
+		{
+			name: "return provided flags",
+			fields: fields{
+				flags: []Flag{
+					FlagInt{Name: "k-int", flagProvided: true},
+					FlagBool{Name: "k-bool"},
+					FlagString{Name: "k-string", flagProvided: true},
+					FlagStringSlice{Name: "k-string-slice", flagProvided: true},
+				},
+			},
+			args: args{
+				providedOnly: true,
+			},
+			wantFlags: []Flag{
+				FlagInt{Name: "k-int", flagProvided: true},
+				FlagString{Name: "k-string", flagProvided: true},
+				FlagStringSlice{Name: "k-string-slice", flagProvided: true},
+			},
+		},
+		{
+			name: "return provided short flags",
+			fields: fields{
+				flags: []Flag{
+					FlagInt{Name: "k-int", flagProvided: true},
+					FlagBool{Name: "k-bool", flagProvided: true, flagProvidedAsAlias: true},
+					FlagString{Name: "k-string", flagProvided: true, flagProvidedAsAlias: true},
+					FlagStringSlice{Name: "k-string-slice", flagProvided: true},
+				},
+			},
+			args: args{
+				aliasOnly: true,
+			},
+			wantFlags: []Flag{
+				FlagBool{Name: "k-bool", flagProvided: true, flagProvidedAsAlias: true},
+				FlagString{Name: "k-string", flagProvided: true, flagProvidedAsAlias: true},
+			},
+		},
+		{
+			name: "return provided flags only",
+			fields: fields{
+				flags: []Flag{
+					FlagInt{Name: "k-int", flagProvided: true},
+					FlagBool{Name: "k-bool", flagProvided: true},
+					FlagString{Name: "k-string", flagProvided: true},
+					FlagStringSlice{Name: "k-string-slice", flagProvided: true},
+				},
+			},
+			args: args{
+				providedOnly: true,
+			},
+			wantFlags: []Flag{
+				FlagInt{Name: "k-int", flagProvided: true},
+				FlagBool{Name: "k-bool", flagProvided: true},
+				FlagString{Name: "k-string", flagProvided: true},
+				FlagStringSlice{Name: "k-string-slice", flagProvided: true},
+			},
+		},
+		{
+			name: "return provided short flags only",
+			fields: fields{
+				flags: []Flag{
+					FlagInt{Name: "k-int", flagProvided: true, flagProvidedAsAlias: true},
+					FlagBool{Name: "k-bool", flagProvided: true, flagProvidedAsAlias: true},
+					FlagString{Name: "k-string", flagProvided: true, flagProvidedAsAlias: true},
+					FlagStringSlice{Name: "k-string-slice", flagProvided: true, flagProvidedAsAlias: true},
+				},
+			},
+			args: args{
+				aliasOnly: true,
+			},
+			wantFlags: []Flag{
+				FlagInt{Name: "k-int", flagProvided: true, flagProvidedAsAlias: true},
+				FlagBool{Name: "k-bool", flagProvided: true, flagProvidedAsAlias: true},
+				FlagString{Name: "k-string", flagProvided: true, flagProvidedAsAlias: true},
+				FlagStringSlice{Name: "k-string-slice", flagProvided: true, flagProvidedAsAlias: true},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -500,7 +960,26 @@ func TestFlagValues_GetProvided(t *testing.T) {
 		fields fields
 		want   []Flag
 	}{
-		// TODO: Add test cases.
+		{
+			name: "get provided nil flags",
+			fields: fields{
+				flags: []Flag{},
+			},
+			want: []Flag(nil),
+		},
+		{
+			name: "get provided flag list",
+			fields: fields{
+				flags: []Flag{
+					FlagInt{Name: "k-int", flagProvided: true, flagProvidedAsAlias: true},
+					FlagStringSlice{Name: "k-string-slice", flagProvided: true, flagProvidedAsAlias: true},
+				},
+			},
+			want: []Flag{
+				FlagInt{Name: "k-int", flagProvided: true, flagProvidedAsAlias: true},
+				FlagStringSlice{Name: "k-string-slice", flagProvided: true, flagProvidedAsAlias: true},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -508,7 +987,7 @@ func TestFlagValues_GetProvided(t *testing.T) {
 				flags: tt.fields.flags,
 			}
 			if got := v.GetProvided(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("FlagValues.GetProvided() = %v, want %v", got, tt.want)
+				t.Errorf("FlagValues.GetProvided() = %#v, want %#v", got, tt.want)
 			}
 		})
 	}
