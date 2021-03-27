@@ -287,70 +287,73 @@ func (v *FlagValues) Any(longFlagName string) AnyValue {
 }
 
 // Bool gets a `bool` flag value which value type should match
-// with its flag definition type, otherwise it just panics.
-func (v *FlagValues) Bool(longFlagName string) *FlagBoolValue {
+// with its flag definition type, otherwise it returns an error.
+func (v *FlagValues) Bool(longFlagName string) (val *FlagBoolValue, err error) {
 	switch f := v.findByKey(longFlagName).(type) {
 	case FlagBool:
-		return &FlagBoolValue{flag: f}
+		val = &FlagBoolValue{flag: f}
+		return
 	default:
 		t := strings.ReplaceAll(fmt.Sprintf("%T", f), "cline.", "")
-		panic(
-			fmt.Sprintf(
-				"error: flag `--%s` value used as `FlagBoolValue` but declared as `%s`.\n",
-				longFlagName,
-				t),
+		err = fmt.Errorf(
+			"flag `--%s` value used as `FlagBoolValue` but declared as `%s`",
+			longFlagName,
+			t,
 		)
+		return
 	}
 }
 
 // Int finds a `int` flag value which value type should match
-// with its flag definition type, otherwise it just panics.
-func (v *FlagValues) Int(longFlagName string) *FlagIntValue {
+// with its flag definition type, otherwise it returns an error.
+func (v *FlagValues) Int(longFlagName string) (val *FlagIntValue, err error) {
 	switch f := v.findByKey(longFlagName).(type) {
 	case FlagInt:
-		return &FlagIntValue{flag: f}
+		val = &FlagIntValue{flag: f}
+		return
 	default:
 		t := strings.ReplaceAll(fmt.Sprintf("%T", f), "cline.", "")
-		panic(
-			fmt.Sprintf(
-				"error: flag `--%s` value used as `FlagIntValue` but declared as `%s`.\n",
-				longFlagName,
-				t,
-			),
+		err = fmt.Errorf(
+			"flag `--%s` value used as `FlagIntValue` but declared as `%s`",
+			longFlagName,
+			t,
 		)
+		return
 	}
 }
 
 // String finds a `string` flag value which value type should match
-// with its flag definition type, otherwise it just panics.
-func (v *FlagValues) String(longFlagName string) *FlagStringValue {
+// with its flag definition type, otherwise it returns an error.
+func (v *FlagValues) String(longFlagName string) (val *FlagStringValue, err error) {
 	switch f := v.findByKey(longFlagName).(type) {
 	case FlagString:
-		return &FlagStringValue{flag: f}
+		val = &FlagStringValue{flag: f}
+		return
 	default:
 		t := strings.ReplaceAll(fmt.Sprintf("%T", f), "cline.", "")
-		panic(fmt.Sprintf(
-			"error: flag `--%s` value used as `FlagStringValue` but declared as `%s`.\n",
+		err = fmt.Errorf(
+			"flag `--%s` value used as `FlagStringValue` but declared as `%s`",
 			longFlagName,
 			t,
-		))
+		)
+		return
 	}
 }
 
 // StringSlice finds a string slice which value type should match
-// with its flag definition type, otherwise it just panics.
-func (v *FlagValues) StringSlice(longFlagName string) *FlagStringSliceValue {
+// with its flag definition type, otherwise it returns an error.
+func (v *FlagValues) StringSlice(longFlagName string) (val *FlagStringSliceValue, err error) {
 	switch f := v.findByKey(longFlagName).(type) {
 	case FlagStringSlice:
-		return &FlagStringSliceValue{flag: f}
+		val = &FlagStringSliceValue{flag: f}
+		return
 	default:
 		t := strings.ReplaceAll(fmt.Sprintf("%T", f), "cline.", "")
-		panic(
-			fmt.Sprintf(
-				"error: flag `--%s` value used as `FlagStringSliceValue` but declared as `%s`.\n",
-				longFlagName,
-				t,
-			),
+		err = fmt.Errorf(
+			"flag `--%s` value used as `FlagStringSliceValue` but declared as `%s`",
+			longFlagName,
+			t,
 		)
+		return
 	}
 }

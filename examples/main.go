@@ -71,19 +71,30 @@ func main() {
 			},
 			Handler: func(ctx *cli.CmdContext) error {
 				fmt.Printf("Cmd `%s` executed!\n", ctx.Cmd.Name)
-				fmt.Printf("App Flag `file`: `%s`\n", ctx.AppContext.Flags.String("file").Value())
-				b, _ := ctx.AppContext.Flags.Bool("verbose").Value()
-				fmt.Printf("App Flag `verbose`: `%v`\n", b)
 
-				i, err := ctx.Flags.Int("trace").Value()
-				if err != nil {
-					fmt.Println(err)
-					os.Exit(1)
+				if file, err := ctx.AppContext.Flags.String("file"); err != nil {
+					fmt.Printf("App Flag `file`: `%s`\n", file.Value())
 				}
-				fmt.Printf("Cmd Flag `trace`: `%d` (%T)\n", i, i)
 
-				d, _ := ctx.Flags.Bool("detailed").Value()
-				fmt.Printf("Cmd Flag `detailed`: `%v` (%T)\n", d, d)
+				if verbose, err := ctx.AppContext.Flags.Bool("verbose"); err != nil {
+					b, _ := verbose.Value()
+					fmt.Printf("App Flag `verbose`: `%v`\n", b)
+				}
+
+				if trace, err := ctx.AppContext.Flags.Int("trace"); err != nil {
+					i, err := trace.Value()
+					if err != nil {
+						fmt.Println(err)
+						os.Exit(1)
+					}
+					fmt.Printf("Cmd Flag `trace`: `%d` (%T)\n", i, i)
+				}
+
+				if detailed, err := ctx.AppContext.Flags.Bool("detailed"); err != nil {
+					d, _ := detailed.Value()
+					fmt.Printf("Cmd Flag `detailed`: `%v` (%T)\n", d, d)
+				}
+
 				fmt.Printf("Cmd Tail arguments: %#v\n", ctx.TailArgs)
 				return nil
 			},
@@ -91,10 +102,21 @@ func main() {
 	}
 	app.Handler = func(ctx *cli.AppContext) error {
 		fmt.Printf("App `%s` executed!\n", ctx.App.Name)
-		fmt.Printf("App Flag `file`: `%s`\n", ctx.Flags.String("file").Value())
+
+		if file, err := ctx.Flags.Bool("file"); err != nil {
+			if b, err := file.Value(); err != nil {
+				fmt.Printf("App Flag `file`: `%t`\n", b)
+			}
+		}
+
 		fmt.Printf("App Flag `int`: `%v`\n", ctx.Flags.Any("int"))
-		b, _ := ctx.Flags.Bool("verbose").Value()
-		fmt.Printf("App Flag `verbose`: `%v`\n", b)
+
+		if verbose, err := ctx.Flags.Bool("verbose"); err != nil {
+			if b, err := verbose.Value(); err != nil {
+				fmt.Printf("App Flag `verbose`: `%v`\n", b)
+			}
+		}
+
 		fmt.Printf("App Tail arguments: %#v\n", ctx.TailArgs)
 		fmt.Printf("App Provided flags: %v\n", ctx.Flags.GetProvided())
 		fmt.Printf("App Provided flags (long): %v\n", ctx.Flags.GetProvidedLong())

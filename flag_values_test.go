@@ -965,7 +965,7 @@ func TestFlagValues_GetProvided(t *testing.T) {
 			fields: fields{
 				flags: []Flag{},
 			},
-			want: []Flag(nil),
+			want: nil,
 		},
 		{
 			name: "get provided flag list",
@@ -1002,7 +1002,26 @@ func TestFlagValues_GetProvidedLong(t *testing.T) {
 		fields fields
 		want   []Flag
 	}{
-		// TODO: Add test cases.
+		{
+			name: "get provided empty flags",
+			fields: fields{
+				flags: []Flag{},
+			},
+			want: []Flag{},
+		},
+		{
+			name: "get provided flag list",
+			fields: fields{
+				flags: []Flag{
+					FlagInt{Name: "k-int", flagProvided: true},
+					FlagStringSlice{Name: "k-string-slice", flagProvided: true},
+				},
+			},
+			want: []Flag{
+				FlagInt{Name: "k-int", flagProvided: true},
+				FlagStringSlice{Name: "k-string-slice", flagProvided: true},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1025,7 +1044,26 @@ func TestFlagValues_GetProvidedShort(t *testing.T) {
 		fields fields
 		want   []Flag
 	}{
-		// TODO: Add test cases.
+		{
+			name: "get provided empty short flags",
+			fields: fields{
+				flags: []Flag{},
+			},
+			want: nil,
+		},
+		{
+			name: "get provided short flag list",
+			fields: fields{
+				flags: []Flag{
+					FlagInt{Name: "k-int", flagProvided: true, flagProvidedAsAlias: true},
+					FlagStringSlice{Name: "k-string-slice", flagProvided: true, flagProvidedAsAlias: true},
+				},
+			},
+			want: []Flag{
+				FlagInt{Name: "k-int", flagProvided: true, flagProvidedAsAlias: true},
+				FlagStringSlice{Name: "k-string-slice", flagProvided: true, flagProvidedAsAlias: true},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1052,7 +1090,78 @@ func TestFlagValues_Any(t *testing.T) {
 		args   args
 		want   AnyValue
 	}{
-		// TODO: Add test cases.
+		{
+			name: "lookup using empty bool flag list",
+			fields: fields{
+				flags: []Flag{
+					FlagInt{Name: "k-int"},
+					FlagBool{Name: "k-bool"},
+					FlagString{Name: "k-string"},
+					FlagStringSlice{Name: "k-string-slice"},
+				},
+			},
+			args: args{
+				longFlagName: "k-bool",
+			},
+			want: "",
+		},
+		{
+			name: "lookup using empty string flag list",
+			fields: fields{
+				flags: []Flag{
+					FlagInt{Name: "k-int"},
+					FlagBool{Name: "k-bool"},
+					FlagString{Name: "k-string"},
+					FlagStringSlice{Name: "k-string-slice"},
+				},
+			},
+			args: args{
+				longFlagName: "k-string",
+			},
+			want: "",
+		},
+		{
+			name: "lookup using empty string-slice flag list",
+			fields: fields{
+				flags: []Flag{
+					FlagInt{Name: "k-int"},
+					FlagBool{Name: "k-bool"},
+					FlagString{Name: "k-string"},
+					FlagStringSlice{Name: "k-string-slice"},
+				},
+			},
+			args: args{
+				longFlagName: "k-string-slice",
+			},
+			want: "",
+		},
+		{
+			name: "lookup using valid int flag key",
+			fields: fields{
+				flags: []Flag{
+					FlagInt{Name: "k-int", flagProvided: true, flagValue: "5"},
+					FlagBool{Name: "k-bool", flagProvided: true, flagValue: "true"},
+					FlagString{Name: "k-string", flagProvided: true, flagValue: "string_val"},
+					FlagStringSlice{Name: "k-string-slice", flagProvided: true, flagValue: "a,b,c"},
+				},
+			},
+			args: args{
+				longFlagName: "k-int",
+			},
+			want: AnyValue("5"),
+		},
+		{
+			name: "lookup using empty string-slice flag list",
+			fields: fields{
+				flags: []Flag{
+					map[string]int{"a": 1, "b": 2},
+				},
+			},
+			args: args{
+				longFlagName: "k-any",
+			},
+			want: "",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1074,19 +1183,56 @@ func TestFlagValues_Bool(t *testing.T) {
 		longFlagName string
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   *FlagBoolValue
+		name    string
+		fields  fields
+		args    args
+		want    *FlagBoolValue
+		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "get invalid bool value",
+			fields: fields{
+				flags: []Flag{
+					FlagInt{Name: "k-int", flagProvided: true, flagValue: "5"},
+					FlagBool{Name: "k-bool", flagProvided: false, flagValue: "true"},
+					FlagString{Name: "k-string", flagProvided: true, flagValue: "string_val"},
+					FlagStringSlice{Name: "k-string-slice", flagProvided: true, flagValue: "a,b,c"},
+				},
+			},
+			args: args{
+				longFlagName: "some",
+			},
+			wantErr: true,
+		},
+		{
+			name: "get valid bool value",
+			fields: fields{
+				flags: []Flag{
+					FlagInt{Name: "k-int", flagProvided: true, flagValue: "5"},
+					FlagBool{Name: "k-bool", flagProvided: true, flagValue: "true"},
+					FlagString{Name: "k-string", flagProvided: true, flagValue: "string_val"},
+					FlagStringSlice{Name: "k-string-slice", flagProvided: true, flagValue: "a,b,c"},
+				},
+			},
+			args: args{
+				longFlagName: "k-bool",
+			},
+			want: &FlagBoolValue{
+				flag: FlagBool{Name: "k-bool", flagProvided: true, flagValue: "true"},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			v := &FlagValues{
 				flags: tt.fields.flags,
 			}
-			if got := v.Bool(tt.args.longFlagName); !reflect.DeepEqual(got, tt.want) {
+			got, err := v.Bool(tt.args.longFlagName)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FlagValues.Bool() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("FlagValues.Bool() = %v, want %v", got, tt.want)
 			}
 		})
@@ -1101,19 +1247,56 @@ func TestFlagValues_Int(t *testing.T) {
 		longFlagName string
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   *FlagIntValue
+		name    string
+		fields  fields
+		args    args
+		want    *FlagIntValue
+		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "get invalid int value",
+			fields: fields{
+				flags: []Flag{
+					FlagInt{Name: "k-int", flagProvided: true, flagValue: "5"},
+					FlagBool{Name: "k-bool", flagProvided: false, flagValue: "true"},
+					FlagString{Name: "k-string", flagProvided: true, flagValue: "string_val"},
+					FlagStringSlice{Name: "k-string-slice", flagProvided: true, flagValue: "a,b,c"},
+				},
+			},
+			args: args{
+				longFlagName: "some",
+			},
+			wantErr: true,
+		},
+		{
+			name: "get valid int value",
+			fields: fields{
+				flags: []Flag{
+					FlagInt{Name: "k-int", flagProvided: true, flagValue: "256"},
+					FlagBool{Name: "k-bool", flagProvided: true, flagValue: "true"},
+					FlagString{Name: "k-string", flagProvided: true, flagValue: "string_val"},
+					FlagStringSlice{Name: "k-string-slice", flagProvided: true, flagValue: "a,b,c"},
+				},
+			},
+			args: args{
+				longFlagName: "k-int",
+			},
+			want: &FlagIntValue{
+				flag: FlagInt{Name: "k-int", flagProvided: true, flagValue: "256"},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			v := &FlagValues{
 				flags: tt.fields.flags,
 			}
-			if got := v.Int(tt.args.longFlagName); !reflect.DeepEqual(got, tt.want) {
+			got, err := v.Int(tt.args.longFlagName)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FlagValues.Int() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("FlagValues.Int() = %v, want %v", got, tt.want)
 			}
 		})
@@ -1128,19 +1311,56 @@ func TestFlagValues_String(t *testing.T) {
 		longFlagName string
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   *FlagStringValue
+		name    string
+		fields  fields
+		args    args
+		want    *FlagStringValue
+		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "get invalid string value",
+			fields: fields{
+				flags: []Flag{
+					FlagInt{Name: "k-int", flagProvided: true, flagValue: "5"},
+					FlagBool{Name: "k-bool", flagProvided: false, flagValue: "true"},
+					FlagString{Name: "k-string", flagProvided: true, flagValue: "string_val"},
+					FlagStringSlice{Name: "k-string-slice", flagProvided: true, flagValue: "a,b,c"},
+				},
+			},
+			args: args{
+				longFlagName: "some",
+			},
+			wantErr: true,
+		},
+		{
+			name: "get valid string value",
+			fields: fields{
+				flags: []Flag{
+					FlagInt{Name: "k-int", flagProvided: true, flagValue: "256"},
+					FlagBool{Name: "k-bool", flagProvided: true, flagValue: "true"},
+					FlagString{Name: "k-string", flagProvided: true, flagValue: "string_val"},
+					FlagStringSlice{Name: "k-string-slice", flagProvided: true, flagValue: "a,b,c"},
+				},
+			},
+			args: args{
+				longFlagName: "k-string",
+			},
+			want: &FlagStringValue{
+				flag: FlagString{Name: "k-string", flagProvided: true, flagValue: "string_val"},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			v := &FlagValues{
 				flags: tt.fields.flags,
 			}
-			if got := v.String(tt.args.longFlagName); !reflect.DeepEqual(got, tt.want) {
+			got, err := v.String(tt.args.longFlagName)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FlagValues.String() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("FlagValues.String() = %v, want %v", got, tt.want)
 			}
 		})
@@ -1155,20 +1375,251 @@ func TestFlagValues_StringSlice(t *testing.T) {
 		longFlagName string
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   *FlagStringSliceValue
+		name    string
+		fields  fields
+		args    args
+		want    *FlagStringSliceValue
+		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "get invalid string-slice value",
+			fields: fields{
+				flags: []Flag{
+					FlagInt{Name: "k-int", flagProvided: true, flagValue: "5"},
+					FlagBool{Name: "k-bool", flagProvided: false, flagValue: "true"},
+					FlagString{Name: "k-string", flagProvided: true, flagValue: "string_val"},
+					FlagStringSlice{Name: "k-string-slice", flagProvided: true, flagValue: "1,2,3"},
+				},
+			},
+			args: args{
+				longFlagName: "some",
+			},
+			wantErr: true,
+		},
+		{
+			name: "get valid string-slice value",
+			fields: fields{
+				flags: []Flag{
+					FlagInt{Name: "k-int", flagProvided: true, flagValue: "256"},
+					FlagBool{Name: "k-bool", flagProvided: true, flagValue: "true"},
+					FlagString{Name: "k-string", flagProvided: true, flagValue: "string_val"},
+					FlagStringSlice{Name: "k-string-slice", flagProvided: true, flagValue: "1,2,3"},
+				},
+			},
+			args: args{
+				longFlagName: "k-string-slice",
+			},
+			want: &FlagStringSliceValue{
+				flag: FlagStringSlice{Name: "k-string-slice", flagProvided: true, flagValue: "1,2,3"},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			v := &FlagValues{
 				flags: tt.fields.flags,
 			}
-			if got := v.StringSlice(tt.args.longFlagName); !reflect.DeepEqual(got, tt.want) {
+			got, err := v.StringSlice(tt.args.longFlagName)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FlagValues.StringSlice() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("FlagValues.StringSlice() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestFlagIntValue_Value(t *testing.T) {
+	type fields struct {
+		flag FlagInt
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		want    int
+		wantErr bool
+	}{
+		{
+			name: "no provided value flag",
+			fields: fields{
+				flag: FlagInt{},
+			},
+			wantErr: true,
+		},
+		{
+			name: "provided value flag",
+			fields: fields{
+				flag: FlagInt{
+					Name:         "short",
+					Value:        7,
+					flagValue:    AnyValue("7"),
+					flagProvided: true,
+				},
+			},
+			want: 7,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v := &FlagIntValue{
+				flag: tt.fields.flag,
+			}
+			got, err := v.Value()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FlagIntValue.Value() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("FlagIntValue.Value() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestFlagIntValue_IsProvided(t *testing.T) {
+	type fields struct {
+		flag FlagInt
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   bool
+	}{
+		{
+			name: "no provided flag",
+			fields: fields{
+				flag: FlagInt{},
+			},
+		},
+		{
+			name: "provided flag",
+			fields: fields{
+				flag: FlagInt{
+					Name:         "provided",
+					Value:        32,
+					flagValue:    AnyValue("32"),
+					flagProvided: true,
+				},
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v := &FlagIntValue{
+				flag: tt.fields.flag,
+			}
+			if got := v.IsProvided(); got != tt.want {
+				t.Errorf("FlagIntValue.IsProvided() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestFlagIntValue_IsProvidedShort(t *testing.T) {
+	type fields struct {
+		flag FlagInt
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   bool
+	}{
+		{
+			name: "no provided short flag",
+			fields: fields{
+				flag: FlagInt{},
+			},
+		},
+		{
+			name: "provided short flag",
+			fields: fields{
+				flag: FlagInt{
+					Name:                "provided",
+					flagProvided:        true,
+					flagProvidedAsAlias: true,
+				},
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v := &FlagIntValue{
+				flag: tt.fields.flag,
+			}
+			if got := v.IsProvidedShort(); got != tt.want {
+				t.Errorf("FlagIntValue.IsProvidedShort() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestFlagIntValue_IsProvidedLong(t *testing.T) {
+	type fields struct {
+		flag FlagInt
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   bool
+	}{
+		{
+			name: "no provided long flag",
+			fields: fields{
+				flag: FlagInt{},
+			},
+		},
+		{
+			name: "provided long flag",
+			fields: fields{
+				flag: FlagInt{
+					Name:                "provided",
+					flagProvided:        true,
+					flagProvidedAsAlias: false,
+				},
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v := &FlagIntValue{
+				flag: tt.fields.flag,
+			}
+			if got := v.IsProvidedLong(); got != tt.want {
+				t.Errorf("FlagIntValue.IsProvidedLong() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestFlagIntValue_GetFlagType(t *testing.T) {
+	type fields struct {
+		flag FlagInt
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   FlagInt
+	}{
+		{
+			name: "get flag type",
+			fields: fields{
+				flag: FlagInt{},
+			},
+			want: FlagInt{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v := &FlagIntValue{
+				flag: tt.fields.flag,
+			}
+			if got := v.GetFlagType(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("FlagIntValue.GetFlagType() = %v, want %v", got, tt.want)
 			}
 		})
 	}
