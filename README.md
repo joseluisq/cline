@@ -81,15 +81,28 @@ func main() {
 				fmt.Printf("Cmd `%s` executed!\n", ctx.Cmd.Name)
 				fmt.Printf("App Flag `file` opted: `%s`\n", ctx.AppContext.Flags.Any("file"))
 
-				i, err := ctx.Flags.Int("trace").Value()
+				trace, err := ctx.Flags.Int("trace")
 				if err != nil {
-					fmt.Println(err)
-					os.Exit(1)
+					return err
 				}
+				i, err := trace.Value()
+				if err != nil {
+					return err
+				}
+
 				fmt.Printf("Cmd Flag `trace` opted: `%d` (%T)\n", i, i)
 
-				d, _ := ctx.Flags.Bool("detailed").Value()
+				detailed, err := ctx.Flags.Bool("detailed")
+				if err != nil {
+					return err
+				}
+				d, err := detailed.Value()
+				if err != nil {
+					return err
+				}
+
 				fmt.Printf("Cmd Flag `detailed` opted: `%v` (%T)\n", d, d)
+
 				fmt.Printf("Cmd Tail arguments: %#v\n", ctx.TailArgs)
 				return nil
 			},
@@ -98,11 +111,16 @@ func main() {
 	app.Handler = func(ctx *cli.AppContext) error {
 		fmt.Printf("App `%s` executed!\n", ctx.App.Name)
 		fmt.Printf("App Tail arguments: %#v\n", ctx.TailArgs)
-		fmt.Printf("App Flag `file` opted: `%v`\n", ctx.Flags.StringSlice("file"))
 
-		b, _ := ctx.Flags.Bool("verbose").Value()
+		if f, err := ctx.Flags.StringSlice("file"); err == nil {
+			fmt.Printf("App Flag `file` opted: `%v`\n", f.Value())
+		}
 
-		fmt.Printf("App Flag `verbose` opted: `%v`\n", b)
+		if v, err := ctx.Flags.Bool("verbose"); err == nil {
+			b, _ := v.Value()
+			fmt.Printf("App Flag `verbose` opted: `%v`\n", b)
+		}
+
 		return nil
 	}
 	if err := app.Run(os.Args); err != nil {
