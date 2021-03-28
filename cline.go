@@ -34,13 +34,14 @@ type CmdHandler func(*CmdContext) error
 
 // App defines application settings
 type App struct {
-	Name      string
-	Summary   string
-	Version   string
-	BuildTime string
-	Flags     []Flag
-	Commands  []Cmd
-	Handler   AppHandler
+	Name        string
+	Summary     string
+	Version     string
+	BuildTime   string
+	BuildCommit string
+	Flags       []Flag
+	Commands    []Cmd
+	Handler     AppHandler
 }
 
 // AppContext defines an application context.

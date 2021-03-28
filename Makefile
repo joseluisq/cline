@@ -1,4 +1,5 @@
 BUILD_TIME ?= $(shell date -u '+%Y-%m-%dT%H:%m:%S')
+BUILD_VCS_REF ?= $(shell git rev-parse --short HEAD)
 
 install:
 	@go version
@@ -16,8 +17,12 @@ test:
 build:
 	@go version
 	@go build -v \
-		-ldflags "-s -w -X 'main.version=0.0.0' -X 'main.buildTime=$(BUILD_TIME)'" \
+		-ldflags "-s -w \
+			-X 'main.version=0.0.0' \
+			-X 'main.buildTime=$(BUILD_TIME)' \
+			-X 'main.buildCommit=$(BUILD_VCS_REF)'" \
 		-a -o bin/cline ./examples
+	@ls -ogh bin/cline
 .PHONY: build
 
 coverage:

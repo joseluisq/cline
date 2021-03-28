@@ -10,8 +10,9 @@ import (
 // App version and build time values passed at compile time
 // See `Makefile` > build
 var (
-	version   string = "devel"
-	buildTime string
+	version     string = "devel"
+	buildTime   string
+	buildCommit string
 )
 
 func main() {
@@ -20,6 +21,7 @@ func main() {
 	app.Summary = "Run a program in a modified environment using .env files"
 	app.Version = version
 	app.BuildTime = buildTime
+	app.BuildCommit = buildCommit
 	app.Flags = []cli.Flag{
 		cli.FlagString{
 			Name:    "file",

@@ -168,6 +168,7 @@ func (app *App) printVersion() error {
 	fmt.Printf("Version:       %s\n", app.Version)
 	fmt.Printf("Go version:    %s\n", runtime.Version())
 	fmt.Printf("Built:         %s\n", app.BuildTime)
+	fmt.Printf("Commit:        %s\n", app.BuildCommit)
 	fmt.Printf("OS/Arch:       %s/%s\n", runtime.GOOS, runtime.GOARCH)
 	return nil
 }
