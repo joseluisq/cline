@@ -25,7 +25,7 @@ func main() {
 	app.Flags = []cli.Flag{
 		cli.FlagString{
 			Name:    "file",
-			Summary: "Load environment variables from a file path",
+			Summary: "Load environment variables from a file path.\nSome new line description\nAnother new line description.",
 			Value:   ".env",
 			Aliases: []string{"f"},
 		},
@@ -33,7 +33,7 @@ func main() {
 			Name:    "int",
 			Summary: "Int value",
 			Value:   5,
-			Aliases: []string{"b"},
+			Aliases: []string{"b", "z"},
 		},
 		cli.FlagBool{
 			Name:    "verbose",

@@ -20,6 +20,7 @@ func printHelp(app *App, cmd *Cmd) error {
 		return fmt.Errorf("application instance not found")
 	}
 
+	paddingLeft := strings.Repeat(" ", 3)
 	summary := app.Summary
 	flags := app.Flags
 	if cmd != nil {
@@ -27,13 +28,16 @@ func printHelp(app *App, cmd *Cmd) error {
 		flags = cmd.Flags
 	}
 
-	// TODO: subcommands support
-	if cmd == nil {
-		fmt.Printf("NAME: %s [OPTIONS] COMMAND\n\n", app.Name)
-	} else {
-		fmt.Printf("NAME: %s %s [OPTIONS] COMMAND\n\n", app.Name, cmd.Name)
-	}
+	fmt.Printf("%s %s\n", app.Name, app.Version)
 	fmt.Printf("%s\n\n", summary)
+
+	// TODO: subcommands support
+	fmt.Println("USAGE:")
+	if cmd == nil {
+		fmt.Printf("%s%s [OPTIONS] COMMAND\n\n", paddingLeft, app.Name)
+	} else {
+		fmt.Printf("%s%s %s [OPTIONS]\n\n", paddingLeft, app.Name, cmd.Name)
+	}
 
 	// Print options
 	fmt.Printf("OPTIONS:\n")
@@ -101,7 +105,11 @@ func printHelp(app *App, cmd *Cmd) error {
 
 		defaultVal := strings.TrimSpace(v.defaults)
 		if defaultVal != "" {
-			defaultVal = " [default: " + defaultVal + "]"
+			defaultSpace := ""
+			if v.summary != "" {
+				defaultSpace = " "
+			}
+			defaultVal = defaultSpace + "[default: " + defaultVal + "]"
 		}
 		envVar := strings.TrimSpace(v.envVar)
 		if envVar != "" {
@@ -109,17 +117,17 @@ func printHelp(app *App, cmd *Cmd) error {
 		}
 
 		line := fmt.Sprintf(
-			"  %s%s --%s%s    %s%s%s\n",
+			"%s%s%s --%s%s%s",
+			paddingLeft,
 			marginLeftRepeat,
 			shorts,
 			v.name,
 			marginRightRepeat,
-			v.summary,
-			defaultVal,
-			envVar,
+			paddingLeft,
 		)
 
-		fmt.Println(line)
+		summary := strings.ReplaceAll(v.summary, "\n", "\n"+strings.Repeat(" ", len(line)))
+		fmt.Println(line + summary + defaultVal + envVar)
 	}
 
 	// Print app commands
@@ -138,9 +146,11 @@ func printHelp(app *App, cmd *Cmd) error {
 			}
 			for _, c := range vcmds {
 				fmt.Printf(
-					"  %s%s%s    %s\n",
+					"%s%s%s%s%s%s\n",
+					paddingLeft,
 					"",
 					c[0],
+					paddingLeft,
 					strings.Repeat(
 						" ", cmdLen-len([]rune(c[0])),
 					),
@@ -153,10 +163,9 @@ func printHelp(app *App, cmd *Cmd) error {
 		}
 	} else {
 		fmt.Printf("\n")
-		fmt.Printf("Run '%s %s COMMAND --help' for more information on a command\n", app.Name, cmd.Name)
+		fmt.Printf("Run '%s %s --help' for more information about this command\n", app.Name, cmd.Name)
 	}
 
-	fmt.Printf("\n")
 	return nil
 }
 

@@ -134,25 +134,31 @@ Output example:
 
 ```sh
 $ go run examples/main.go -h
-# NAME: enve [OPTIONS] COMMAND
-
+# enve 0.0.0
 # Run a program in a modified environment using .env files
 
+# USAGE:
+#    enve [OPTIONS] COMMAND
+#
 # OPTIONS:
-#   -f --file       Load environment variables from a file path [default: .env]
-#   -V --verbose    Enable more verbose info [default: false] [env: ENV_VERBOSE]
-#   -h --help       Prints help information
-#   -v --version    Prints version information
-
+#       -f --file      Load environment variables from a file path.
+#                      Some new line description
+#                      Another new line description. [default: .env]
+#    -b,-z --int       Int value [default: 5]
+#       -V --verbose   Enable more verbose info [default: true] [env: ENV_VERBOSE]
+#       -h --help      Prints help information
+#       -v --version   Prints version information
+#
 # COMMANDS:
-#   info    Show command information
-
+#    info   Show command information
+#
 # Run 'enve COMMAND --help' for more information on a command
 
 $ go run examples/main.go -v
 # Version:       0.0.0
-# Go version:    go1.15.4
-# Built:         2020-11-10T21:11:36
+# Go version:    go1.16.2
+# Built:         2021-03-28T20:03:04
+# Commit:        1885ad1
 # OS/Arch:       linux/amd64
 ```
 
