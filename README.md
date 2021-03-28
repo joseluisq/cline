@@ -17,7 +17,11 @@ WIP project under **active** development.
 - Optional environment variable names for flags.
 - Automatic `--help` (`-h`) flag for global flags and commands.
 - Automatic `--version` (`-v`) flag with relevant info like app version, Go version, build datetime and OS/Arch.
-- POSIX-compliant flags (partial but [WIP](https://github.com/joseluisq/cline/issues/3))
+
+### Work in progress
+
+- POSIX-compliant flags feature is partial. Please see [issue #3](https://github.com/joseluisq/cline/issues/3)
+- Subcommands are not supported yet.
 
 ## Usage
 
@@ -33,9 +37,12 @@ import (
 	cli "github.com/joseluisq/cline"
 )
 
+// App values passed at compile time for --version flag
+// See "Makefile > build"
 var (
-	version   string = "devel"
-	buildTime string
+	version     string = "devel"
+	buildTime   string
+	buildCommit string
 )
 
 func main() {
@@ -44,6 +51,8 @@ func main() {
 	app.Summary = "Run a program in a modified environment using .env files"
 	app.Version = version
 	app.BuildTime = buildTime
+	app.BuildCommit = buildCommit
+	// Global App flags
 	app.Flags = []cli.Flag{
 		cli.FlagString{
 			Name:    "file",
@@ -59,6 +68,7 @@ func main() {
 			EnvVar:  "ENV_VERBOSE",
 		},
 	}
+	// App commands
 	app.Commands = []cli.Cmd{
 		{
 			Name:    "info",
@@ -77,6 +87,7 @@ func main() {
 					Aliases: []string{"d"},
 				},
 			},
+			// Specific command handler for its flags
 			Handler: func(ctx *cli.CmdContext) error {
 				fmt.Printf("Cmd `%s` executed!\n", ctx.Cmd.Name)
 				fmt.Printf("App Flag `file` opted: `%s`\n", ctx.AppContext.Flags.Any("file"))
@@ -89,7 +100,6 @@ func main() {
 				if err != nil {
 					return err
 				}
-
 				fmt.Printf("Cmd Flag `trace` opted: `%d` (%T)\n", i, i)
 
 				detailed, err := ctx.Flags.Bool("detailed")
@@ -100,7 +110,6 @@ func main() {
 				if err != nil {
 					return err
 				}
-
 				fmt.Printf("Cmd Flag `detailed` opted: `%v` (%T)\n", d, d)
 
 				fmt.Printf("Cmd Tail arguments: %#v\n", ctx.TailArgs)
@@ -108,6 +117,7 @@ func main() {
 			},
 		},
 	}
+	// App handler for flags
 	app.Handler = func(ctx *cli.AppContext) error {
 		fmt.Printf("App `%s` executed!\n", ctx.App.Name)
 		fmt.Printf("App Tail arguments: %#v\n", ctx.TailArgs)
