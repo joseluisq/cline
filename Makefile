@@ -1,14 +1,8 @@
 BUILD_TIME ?= $(shell date -u '+%Y-%m-%dT%H:%m:%S')
 BUILD_VCS_REF ?= $(shell git rev-parse --short HEAD)
 
-install:
-	@go version
-	@go get -v golang.org/x/lint/golint
-.PHONY: install
-
 test:
 	@go version
-	@golint -set_exit_status ./...
 	@go vet ./...
 	@go test $$(go list ./... | grep -v /examples) \
 		-v -timeout 30s -race -coverprofile=coverage.txt -covermode=atomic
