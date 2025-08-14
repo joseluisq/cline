@@ -1,19 +1,22 @@
-package cline
+package helpers
 
 import (
 	"fmt"
 	"strings"
+
+	"github.com/joseluisq/cline/app"
+	"github.com/joseluisq/cline/flag"
 )
 
 // It checks if a list of commands and initialize them if they are valid.
-func validateCommands(commands []Cmd) (cmds []Cmd, err error) {
+func ValidateCommands(commands []app.Cmd) (cmds []app.Cmd, err error) {
 	for _, c := range commands {
 		name := strings.TrimSpace(c.Name)
 		if name == "" {
 			err = fmt.Errorf("one command name has empty value")
 			return
 		}
-		flags, errf := validateFlagsAndInit(c.Flags)
+		flags, errf := ValidateFlagsAndInit(c.Flags)
 		if errf != nil {
 			err = errf
 			return
@@ -25,39 +28,39 @@ func validateCommands(commands []Cmd) (cmds []Cmd, err error) {
 }
 
 // It checks a list of flags and initialize them if they are valid.
-func validateFlagsAndInit(flags []Flag) (vflags []Flag, err error) {
+func ValidateFlagsAndInit(flags []flag.Flag) (vflags []flag.Flag, err error) {
 	for _, v := range flags {
 		switch f := v.(type) {
-		case FlagBool:
+		case flag.FlagBool:
 			if name := strings.ToLower(strings.TrimSpace(f.Name)); name == "" {
 				err = fmt.Errorf("bool flag name has an empty value")
 				return
 			}
-			f.initialize()
+			f.Initialize()
 			vflags = append(vflags, f)
 
-		case FlagInt:
+		case flag.FlagInt:
 			if name := strings.ToLower(strings.TrimSpace(f.Name)); name == "" {
 				err = fmt.Errorf("int flag name has an empty value")
 				return
 			}
-			f.initialize()
+			f.Initialize()
 			vflags = append(vflags, f)
 
-		case FlagString:
+		case flag.FlagString:
 			if name := strings.ToLower(strings.TrimSpace(f.Name)); name == "" {
 				err = fmt.Errorf("string flag name has an empty value")
 				return
 			}
-			f.initialize()
+			f.Initialize()
 			vflags = append(vflags, f)
 
-		case FlagStringSlice:
+		case flag.FlagStringSlice:
 			if name := strings.ToLower(strings.TrimSpace(f.Name)); name == "" {
 				err = fmt.Errorf("string slice flag name has an empty value")
 				return
 			}
-			f.initialize()
+			f.Initialize()
 			vflags = append(vflags, f)
 
 		default:
@@ -70,10 +73,10 @@ func validateFlagsAndInit(flags []Flag) (vflags []Flag, err error) {
 
 // It finds a flag item with its index in a given flags array by key
 // then checks if every flag is a short flag or not.
-func findFlagByKey(key string, flags []Flag) (int, Flag, bool) {
+func FindFlagByKey(key string, flags []flag.Flag) (int, flag.Flag, bool) {
 	for i, v := range flags {
 		switch f := v.(type) {
-		case FlagBool:
+		case flag.FlagBool:
 			// Check for long named flags
 			if f.Name == key {
 				return i, f, false
@@ -84,7 +87,7 @@ func findFlagByKey(key string, flags []Flag) (int, Flag, bool) {
 					return i, f, true
 				}
 			}
-		case FlagInt:
+		case flag.FlagInt:
 			// Check for long named flags
 			if f.Name == key {
 				return i, f, false
@@ -95,7 +98,7 @@ func findFlagByKey(key string, flags []Flag) (int, Flag, bool) {
 					return i, f, true
 				}
 			}
-		case FlagString:
+		case flag.FlagString:
 			// Check for long named flags
 			if f.Name == key {
 				return i, f, false
@@ -106,7 +109,7 @@ func findFlagByKey(key string, flags []Flag) (int, Flag, bool) {
 					return i, f, true
 				}
 			}
-		case FlagStringSlice:
+		case flag.FlagStringSlice:
 			// Check for long named flags
 			if f.Name == key {
 				return i, f, false

@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	cli "github.com/joseluisq/cline"
+	"github.com/joseluisq/cline/app"
+	"github.com/joseluisq/cline/flag"
+	"github.com/joseluisq/cline/handler"
 )
 
 // App version and build time values passed at compile time
@@ -16,26 +18,26 @@ var (
 )
 
 func main() {
-	app := cli.New()
-	app.Name = "enve"
-	app.Summary = "Run a program in a modified environment using .env files"
-	app.Version = version
-	app.BuildTime = buildTime
-	app.BuildCommit = buildCommit
-	app.Flags = []cli.Flag{
-		cli.FlagString{
+	ap := app.New()
+	ap.Name = "enve"
+	ap.Summary = "Run a program in a modified environment using .env files"
+	ap.Version = version
+	ap.BuildTime = buildTime
+	ap.BuildCommit = buildCommit
+	ap.Flags = []flag.Flag{
+		flag.FlagString{
 			Name:    "file",
 			Summary: "Load environment variables from a file path.\nSome new line description\nAnother new line description.",
 			Value:   ".env",
 			Aliases: []string{"f"},
 		},
-		cli.FlagInt{
+		flag.FlagInt{
 			Name:    "int",
 			Summary: "Int value",
 			Value:   5,
 			Aliases: []string{"b", "z"},
 		},
-		cli.FlagBool{
+		flag.FlagBool{
 			Name:    "verbose",
 			Summary: "Enable more verbose info",
 			Value:   true,
@@ -43,35 +45,35 @@ func main() {
 			EnvVar:  "ENV_VERBOSE",
 		},
 	}
-	app.Commands = []cli.Cmd{
+	ap.Commands = []app.Cmd{
 		{
 			Name:    "info",
 			Summary: "Show command information",
-			Flags: []cli.Flag{
-				cli.FlagInt{
+			Flags: []flag.Flag{
+				flag.FlagInt{
 					Name:    "trace",
 					Summary: "Enable tracing mode",
 					Value:   10,
 					Aliases: []string{"t"},
 				},
-				cli.FlagBool{
+				flag.FlagBool{
 					Name:    "detailed",
 					Summary: "Enable info details",
 					Value:   true,
 					Aliases: []string{"d"},
 				},
-				cli.FlagString{
+				flag.FlagString{
 					Name:    "FF",
 					Value:   ".env",
 					Aliases: []string{"f"},
 				},
-				cli.FlagStringSlice{
+				flag.FlagStringSlice{
 					Name:    "II",
 					Value:   []string{"q", "r", "s"},
 					Aliases: []string{"i"},
 				},
 			},
-			Handler: func(ctx *cli.CmdContext) error {
+			Handler: func(ctx *app.CmdContext) error {
 				fmt.Printf("Cmd `%s` executed!\n", ctx.Cmd.Name)
 
 				file, err := ctx.AppContext.Flags.String("file")
@@ -109,7 +111,7 @@ func main() {
 			},
 		},
 	}
-	app.Handler = func(ctx *cli.AppContext) error {
+	ap.Handler = func(ctx *app.AppContext) error {
 		fmt.Printf("App `%s` executed!\n", ctx.App.Name)
 
 		file, err := ctx.Flags.String("file")
@@ -137,7 +139,8 @@ func main() {
 		fmt.Printf("App Provided flags (short): %v\n", ctx.Flags.GetProvidedShort())
 		return nil
 	}
-	if err := app.Run(os.Args); err != nil {
+
+	if err := handler.New(ap).Run(os.Args); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}

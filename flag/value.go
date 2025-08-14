@@ -1,4 +1,4 @@
-package cline
+package flag
 
 import (
 	"fmt"
@@ -36,127 +36,127 @@ func (v AnyValue) ToStringSlice() []string {
 
 // FlagBoolValue represents a `bool` type flag value.
 type FlagBoolValue struct {
-	flag FlagBool
+	Flag FlagBool
 }
 
 // Value unwraps the plain `bool` value of the current flag.
 func (v *FlagBoolValue) Value() (bool, error) {
-	return v.flag.flagValue.ToBool()
+	return v.Flag.FlagValue.ToBool()
 }
 
 // IsProvided checks if current `bool` flag was provided from stdin.
 func (v *FlagBoolValue) IsProvided() bool {
-	return v.flag.flagProvided
+	return v.Flag.FlagProvided
 }
 
 // IsProvidedShort checks if current `bool` flag was provided from stdin but using its short name.
 func (v *FlagBoolValue) IsProvidedShort() bool {
-	return v.flag.flagProvided && v.flag.flagProvidedAsAlias
+	return v.Flag.FlagProvided && v.Flag.FlagProvidedAsAlias
 }
 
 // IsProvidedLong checks if current `bool` flag was provided from stdin but using its long name.
 func (v *FlagBoolValue) IsProvidedLong() bool {
-	return v.flag.flagProvided && !v.flag.flagProvidedAsAlias
+	return v.Flag.FlagProvided && !v.Flag.FlagProvidedAsAlias
 }
 
 // GetFlagType returns the associated flag type.
 func (v *FlagBoolValue) GetFlagType() FlagBool {
-	return v.flag
+	return v.Flag
 }
 
 // FlagIntValue represents an `int` type flag value.
 type FlagIntValue struct {
-	flag FlagInt
+	Flag FlagInt
 }
 
 // Value unwraps the plain `int` value of the current flag.
 func (v *FlagIntValue) Value() (int, error) {
-	return v.flag.flagValue.ToInt()
+	return v.Flag.FlagValue.ToInt()
 }
 
 // IsProvided checks if current `int` flag was provided from stdin.
 func (v *FlagIntValue) IsProvided() bool {
-	return v.flag.flagProvided
+	return v.Flag.FlagProvided
 }
 
 // IsProvidedShort checks if current `int` flag was provided from stdin but using its short name.
 func (v *FlagIntValue) IsProvidedShort() bool {
-	return v.flag.flagProvided && v.flag.flagProvidedAsAlias
+	return v.Flag.FlagProvided && v.Flag.FlagProvidedAsAlias
 }
 
 // IsProvidedLong checks if current `int` flag was provided from stdin but using its long name.
 func (v *FlagIntValue) IsProvidedLong() bool {
-	return v.flag.flagProvided && !v.flag.flagProvidedAsAlias
+	return v.Flag.FlagProvided && !v.Flag.FlagProvidedAsAlias
 }
 
 // GetFlagType returns the associated flag type.
 func (v *FlagIntValue) GetFlagType() FlagInt {
-	return v.flag
+	return v.Flag
 }
 
 // FlagStringValue represents a `string` type flag value.
 type FlagStringValue struct {
-	flag FlagString
+	Flag FlagString
 }
 
 // Value unwraps the plain `string` value of the current flag.
 func (v *FlagStringValue) Value() string {
-	return v.flag.flagValue.ToString()
+	return v.Flag.FlagValue.ToString()
 }
 
 // IsProvided checks if current `string` flag was provided from stdin.
 func (v *FlagStringValue) IsProvided() bool {
-	return v.flag.flagProvided
+	return v.Flag.FlagProvided
 }
 
 // IsProvidedShort checks if current `string` flag was provided from stdin but using its short name.
 func (v *FlagStringValue) IsProvidedShort() bool {
-	return v.flag.flagProvided && v.flag.flagProvidedAsAlias
+	return v.Flag.FlagProvided && v.Flag.FlagProvidedAsAlias
 }
 
 // IsProvidedLong checks if current `string` flag was provided from stdin but using its long name.
 func (v *FlagStringValue) IsProvidedLong() bool {
-	return v.flag.flagProvided && !v.flag.flagProvidedAsAlias
+	return v.Flag.FlagProvided && !v.Flag.FlagProvidedAsAlias
 }
 
 // GetFlagType returns the associated flag type.
 func (v *FlagStringValue) GetFlagType() FlagString {
-	return v.flag
+	return v.Flag
 }
 
 // FlagStringSliceValue represents a string slice type flag value.
 type FlagStringSliceValue struct {
-	flag FlagStringSlice
+	Flag FlagStringSlice
 }
 
 // Value unwraps the plain string slice value of the current flag.
 func (v *FlagStringSliceValue) Value() []string {
-	return v.flag.flagValue.ToStringSlice()
+	return v.Flag.FlagValue.ToStringSlice()
 }
 
 // IsProvided checks if current string slice flag was provided from stdin.
 func (v *FlagStringSliceValue) IsProvided() bool {
-	return v.flag.flagProvided
+	return v.Flag.FlagProvided
 }
 
 // IsProvidedShort checks if current string slice flag was provided from stdin but using its short name.
 func (v *FlagStringSliceValue) IsProvidedShort() bool {
-	return v.flag.flagProvided && v.flag.flagProvidedAsAlias
+	return v.Flag.FlagProvided && v.Flag.FlagProvidedAsAlias
 }
 
 // IsProvidedLong checks if current string slice flag was provided from stdin but using its long name.
 func (v *FlagStringSliceValue) IsProvidedLong() bool {
-	return v.flag.flagProvided && !v.flag.flagProvidedAsAlias
+	return v.Flag.FlagProvided && !v.Flag.FlagProvidedAsAlias
 }
 
 // GetFlagType returns the associated flag type.
 func (v *FlagStringSliceValue) GetFlagType() FlagStringSlice {
-	return v.flag
+	return v.Flag
 }
 
 // FlagValues defines list of flag values.
 type FlagValues struct {
-	flags []Flag
+	Flags []Flag
 }
 
 // It finds a `Flag` by its string key in the inner list.
@@ -165,7 +165,7 @@ func (v *FlagValues) findByKey(longFlagName string) (flag Flag) {
 	if longFlagName == "" {
 		return
 	}
-	for _, fl := range v.flags {
+	for _, fl := range v.Flags {
 		switch f := fl.(type) {
 		case FlagBool:
 			if f.Name == longFlagName {
@@ -195,56 +195,56 @@ func (v *FlagValues) findByKey(longFlagName string) (flag Flag) {
 // It returns provided flags by specified filters.
 func (v *FlagValues) getProvidedFlags(providedOnly bool, providedAliasOnly bool) (flags []Flag) {
 	if !providedOnly && !providedAliasOnly {
-		flags = v.flags
+		flags = v.Flags
 		return
 	}
-	for _, fl := range v.flags {
+	for _, fl := range v.Flags {
 		switch f := fl.(type) {
 		case FlagBool:
-			if !f.flagProvided {
+			if !f.FlagProvided {
 				continue
 			}
 			if providedOnly {
 				flags = append(flags, f)
 				continue
 			}
-			if providedAliasOnly && f.flagProvidedAsAlias {
+			if providedAliasOnly && f.FlagProvidedAsAlias {
 				flags = append(flags, f)
 				continue
 			}
 		case FlagInt:
-			if !f.flagProvided {
+			if !f.FlagProvided {
 				continue
 			}
 			if providedOnly {
 				flags = append(flags, f)
 				continue
 			}
-			if providedAliasOnly && f.flagProvidedAsAlias {
+			if providedAliasOnly && f.FlagProvidedAsAlias {
 				flags = append(flags, f)
 				continue
 			}
 		case FlagString:
-			if !f.flagProvided {
+			if !f.FlagProvided {
 				continue
 			}
 			if providedOnly {
 				flags = append(flags, f)
 				continue
 			}
-			if providedAliasOnly && f.flagProvidedAsAlias {
+			if providedAliasOnly && f.FlagProvidedAsAlias {
 				flags = append(flags, f)
 				continue
 			}
 		case FlagStringSlice:
-			if !f.flagProvided {
+			if !f.FlagProvided {
 				continue
 			}
 			if providedOnly {
 				flags = append(flags, f)
 				continue
 			}
-			if providedAliasOnly && f.flagProvidedAsAlias {
+			if providedAliasOnly && f.FlagProvidedAsAlias {
 				flags = append(flags, f)
 				continue
 			}
@@ -275,13 +275,13 @@ func (v *FlagValues) GetProvidedShort() []Flag {
 func (v *FlagValues) Any(longFlagName string) AnyValue {
 	switch f := v.findByKey(longFlagName).(type) {
 	case FlagBool:
-		return f.flagValue
+		return f.FlagValue
 	case FlagInt:
-		return f.flagValue
+		return f.FlagValue
 	case FlagString:
-		return f.flagValue
+		return f.FlagValue
 	case FlagStringSlice:
-		return f.flagValue
+		return f.FlagValue
 	}
 	return AnyValue("")
 }
@@ -291,7 +291,7 @@ func (v *FlagValues) Any(longFlagName string) AnyValue {
 func (v *FlagValues) Bool(longFlagName string) (val *FlagBoolValue, err error) {
 	switch f := v.findByKey(longFlagName).(type) {
 	case FlagBool:
-		val = &FlagBoolValue{flag: f}
+		val = &FlagBoolValue{Flag: f}
 		return
 	default:
 		t := strings.ReplaceAll(fmt.Sprintf("%T", f), "cline.", "")
@@ -309,7 +309,7 @@ func (v *FlagValues) Bool(longFlagName string) (val *FlagBoolValue, err error) {
 func (v *FlagValues) Int(longFlagName string) (val *FlagIntValue, err error) {
 	switch f := v.findByKey(longFlagName).(type) {
 	case FlagInt:
-		val = &FlagIntValue{flag: f}
+		val = &FlagIntValue{Flag: f}
 		return
 	default:
 		t := strings.ReplaceAll(fmt.Sprintf("%T", f), "cline.", "")
@@ -327,7 +327,7 @@ func (v *FlagValues) Int(longFlagName string) (val *FlagIntValue, err error) {
 func (v *FlagValues) String(longFlagName string) (val *FlagStringValue, err error) {
 	switch f := v.findByKey(longFlagName).(type) {
 	case FlagString:
-		val = &FlagStringValue{flag: f}
+		val = &FlagStringValue{Flag: f}
 		return
 	default:
 		t := strings.ReplaceAll(fmt.Sprintf("%T", f), "cline.", "")
@@ -345,7 +345,7 @@ func (v *FlagValues) String(longFlagName string) (val *FlagStringValue, err erro
 func (v *FlagValues) StringSlice(longFlagName string) (val *FlagStringSliceValue, err error) {
 	switch f := v.findByKey(longFlagName).(type) {
 	case FlagStringSlice:
-		val = &FlagStringSliceValue{flag: f}
+		val = &FlagStringSliceValue{Flag: f}
 		return
 	default:
 		t := strings.ReplaceAll(fmt.Sprintf("%T", f), "cline.", "")
