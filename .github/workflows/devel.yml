@@ -50,11 +50,12 @@ jobs:
         run: |
           go test ./... -v -timeout 30s -coverprofile=coverage.txt -covermode=atomic
       - name: Coverage
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v5
         with:
           flags: unittests
           verbose: true
           name: codecov-cline
+          token: ${{ secrets.CODECOV_TOKEN }}
       - name: Build
         shell: bash
         run: |
