@@ -117,9 +117,6 @@ func main() {
 			return err
 		}
 		b := file.Value()
-		if err != nil {
-			return err
-		}
 		fmt.Printf("App Flag `file`: `%s`\n", b)
 
 		fmt.Printf("App Flag `int`: `%v`\n", ctx.Flags.Any("int"))

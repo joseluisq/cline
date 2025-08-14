@@ -5,6 +5,9 @@ vendor
 *.txt
 *.log
 *.bin
-*.sum
+*envf*
+/*.sh
+/*.env
+.DS_Store
 .vscode
 TODO

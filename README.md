@@ -2,8 +2,6 @@
 
 > A fast and lightweight CLI package for Go without external dependencies.
 
-WIP project under **active** development.
-
 ## Features
 
 - No external dependencies more than few [Go's stdlib](https://golang.org/pkg/#stdlib) ones.
