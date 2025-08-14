@@ -1,10 +1,13 @@
-package cline
+package flag
 
 import (
 	"strconv"
 	"strings"
 	"syscall"
 )
+
+// Flag defines a flag generic type.
+type Flag interface{}
 
 // FlagInt defines an `Int` type flag.
 type FlagInt struct {
@@ -22,24 +25,24 @@ type FlagInt struct {
 	// and underscores but without dashes, spaces or any kind of special chars.
 	EnvVar string
 
-	flagValue           AnyValue
-	flagAssigned        bool
-	flagProvided        bool
-	flagProvidedAsAlias bool
+	FlagValue           Value
+	FlagAssigned        bool
+	FlagProvided        bool
+	FlagProvidedAsAlias bool
 }
 
 // It sets a default flag value via its associated `Value` prop
 // or its environment variable (`EnvVar`) if so.
-func (fi *FlagInt) initialize() {
-	val := AnyValue(strconv.Itoa(fi.Value))
+func (fi *FlagInt) Initialize() {
+	val := Value(strconv.Itoa(fi.Value))
 	ev, ok := syscall.Getenv(fi.EnvVar)
 	if ok {
-		s := AnyValue(ev)
+		s := Value(ev)
 		if _, err := s.ToInt(); err == nil {
 			val = s
 		}
 	}
-	fi.flagValue = val
+	fi.FlagValue = val
 }
 
 // FlagBool defines a `bool` type flag.
@@ -58,23 +61,23 @@ type FlagBool struct {
 	// and underscores but without dashes, spaces or any kind of special chars.
 	EnvVar string
 
-	flagValue           AnyValue
-	flagAssigned        bool
-	flagProvided        bool
-	flagProvidedAsAlias bool
+	FlagValue           Value
+	FlagAssigned        bool
+	FlagProvided        bool
+	FlagProvidedAsAlias bool
 }
 
 // It sets a default flag value via its associated `Value` prop
 // or its environment variable (`EnvVar`) if so.
-func (fb *FlagBool) initialize() {
-	val := AnyValue(strconv.FormatBool(fb.Value))
+func (fb *FlagBool) Initialize() {
+	val := Value(strconv.FormatBool(fb.Value))
 	ev, ok := syscall.Getenv(fb.EnvVar)
 	if ok {
-		if b, err := AnyValue(ev).ToBool(); err == nil {
-			val = AnyValue(strconv.FormatBool(b))
+		if b, err := Value(ev).ToBool(); err == nil {
+			val = Value(strconv.FormatBool(b))
 		}
 	}
-	fb.flagValue = val
+	fb.FlagValue = val
 }
 
 // FlagString defines a `String` type flag.
@@ -93,21 +96,21 @@ type FlagString struct {
 	// and underscores but without dashes, spaces or any kind of special chars.
 	EnvVar string
 
-	flagValue           AnyValue
-	flagAssigned        bool
-	flagProvided        bool
-	flagProvidedAsAlias bool
+	FlagValue           Value
+	FlagAssigned        bool
+	FlagProvided        bool
+	FlagProvidedAsAlias bool
 }
 
 // It sets a default flag value via its associated `Value` prop
 // or its environment variable (`EnvVar`) if so.
-func (fs *FlagString) initialize() {
-	val := AnyValue(fs.Value)
+func (fs *FlagString) Initialize() {
+	val := Value(fs.Value)
 	ev, ok := syscall.Getenv(fs.EnvVar)
 	if ok {
-		val = AnyValue(ev)
+		val = Value(ev)
 	}
-	fs.flagValue = val
+	fs.FlagValue = val
 }
 
 // FlagStringSlice defines a string slice type flag.
@@ -126,19 +129,19 @@ type FlagStringSlice struct {
 	// and underscores but without dashes, spaces or any kind of special chars.
 	EnvVar string
 
-	flagValue           AnyValue
-	flagAssigned        bool
-	flagProvided        bool
-	flagProvidedAsAlias bool
+	FlagValue           Value
+	FlagAssigned        bool
+	FlagProvided        bool
+	FlagProvidedAsAlias bool
 }
 
 // It sets a default flag value via its associated `Value` prop
 // or its environment variable (`EnvVar`) if so.
-func (fs *FlagStringSlice) initialize() {
-	val := AnyValue(strings.Join(fs.Value, ","))
+func (fs *FlagStringSlice) Initialize() {
+	val := Value(strings.Join(fs.Value, ","))
 	ev, ok := syscall.Getenv(fs.EnvVar)
 	if ok {
-		val = AnyValue(ev)
+		val = Value(ev)
 	}
-	fs.flagValue = val
+	fs.FlagValue = val
 }
