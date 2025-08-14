@@ -25,7 +25,7 @@ type FlagInt struct {
 	// and underscores but without dashes, spaces or any kind of special chars.
 	EnvVar string
 
-	FlagValue           AnyValue
+	FlagValue           Value
 	FlagAssigned        bool
 	FlagProvided        bool
 	FlagProvidedAsAlias bool
@@ -34,10 +34,10 @@ type FlagInt struct {
 // It sets a default flag value via its associated `Value` prop
 // or its environment variable (`EnvVar`) if so.
 func (fi *FlagInt) Initialize() {
-	val := AnyValue(strconv.Itoa(fi.Value))
+	val := Value(strconv.Itoa(fi.Value))
 	ev, ok := syscall.Getenv(fi.EnvVar)
 	if ok {
-		s := AnyValue(ev)
+		s := Value(ev)
 		if _, err := s.ToInt(); err == nil {
 			val = s
 		}
@@ -61,7 +61,7 @@ type FlagBool struct {
 	// and underscores but without dashes, spaces or any kind of special chars.
 	EnvVar string
 
-	FlagValue           AnyValue
+	FlagValue           Value
 	FlagAssigned        bool
 	FlagProvided        bool
 	FlagProvidedAsAlias bool
@@ -70,11 +70,11 @@ type FlagBool struct {
 // It sets a default flag value via its associated `Value` prop
 // or its environment variable (`EnvVar`) if so.
 func (fb *FlagBool) Initialize() {
-	val := AnyValue(strconv.FormatBool(fb.Value))
+	val := Value(strconv.FormatBool(fb.Value))
 	ev, ok := syscall.Getenv(fb.EnvVar)
 	if ok {
-		if b, err := AnyValue(ev).ToBool(); err == nil {
-			val = AnyValue(strconv.FormatBool(b))
+		if b, err := Value(ev).ToBool(); err == nil {
+			val = Value(strconv.FormatBool(b))
 		}
 	}
 	fb.FlagValue = val
@@ -96,7 +96,7 @@ type FlagString struct {
 	// and underscores but without dashes, spaces or any kind of special chars.
 	EnvVar string
 
-	FlagValue           AnyValue
+	FlagValue           Value
 	FlagAssigned        bool
 	FlagProvided        bool
 	FlagProvidedAsAlias bool
@@ -105,10 +105,10 @@ type FlagString struct {
 // It sets a default flag value via its associated `Value` prop
 // or its environment variable (`EnvVar`) if so.
 func (fs *FlagString) Initialize() {
-	val := AnyValue(fs.Value)
+	val := Value(fs.Value)
 	ev, ok := syscall.Getenv(fs.EnvVar)
 	if ok {
-		val = AnyValue(ev)
+		val = Value(ev)
 	}
 	fs.FlagValue = val
 }
@@ -129,7 +129,7 @@ type FlagStringSlice struct {
 	// and underscores but without dashes, spaces or any kind of special chars.
 	EnvVar string
 
-	FlagValue           AnyValue
+	FlagValue           Value
 	FlagAssigned        bool
 	FlagProvided        bool
 	FlagProvidedAsAlias bool
@@ -138,10 +138,10 @@ type FlagStringSlice struct {
 // It sets a default flag value via its associated `Value` prop
 // or its environment variable (`EnvVar`) if so.
 func (fs *FlagStringSlice) Initialize() {
-	val := AnyValue(strings.Join(fs.Value, ","))
+	val := Value(strings.Join(fs.Value, ","))
 	ev, ok := syscall.Getenv(fs.EnvVar)
 	if ok {
-		val = AnyValue(ev)
+		val = Value(ev)
 	}
 	fs.FlagValue = val
 }

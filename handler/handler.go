@@ -124,7 +124,7 @@ func (h *Handler) Run(vArgs []string) error {
 					}
 
 					// If bool flag is defined is assumed as `true`
-					fl.FlagValue = flag.AnyValue("1")
+					fl.FlagValue = flag.Value("1")
 					// Check if we are at the last arg's item
 					if argIndex == vArgsLen-1 {
 						fl.FlagAssigned = true
@@ -178,7 +178,7 @@ func (h *Handler) Run(vArgs []string) error {
 					continue
 				}
 
-				s := flag.AnyValue(arg)
+				s := flag.Value(arg)
 				_, err := s.ToBool()
 				if err != nil {
 					tailArgs = append(tailArgs, arg)
@@ -186,7 +186,7 @@ func (h *Handler) Run(vArgs []string) error {
 
 				// If bool flag is defined is assumed as `true`
 				if err != nil {
-					s = flag.AnyValue("1")
+					s = flag.Value("1")
 				}
 
 				fl.FlagValue = s
@@ -211,7 +211,7 @@ func (h *Handler) Run(vArgs []string) error {
 					tailArgs = append(tailArgs, arg)
 					continue
 				}
-				s := flag.AnyValue(arg)
+				s := flag.Value(arg)
 				if _, err := s.ToInt(); err == nil {
 					fl.FlagValue = s
 					fl.FlagAssigned = true
@@ -237,7 +237,7 @@ func (h *Handler) Run(vArgs []string) error {
 					tailArgs = append(tailArgs, arg)
 					continue
 				}
-				fl.FlagValue = flag.AnyValue(arg)
+				fl.FlagValue = flag.Value(arg)
 				fl.FlagAssigned = true
 				lastFlag = fl
 
@@ -258,7 +258,7 @@ func (h *Handler) Run(vArgs []string) error {
 					tailArgs = append(tailArgs, arg)
 					continue
 				}
-				fl.FlagValue = flag.AnyValue(arg)
+				fl.FlagValue = flag.Value(arg)
 				fl.FlagAssigned = true
 				lastFlag = fl
 

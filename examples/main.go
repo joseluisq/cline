@@ -121,7 +121,7 @@ func main() {
 		b := file.Value()
 		fmt.Printf("App Flag `file`: `%s`\n", b)
 
-		fmt.Printf("App Flag `int`: `%v`\n", ctx.Flags.Any("int"))
+		fmt.Printf("App Flag `int`: `%v`\n", ctx.Flags.Value("int"))
 
 		verbose, err := ctx.Flags.Bool("verbose")
 		if err != nil {
