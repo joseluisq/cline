@@ -6,7 +6,7 @@ import (
 )
 
 // Value is a generic string type alias which represents
-// the raw input value for a command flag.
+// the raw input value for a command flag which can be cast into other types.
 type Value string
 
 // ToBool converts current flag value into `bool`.

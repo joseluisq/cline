@@ -293,29 +293,25 @@ func (h *Handler) Run(vArgs []string) error {
 	// Call command handler
 	if hasCmd && lastCmd.Handler != nil {
 		return lastCmd.Handler(&app.CmdContext{
-			Cmd: &lastCmd,
-			Flags: &flag.FlagValues{
-				Flags: lastCmd.Flags,
-			},
+			Cmd:      &lastCmd,
+			Flags:    flag.NewFlagValues(lastCmd.Flags),
 			TailArgs: tailArgs,
-			AppContext: &app.AppContext{
-				App: h.ap,
-				Flags: &flag.FlagValues{
-					Flags: h.ap.Flags,
-				},
-			},
+			AppContext: app.NewContext(
+				h.ap,
+				flag.NewFlagValues(h.ap.Flags),
+				[]string{},
+			),
 		})
 	}
 
 	// Call application handler
 	if h.ap.Handler != nil {
-		return h.ap.Handler(&app.AppContext{
-			App: h.ap,
-			Flags: &flag.FlagValues{
-				Flags: h.ap.Flags,
-			},
-			TailArgs: tailArgs,
-		})
+		ctx := app.NewContext(
+			h.ap,
+			flag.NewFlagValues(h.ap.Flags),
+			tailArgs,
+		)
+		return h.ap.Handler(ctx)
 	}
 
 	return nil

@@ -33,10 +33,9 @@ type FlagInt struct {
 
 // It sets a default flag value via its associated `Value` prop
 // or its environment variable (`EnvVar`) if so.
-func (fi *FlagInt) Initialize() {
+func (fi *FlagInt) Init() {
 	val := Value(strconv.Itoa(fi.Value))
-	ev, ok := syscall.Getenv(fi.EnvVar)
-	if ok {
+	if ev, ok := syscall.Getenv(fi.EnvVar); ok {
 		s := Value(ev)
 		if _, err := s.ToInt(); err == nil {
 			val = s
@@ -69,10 +68,9 @@ type FlagBool struct {
 
 // It sets a default flag value via its associated `Value` prop
 // or its environment variable (`EnvVar`) if so.
-func (fb *FlagBool) Initialize() {
+func (fb *FlagBool) Init() {
 	val := Value(strconv.FormatBool(fb.Value))
-	ev, ok := syscall.Getenv(fb.EnvVar)
-	if ok {
+	if ev, ok := syscall.Getenv(fb.EnvVar); ok {
 		if b, err := Value(ev).ToBool(); err == nil {
 			val = Value(strconv.FormatBool(b))
 		}
@@ -104,10 +102,9 @@ type FlagString struct {
 
 // It sets a default flag value via its associated `Value` prop
 // or its environment variable (`EnvVar`) if so.
-func (fs *FlagString) Initialize() {
+func (fs *FlagString) Init() {
 	val := Value(fs.Value)
-	ev, ok := syscall.Getenv(fs.EnvVar)
-	if ok {
+	if ev, ok := syscall.Getenv(fs.EnvVar); ok {
 		val = Value(ev)
 	}
 	fs.FlagValue = val
@@ -137,10 +134,9 @@ type FlagStringSlice struct {
 
 // It sets a default flag value via its associated `Value` prop
 // or its environment variable (`EnvVar`) if so.
-func (fs *FlagStringSlice) Initialize() {
+func (fs *FlagStringSlice) Init() {
 	val := Value(strings.Join(fs.Value, ","))
-	ev, ok := syscall.Getenv(fs.EnvVar)
-	if ok {
+	if ev, ok := syscall.Getenv(fs.EnvVar); ok {
 		val = Value(ev)
 	}
 	fs.FlagValue = val

@@ -36,7 +36,7 @@ func ValidateFlagsAndInit(flags []flag.Flag) (vflags []flag.Flag, err error) {
 				err = fmt.Errorf("bool flag name has an empty value")
 				return
 			}
-			f.Initialize()
+			f.Init()
 			vflags = append(vflags, f)
 
 		case flag.FlagInt:
@@ -44,7 +44,7 @@ func ValidateFlagsAndInit(flags []flag.Flag) (vflags []flag.Flag, err error) {
 				err = fmt.Errorf("int flag name has an empty value")
 				return
 			}
-			f.Initialize()
+			f.Init()
 			vflags = append(vflags, f)
 
 		case flag.FlagString:
@@ -52,7 +52,7 @@ func ValidateFlagsAndInit(flags []flag.Flag) (vflags []flag.Flag, err error) {
 				err = fmt.Errorf("string flag name has an empty value")
 				return
 			}
-			f.Initialize()
+			f.Init()
 			vflags = append(vflags, f)
 
 		case flag.FlagStringSlice:
@@ -60,7 +60,7 @@ func ValidateFlagsAndInit(flags []flag.Flag) (vflags []flag.Flag, err error) {
 				err = fmt.Errorf("string slice flag name has an empty value")
 				return
 			}
-			f.Initialize()
+			f.Init()
 			vflags = append(vflags, f)
 
 		default:

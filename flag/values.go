@@ -5,9 +5,16 @@ import (
 	"strings"
 )
 
-// FlagValues defines list of flag values.
+// FlagValues holds all defined flags with their values.
 type FlagValues struct {
-	Flags []Flag
+	flags []Flag
+}
+
+// NewFlagValues creates a new `FlagValues` instance.
+func NewFlagValues(flags []Flag) *FlagValues {
+	return &FlagValues{
+		flags: flags,
+	}
 }
 
 // It finds a `Flag` by its string key in the inner list.
@@ -16,7 +23,7 @@ func (v *FlagValues) findByKey(longFlagName string) (flag Flag) {
 	if longFlagName == "" {
 		return
 	}
-	for _, fl := range v.Flags {
+	for _, fl := range v.flags {
 		switch f := fl.(type) {
 		case FlagBool:
 			if f.Name == longFlagName {
@@ -46,10 +53,10 @@ func (v *FlagValues) findByKey(longFlagName string) (flag Flag) {
 // It returns provided flags by specified filters.
 func (v *FlagValues) getProvidedFlags(providedOnly bool, providedAliasOnly bool) (flags []Flag) {
 	if !providedOnly && !providedAliasOnly {
-		flags = v.Flags
+		flags = v.flags
 		return
 	}
-	for _, fl := range v.Flags {
+	for _, fl := range v.flags {
 		switch f := fl.(type) {
 		case FlagBool:
 			if !f.FlagProvided {
@@ -121,8 +128,8 @@ func (v *FlagValues) GetProvidedShort() []Flag {
 
 // Value gets the current flag value but ignoring its type.
 // However, the resulted value is convertible into other supported types.
-// And since the `AnyValue` is just an alias of built-in `string` type
-// it can be easily converted too into string like `string(AnyValue)`.
+// And since the `Value` type is just an alias of the built-in `string` type
+// it can be easily converted into string like `string(Value)`.
 func (v *FlagValues) Value(longFlagName string) Value {
 	switch f := v.findByKey(longFlagName).(type) {
 	case FlagBool:
