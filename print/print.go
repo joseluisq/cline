@@ -1,9 +1,12 @@
-package cline
+package print
 
 import (
 	"fmt"
-	"runtime"
 	"strings"
+
+	"github.com/joseluisq/cline/app"
+	// "github.com/joseluisq/cline/cmd"
+	"github.com/joseluisq/cline/flag"
 )
 
 type flagStruct struct {
@@ -14,29 +17,29 @@ type flagStruct struct {
 	envVar   string
 }
 
-// printHelp prints current application flags and commands info (--help).
-func printHelp(app *App, cmd *Cmd) error {
-	if app == nil {
+// PrintHelp prints current application flags and commands info (--help).
+func PrintHelp(ap *app.App, cmd *app.Cmd) error {
+	if ap == nil {
 		return fmt.Errorf("application instance not found")
 	}
 
 	paddingLeft := strings.Repeat(" ", 3)
-	summary := app.Summary
-	flags := app.Flags
+	summary := ap.Summary
+	flags := ap.Flags
 	if cmd != nil {
 		summary = cmd.Summary
 		flags = cmd.Flags
 	}
 
-	fmt.Printf("%s %s\n", app.Name, app.Version)
+	fmt.Printf("%s %s\n", ap.Name, ap.Version)
 	fmt.Printf("%s\n\n", summary)
 
 	// TODO: subcommands support
 	fmt.Println("USAGE:")
 	if cmd == nil {
-		fmt.Printf("%s%s [OPTIONS] COMMAND\n\n", paddingLeft, app.Name)
+		fmt.Printf("%s%s [OPTIONS] COMMAND\n\n", paddingLeft, ap.Name)
 	} else {
-		fmt.Printf("%s%s %s [OPTIONS]\n\n", paddingLeft, app.Name, cmd.Name)
+		fmt.Printf("%s%s %s [OPTIONS]\n\n", paddingLeft, ap.Name, cmd.Name)
 	}
 
 	// Print options
@@ -47,11 +50,11 @@ func printHelp(app *App, cmd *Cmd) error {
 	var aliasMaxLen = 0
 
 	// Append help and version flags
-	flags = append(flags, FlagString{
+	flags = append(flags, flag.FlagString{
 		Name: "help", Aliases: []string{"h"}, Summary: "Prints help information",
 	})
 	if cmd == nil {
-		flags = append(flags, FlagString{
+		flags = append(flags, flag.FlagString{
 			Name: "version", Aliases: []string{"v"}, Summary: "Prints version information",
 		})
 	}
@@ -62,18 +65,18 @@ func printHelp(app *App, cmd *Cmd) error {
 
 		fname := ""
 		switch f := fl.(type) {
-		case FlagBool:
+		case flag.FlagBool:
 			fname = f.Name
-			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.flagValue.ToString(), envVar: f.EnvVar}
-		case FlagInt:
+			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.FlagValue.ToString(), envVar: f.EnvVar}
+		case flag.FlagInt:
 			fname = f.Name
-			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.flagValue.ToString(), envVar: f.EnvVar}
-		case FlagString:
+			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.FlagValue.ToString(), envVar: f.EnvVar}
+		case flag.FlagString:
 			fname = f.Name
-			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.flagValue.ToString(), envVar: f.EnvVar}
-		case FlagStringSlice:
+			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.FlagValue.ToString(), envVar: f.EnvVar}
+		case flag.FlagStringSlice:
 			fname = f.Name
-			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.flagValue.ToString(), envVar: f.EnvVar}
+			vFlag = flagStruct{name: f.Name, aliases: f.Aliases, summary: f.Summary, defaults: f.FlagValue.ToString(), envVar: f.EnvVar}
 		}
 		if len([]rune(fname)) > fLen {
 			fLen = len([]rune(fname))
@@ -132,13 +135,13 @@ func printHelp(app *App, cmd *Cmd) error {
 
 	// Print app commands
 	if cmd == nil {
-		if len(app.Commands) > 0 {
+		if len(ap.Commands) > 0 {
 			fmt.Printf("\n")
 			fmt.Printf("COMMANDS:\n")
 
 			var vcmds [][]string
 			var cmdLen int = 0
-			for _, c := range app.Commands {
+			for _, c := range ap.Commands {
 				vcmds = append(vcmds, []string{c.Name, c.Summary})
 				if len([]rune(c.Name)) > cmdLen {
 					cmdLen = len([]rune(c.Name))
@@ -159,25 +162,12 @@ func printHelp(app *App, cmd *Cmd) error {
 			}
 
 			fmt.Printf("\n")
-			fmt.Printf("Run '%s COMMAND --help' for more information on a command\n", app.Name)
+			fmt.Printf("Run '%s COMMAND --help' for more information on a command\n", ap.Name)
 		}
 	} else {
 		fmt.Printf("\n")
-		fmt.Printf("Run '%s %s --help' for more information about this command\n", app.Name, cmd.Name)
+		fmt.Printf("Run '%s %s --help' for more information about this command\n", ap.Name, cmd.Name)
 	}
 
-	return nil
-}
-
-// printVersion prints current application version (--version).
-func (app *App) printVersion() error {
-	if app == nil {
-		return fmt.Errorf("application instance not found")
-	}
-	fmt.Printf("Version:       %s\n", app.Version)
-	fmt.Printf("Go version:    %s\n", runtime.Version())
-	fmt.Printf("Built:         %s\n", app.BuildTime)
-	fmt.Printf("Commit:        %s\n", app.BuildCommit)
-	fmt.Printf("OS/Arch:       %s/%s\n", runtime.GOOS, runtime.GOARCH)
 	return nil
 }
