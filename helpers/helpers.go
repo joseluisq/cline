@@ -73,54 +73,53 @@ func ValidateFlagsAndInit(flags []flag.Flag) (vflags []flag.Flag, err error) {
 
 // It finds a flag item with its index in a given flags array by key
 // then checks if every flag is a short flag or not.
-func FindFlagByKey(key string, flags []flag.Flag) (int, flag.Flag, bool) {
+func FindFlagByKey(key string, flags []flag.Flag) (index int, fl flag.Flag, isAlias bool) {
 	for i, v := range flags {
 		switch f := v.(type) {
 		case flag.FlagBool:
-			// Check for long named flags
-			if f.Name == key {
+			if IsFlagLong(f.Name, key) {
 				return i, f, false
 			}
-			// Check for short named flags
-			for _, s := range f.Aliases {
-				if s == key {
-					return i, f, true
-				}
+			if IsFlagAlias(key, f.Aliases) {
+				return i, f, true
 			}
 		case flag.FlagInt:
-			// Check for long named flags
-			if f.Name == key {
+			if IsFlagLong(f.Name, key) {
 				return i, f, false
 			}
-			// Check for short named flags
-			for _, s := range f.Aliases {
-				if s == key {
-					return i, f, true
-				}
+			if IsFlagAlias(key, f.Aliases) {
+				return i, f, true
 			}
 		case flag.FlagString:
-			// Check for long named flags
-			if f.Name == key {
+			if IsFlagLong(f.Name, key) {
 				return i, f, false
 			}
-			// Check for short named flags
-			for _, s := range f.Aliases {
-				if s == key {
-					return i, f, true
-				}
+			if IsFlagAlias(key, f.Aliases) {
+				return i, f, true
 			}
 		case flag.FlagStringSlice:
-			// Check for long named flags
-			if f.Name == key {
+			if IsFlagLong(f.Name, key) {
 				return i, f, false
 			}
-			// Check for short named flags
-			for _, s := range f.Aliases {
-				if s == key {
-					return i, f, true
-				}
+			if IsFlagAlias(key, f.Aliases) {
+				return i, f, true
 			}
 		}
 	}
 	return -1, nil, false
+}
+
+// Check for long named flags.
+func IsFlagLong(name string, key string) bool {
+	return name == key
+}
+
+// Check for short named flags (aliases).
+func IsFlagAlias(key string, aliases []string) bool {
+	for _, s := range aliases {
+		if s == key {
+			return true
+		}
+	}
+	return false
 }

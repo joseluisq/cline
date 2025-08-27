@@ -6,21 +6,25 @@ import (
 
 // Cmd defines an application command.
 type Cmd struct {
-	Name    string
+	// The command name in alphanumeric format without special characters or spaces.
+	Name string
+	// A brief command description.
 	Summary string
-	Flags   []flag.Flag
+	// The command flags.
+	Flags []flag.Flag
+	// The command action handler.
 	Handler CmdHandler
 }
 
 // CmdContext defines command context.
 type CmdContext struct {
-	// Cmd references to current application command.
+	// It references to current application command.
 	Cmd *Cmd
-	// Flags references to flag input values of current command.
+	// It references to flag input values of the current command.
 	Flags *flag.FlagValues
-	// TailArgs contains current tail input arguments.
+	// It contains current tail input arguments for the current command.
 	TailArgs []string
-	// // AppContext references to current application context.
+	// It references to current application context.
 	AppContext *AppContext
 }
 

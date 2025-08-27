@@ -8,16 +8,24 @@ import (
 	"github.com/joseluisq/cline/flag"
 )
 
-// App defines application settings.
+// App defines the application settings.
 type App struct {
-	Name        string
-	Summary     string
-	Version     string
-	BuildTime   string
+	// The application name.
+	Name string
+	// A brief application description.
+	Summary string
+	// The application version.
+	Version string
+	// The application build time.
+	BuildTime string
+	// The application build commit.
 	BuildCommit string
-	Flags       []flag.Flag
-	Commands    []Cmd
-	Handler     AppHandler
+	// The application flags.
+	Flags []flag.Flag
+	// The application commands.
+	Commands []Cmd
+	// The application action handler.
+	Handler AppHandler
 }
 
 // New creates a new application instance.

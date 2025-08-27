@@ -19,7 +19,8 @@ func New(ap *app.App) *Handler {
 	return &Handler{ap: ap}
 }
 
-// Run executes the current application with given arguments. Note that the first argument is always skipped.
+// Run executes the current application with given arguments.
+// Note that the first argument is always skipped.
 func (h *Handler) Run(vArgs []string) error {
 	// Commands and flags validation
 

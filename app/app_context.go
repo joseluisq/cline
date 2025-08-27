@@ -19,17 +19,17 @@ func NewContext(app *App, flagValues *flag.FlagValues, tailArgs []string) *AppCo
 	}
 }
 
-// App gets the current application instance.
+// App gets a reference of the current application instance.
 func (c *AppContext) App() *App {
 	return c.app
 }
 
-// Flags gets global flag values for the current application.
+// Flags gets the global flag values for the current application.
 func (c *AppContext) Flags() *flag.FlagValues {
 	return c.flags
 }
 
-// TailArgs gets current tail input arguments.
+// TailArgs gets the current tail input arguments.
 func (c *AppContext) TailArgs() []string {
 	return c.tailArgs
 }
