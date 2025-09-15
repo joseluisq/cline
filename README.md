@@ -1,4 +1,4 @@
-# CLIne [![devel](https://github.com/joseluisq/cline/actions/workflows/devel.yml/badge.svg)](https://github.com/joseluisq/cline/actions/workflows/devel.yml) [![codecov](https://codecov.io/gh/joseluisq/cline/branch/master/graph/badge.svg)](https://codecov.io/gh/joseluisq/cline) [![Go Report Card](https://goreportcard.com/badge/github.com/joseluisq/cline)](https://goreportcard.com/report/github.com/joseluisq/cline) [![PkgGoDev](https://pkg.go.dev/badge/github.com/joseluisq/cline)](https://pkg.go.dev/github.com/joseluisq/cline)
+# CLIne [![devel](https://github.com/joseluisq/cline/actions/workflows/devel.yml/badge.svg)](https://github.com/joseluisq/cline/actions/workflows/devel.yml) [![codecov](https://codecov.io/gh/joseluisq/cline/graph/badge.svg?token=LisSjmXpcx)](https://codecov.io/gh/joseluisq/cline) [![Go Report Card](https://goreportcard.com/badge/github.com/joseluisq/cline)](https://goreportcard.com/report/github.com/joseluisq/cline) [![PkgGoDev](https://pkg.go.dev/badge/github.com/joseluisq/cline)](https://pkg.go.dev/github.com/joseluisq/cline)
 
 > A fast and lightweight CLI package for Go without external dependencies.
 

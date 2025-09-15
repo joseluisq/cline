@@ -1,25 +1,29 @@
-package helpers
+package testsuite
 
 import (
 	"os"
-	"reflect"
 	"testing"
+
+	"github.com/joseluisq/cline/app"
+	"github.com/joseluisq/cline/flag"
+	"github.com/joseluisq/cline/helpers"
+	"github.com/stretchr/testify/assert"
 )
 
-func Test_validateCommands(t *testing.T) {
+func Test_ValidateCommands(t *testing.T) {
 	type args struct {
-		commands []Cmd
+		commands []app.Cmd
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    []Cmd
+		want    []app.Cmd
 		wantErr bool
 	}{
 		{
 			name: "empty command array",
 			args: args{
-				commands: []Cmd{},
+				commands: []app.Cmd{},
 			},
 			want:    nil,
 			wantErr: false,
@@ -27,7 +31,7 @@ func Test_validateCommands(t *testing.T) {
 		{
 			name: "invalid command name",
 			args: args{
-				commands: []Cmd{
+				commands: []app.Cmd{
 					{Name: ""},
 				},
 			},
@@ -37,11 +41,11 @@ func Test_validateCommands(t *testing.T) {
 		{
 			name: "invalid command flags",
 			args: args{
-				commands: []Cmd{
-					{Name: "a", Flags: []Flag{}},
+				commands: []app.Cmd{
+					{Name: "a", Flags: []flag.Flag{}},
 				},
 			},
-			want: []Cmd{
+			want: []app.Cmd{
 				{
 					Name:    "a",
 					Summary: "",
@@ -54,8 +58,8 @@ func Test_validateCommands(t *testing.T) {
 		{
 			name: "invalid command flag names",
 			args: args{
-				commands: []Cmd{
-					{Name: "a", Flags: []Flag{FlagBool{Name: ""}}},
+				commands: []app.Cmd{
+					{Name: "a", Flags: []flag.Flag{flag.FlagBool{Name: ""}}},
 				},
 			},
 			want:    nil,
@@ -64,18 +68,18 @@ func Test_validateCommands(t *testing.T) {
 		{
 			name: "valid commands with their flags",
 			args: args{
-				commands: []Cmd{
+				commands: []app.Cmd{
 					{
 						Name:    "info",
 						Summary: "information",
-						Flags: []Flag{
-							FlagInt{
+						Flags: []flag.Flag{
+							flag.FlagInt{
 								Name:    "trace",
 								Summary: "tracing",
 								Value:   10,
 								Aliases: []string{"t"},
 							},
-							FlagBool{
+							flag.FlagBool{
 								Name:    "verbose",
 								Summary: "info details",
 								Value:   true,
@@ -85,28 +89,28 @@ func Test_validateCommands(t *testing.T) {
 					},
 				},
 			},
-			want: []Cmd{
+			want: []app.Cmd{
 				{
 					Name:    "info",
 					Summary: "information",
-					Flags: []Flag{
-						FlagInt{
+					Flags: []flag.Flag{
+						flag.FlagInt{
 							Name:         "trace",
 							Summary:      "tracing",
 							Value:        10,
 							Aliases:      []string{"t"},
 							EnvVar:       "",
-							flagValue:    AnyValue("10"),
-							flagAssigned: false,
+							FlagValue:    flag.Value("10"),
+							FlagAssigned: false,
 						},
-						FlagBool{
+						flag.FlagBool{
 							Name:         "verbose",
 							Summary:      "info details",
 							Value:        true,
 							Aliases:      []string{"v"},
 							EnvVar:       "",
-							flagValue:    AnyValue("true"),
-							flagAssigned: false,
+							FlagValue:    flag.Value("true"),
+							FlagAssigned: false,
 						},
 					},
 				},
@@ -114,23 +118,22 @@ func Test_validateCommands(t *testing.T) {
 			wantErr: false,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := validateCommands(tt.args.commands)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("validateCommands() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("validateCommands() = %v, want %v", got, tt.want)
+			if actualCmds, actualErr := helpers.ValidateCommands(tt.args.commands); tt.wantErr {
+				assert.Error(t, actualErr, "Expected an error but got none")
+			} else {
+				assert.NoError(t, actualErr, "Expected no error but got one")
+				assert.Equal(t, actualCmds, tt.want, "Commands do not match the expected value")
 			}
 		})
 	}
 }
 
-func Test_validateAndInitFlags(t *testing.T) {
+func Test_ValidateAndInitFlags(t *testing.T) {
 	type args struct {
-		flags []Flag
+		flags []flag.Flag
 	}
 
 	// for test purposes (TEST: `invalid flag names`)
@@ -139,13 +142,13 @@ func Test_validateAndInitFlags(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    []Flag
+		want    []flag.Flag
 		wantErr bool
 	}{
 		{
 			name: "empty flag array",
 			args: args{
-				flags: []Flag{},
+				flags: []flag.Flag{},
 			},
 			want:    nil,
 			wantErr: false,
@@ -153,8 +156,8 @@ func Test_validateAndInitFlags(t *testing.T) {
 		{
 			name: "invalid FlagString name",
 			args: args{
-				flags: []Flag{
-					FlagString{Name: ""},
+				flags: []flag.Flag{
+					flag.FlagString{Name: ""},
 				},
 			},
 			want:    nil,
@@ -163,8 +166,8 @@ func Test_validateAndInitFlags(t *testing.T) {
 		{
 			name: "invalid FlagBool name",
 			args: args{
-				flags: []Flag{
-					FlagBool{Name: ""},
+				flags: []flag.Flag{
+					flag.FlagBool{Name: ""},
 				},
 			},
 			want:    nil,
@@ -173,8 +176,8 @@ func Test_validateAndInitFlags(t *testing.T) {
 		{
 			name: "invalid FlagInt name",
 			args: args{
-				flags: []Flag{
-					FlagInt{Name: ""},
+				flags: []flag.Flag{
+					flag.FlagInt{Name: ""},
 				},
 			},
 			want:    nil,
@@ -183,8 +186,8 @@ func Test_validateAndInitFlags(t *testing.T) {
 		{
 			name: "invalid FlagStringSlice name",
 			args: args{
-				flags: []Flag{
-					FlagStringSlice{Name: ""},
+				flags: []flag.Flag{
+					flag.FlagStringSlice{Name: ""},
 				},
 			},
 			want:    nil,
@@ -193,7 +196,7 @@ func Test_validateAndInitFlags(t *testing.T) {
 		{
 			name: "invalid flag type value",
 			args: args{
-				flags: []Flag{
+				flags: []flag.Flag{
 					struct{ ok bool }{false},
 				},
 			},
@@ -203,49 +206,49 @@ func Test_validateAndInitFlags(t *testing.T) {
 		{
 			name: "valid default flag values",
 			args: args{
-				flags: []Flag{
-					FlagString{Name: "str"},
-					FlagInt{Name: "int"},
-					FlagStringSlice{Name: "slice"},
-					FlagBool{Name: "bool"},
+				flags: []flag.Flag{
+					flag.FlagString{Name: "str"},
+					flag.FlagInt{Name: "int"},
+					flag.FlagStringSlice{Name: "slice"},
+					flag.FlagBool{Name: "bool"},
 				},
 			},
-			want: []Flag{
-				FlagString{
+			want: []flag.Flag{
+				flag.FlagString{
 					Name:         "str",
 					Summary:      "",
 					Aliases:      []string(nil),
 					Value:        "",
 					EnvVar:       "",
-					flagValue:    AnyValue(""),
-					flagAssigned: false,
+					FlagValue:    flag.Value(""),
+					FlagAssigned: false,
 				},
-				FlagInt{
+				flag.FlagInt{
 					Name:         "int",
 					Summary:      "",
 					Aliases:      []string(nil),
 					Value:        0,
 					EnvVar:       "",
-					flagValue:    AnyValue("0"),
-					flagAssigned: false,
+					FlagValue:    flag.Value("0"),
+					FlagAssigned: false,
 				},
-				FlagStringSlice{
+				flag.FlagStringSlice{
 					Name:         "slice",
 					Summary:      "",
 					Aliases:      []string(nil),
 					Value:        []string(nil),
 					EnvVar:       "",
-					flagValue:    AnyValue(""),
-					flagAssigned: false,
+					FlagValue:    flag.Value(""),
+					FlagAssigned: false,
 				},
-				FlagBool{
+				flag.FlagBool{
 					Name:         "bool",
 					Summary:      "",
 					Aliases:      []string(nil),
 					Value:        false,
 					EnvVar:       "",
-					flagValue:    AnyValue("false"),
-					flagAssigned: false,
+					FlagValue:    flag.Value("false"),
+					FlagAssigned: false,
 				},
 			},
 			wantErr: false,
@@ -253,11 +256,11 @@ func Test_validateAndInitFlags(t *testing.T) {
 		{
 			name: "invalid flag names",
 			args: args{
-				flags: []Flag{
-					FlagString{Name: ""},
-					FlagBool{Name: ""},
-					FlagStringSlice{Name: ""},
-					FlagInt{Name: ""},
+				flags: []flag.Flag{
+					flag.FlagString{Name: ""},
+					flag.FlagBool{Name: ""},
+					flag.FlagStringSlice{Name: ""},
+					flag.FlagInt{Name: ""},
 				},
 			},
 			want:    nil,
@@ -266,14 +269,14 @@ func Test_validateAndInitFlags(t *testing.T) {
 		{
 			name: "valid flags and env values",
 			args: args{
-				flags: []Flag{
-					FlagString{
+				flags: []flag.Flag{
+					flag.FlagString{
 						Name:    "file",
 						Summary: "summary 1",
 						Value:   "default.go",
 						Aliases: []string{"f"},
 					},
-					FlagBool{
+					flag.FlagBool{
 						Name:    "verbose",
 						Summary: "summary 2",
 						Value:   false,
@@ -282,52 +285,51 @@ func Test_validateAndInitFlags(t *testing.T) {
 					},
 				},
 			},
-			want: []Flag{
-				FlagString{
+			want: []flag.Flag{
+				flag.FlagString{
 					Name:         "file",
 					Summary:      "summary 1",
 					Value:        "default.go",
 					Aliases:      []string{"f"},
-					flagValue:    AnyValue("default.go"),
-					flagAssigned: false,
+					FlagValue:    flag.Value("default.go"),
+					FlagAssigned: false,
 				},
-				FlagBool{
+				flag.FlagBool{
 					Name:         "verbose",
 					Summary:      "summary 2",
 					Value:        false,
 					Aliases:      []string{"V"},
 					EnvVar:       "ENV_VERBOSE",
-					flagValue:    AnyValue("true"),
-					flagAssigned: false,
+					FlagValue:    flag.Value("true"),
+					FlagAssigned: false,
 				},
 			},
 			wantErr: false,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := validateFlagsAndInit(tt.args.flags)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("validateAndInitFlags() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("validateAndInitFlags() = %v, want %v", got, tt.want)
+			if actualFlags, actualErr := helpers.ValidateFlagsAndInit(tt.args.flags); tt.wantErr {
+				assert.Error(t, actualErr, "Expected an error but got none")
+			} else {
+				assert.NoError(t, actualErr, "Expected no error but got one")
+				assert.Equal(t, actualFlags, tt.want, "Flags do not match the expected value")
 			}
 		})
 	}
 }
 
-func Test_findFlagByKey(t *testing.T) {
+func Test_FindFlagByKey(t *testing.T) {
 	type args struct {
 		key   string
-		flags []Flag
+		flags []flag.Flag
 	}
 	tests := []struct {
 		name          string
 		args          args
 		wantIndex     int
-		wantItem      Flag
+		wantItem      flag.Flag
 		wantFlagShort bool
 	}{
 		{
@@ -343,44 +345,44 @@ func Test_findFlagByKey(t *testing.T) {
 			name: "search a valid FlagStringSlice by name",
 			args: args{
 				key: "slice",
-				flags: []Flag{
-					FlagString{Name: "string"},
-					FlagInt{Name: "int"},
-					FlagStringSlice{Name: "slice"},
-					FlagBool{Name: "bool"},
+				flags: []flag.Flag{
+					flag.FlagString{Name: "string"},
+					flag.FlagInt{Name: "int"},
+					flag.FlagStringSlice{Name: "slice"},
+					flag.FlagBool{Name: "bool"},
 				},
 			},
 			wantIndex: 2,
-			wantItem: FlagStringSlice{
+			wantItem: flag.FlagStringSlice{
 				Name:         "slice",
 				Summary:      "",
 				Value:        nil,
 				Aliases:      nil,
 				EnvVar:       "",
-				flagValue:    AnyValue(""),
-				flagAssigned: false,
+				FlagValue:    flag.Value(""),
+				FlagAssigned: false,
 			},
 		},
 		{
 			name: "search a valid FlagStringSlice by short name",
 			args: args{
 				key: "c",
-				flags: []Flag{
-					FlagString{Name: "string", Aliases: []string{"s"}},
-					FlagInt{Name: "int", Aliases: []string{"i"}},
-					FlagStringSlice{Name: "slice", Aliases: []string{"c"}},
-					FlagBool{Name: "bool", Aliases: []string{"b"}},
+				flags: []flag.Flag{
+					flag.FlagString{Name: "string", Aliases: []string{"s"}},
+					flag.FlagInt{Name: "int", Aliases: []string{"i"}},
+					flag.FlagStringSlice{Name: "slice", Aliases: []string{"c"}},
+					flag.FlagBool{Name: "bool", Aliases: []string{"b"}},
 				},
 			},
 			wantIndex: 2,
-			wantItem: FlagStringSlice{
+			wantItem: flag.FlagStringSlice{
 				Name:         "slice",
 				Summary:      "",
 				Value:        nil,
 				Aliases:      []string{"c"},
 				EnvVar:       "",
-				flagValue:    AnyValue(""),
-				flagAssigned: false,
+				FlagValue:    flag.Value(""),
+				FlagAssigned: false,
 			},
 			wantFlagShort: true,
 		},
@@ -388,44 +390,44 @@ func Test_findFlagByKey(t *testing.T) {
 			name: "search a valid FlagString by name",
 			args: args{
 				key: "string",
-				flags: []Flag{
-					FlagInt{Name: "int"},
-					FlagStringSlice{Name: "slice"},
-					FlagBool{Name: "bool"},
-					FlagString{Name: "string"},
+				flags: []flag.Flag{
+					flag.FlagInt{Name: "int"},
+					flag.FlagStringSlice{Name: "slice"},
+					flag.FlagBool{Name: "bool"},
+					flag.FlagString{Name: "string"},
 				},
 			},
 			wantIndex: 3,
-			wantItem: FlagString{
+			wantItem: flag.FlagString{
 				Name:         "string",
 				Summary:      "",
 				Value:        "",
 				Aliases:      nil,
 				EnvVar:       "",
-				flagValue:    AnyValue(""),
-				flagAssigned: false,
+				FlagValue:    flag.Value(""),
+				FlagAssigned: false,
 			},
 		},
 		{
 			name: "search a valid FlagString by short name",
 			args: args{
 				key: "s",
-				flags: []Flag{
-					FlagInt{Name: "int", Aliases: []string{"i"}},
-					FlagStringSlice{Name: "slice", Aliases: []string{"c"}},
-					FlagBool{Name: "bool", Aliases: []string{"b"}},
-					FlagString{Name: "string", Aliases: []string{"s"}},
+				flags: []flag.Flag{
+					flag.FlagInt{Name: "int", Aliases: []string{"i"}},
+					flag.FlagStringSlice{Name: "slice", Aliases: []string{"c"}},
+					flag.FlagBool{Name: "bool", Aliases: []string{"b"}},
+					flag.FlagString{Name: "string", Aliases: []string{"s"}},
 				},
 			},
 			wantIndex: 3,
-			wantItem: FlagString{
+			wantItem: flag.FlagString{
 				Name:         "string",
 				Summary:      "",
 				Value:        "",
 				Aliases:      []string{"s"},
 				EnvVar:       "",
-				flagValue:    AnyValue(""),
-				flagAssigned: false,
+				FlagValue:    flag.Value(""),
+				FlagAssigned: false,
 			},
 			wantFlagShort: true,
 		},
@@ -433,44 +435,44 @@ func Test_findFlagByKey(t *testing.T) {
 			name: "search a valid FlagBool by name",
 			args: args{
 				key: "bool",
-				flags: []Flag{
-					FlagInt{Name: "int"},
-					FlagStringSlice{Name: "slice"},
-					FlagBool{Name: "bool"},
-					FlagString{Name: "string"},
+				flags: []flag.Flag{
+					flag.FlagInt{Name: "int"},
+					flag.FlagStringSlice{Name: "slice"},
+					flag.FlagBool{Name: "bool"},
+					flag.FlagString{Name: "string"},
 				},
 			},
 			wantIndex: 2,
-			wantItem: FlagBool{
+			wantItem: flag.FlagBool{
 				Name:         "bool",
 				Summary:      "",
 				Value:        false,
 				Aliases:      nil,
 				EnvVar:       "",
-				flagValue:    AnyValue(""),
-				flagAssigned: false,
+				FlagValue:    flag.Value(""),
+				FlagAssigned: false,
 			},
 		},
 		{
 			name: "search a valid FlagBool by short name",
 			args: args{
 				key: "b",
-				flags: []Flag{
-					FlagInt{Name: "int", Aliases: []string{"i"}},
-					FlagStringSlice{Name: "slice", Aliases: []string{"c"}},
-					FlagBool{Name: "bool", Aliases: []string{"b"}},
-					FlagString{Name: "string", Aliases: []string{"s"}},
+				flags: []flag.Flag{
+					flag.FlagInt{Name: "int", Aliases: []string{"i"}},
+					flag.FlagStringSlice{Name: "slice", Aliases: []string{"c"}},
+					flag.FlagBool{Name: "bool", Aliases: []string{"b"}},
+					flag.FlagString{Name: "string", Aliases: []string{"s"}},
 				},
 			},
 			wantIndex: 2,
-			wantItem: FlagBool{
+			wantItem: flag.FlagBool{
 				Name:         "bool",
 				Summary:      "",
 				Value:        false,
 				Aliases:      []string{"b"},
 				EnvVar:       "",
-				flagValue:    AnyValue(""),
-				flagAssigned: false,
+				FlagValue:    flag.Value(""),
+				FlagAssigned: false,
 			},
 			wantFlagShort: true,
 		},
@@ -478,60 +480,55 @@ func Test_findFlagByKey(t *testing.T) {
 			name: "search a valid FlagInt by name",
 			args: args{
 				key: "int",
-				flags: []Flag{
-					FlagStringSlice{Name: "slice"},
-					FlagInt{Name: "int"},
-					FlagBool{Name: "bool"},
-					FlagString{Name: "string"},
+				flags: []flag.Flag{
+					flag.FlagStringSlice{Name: "slice"},
+					flag.FlagInt{Name: "int"},
+					flag.FlagBool{Name: "bool"},
+					flag.FlagString{Name: "string"},
 				},
 			},
 			wantIndex: 1,
-			wantItem: FlagInt{
+			wantItem: flag.FlagInt{
 				Name:         "int",
 				Summary:      "",
 				Value:        0,
 				Aliases:      nil,
 				EnvVar:       "",
-				flagValue:    AnyValue(""),
-				flagAssigned: false,
+				FlagValue:    flag.Value(""),
+				FlagAssigned: false,
 			},
 		},
 		{
 			name: "search a valid FlagInt by short name",
 			args: args{
 				key: "i",
-				flags: []Flag{
-					FlagStringSlice{Name: "slice", Aliases: []string{"c"}},
-					FlagInt{Name: "int", Aliases: []string{"i"}},
-					FlagBool{Name: "bool", Aliases: []string{"b"}},
-					FlagString{Name: "string", Aliases: []string{"s"}},
+				flags: []flag.Flag{
+					flag.FlagStringSlice{Name: "slice", Aliases: []string{"c"}},
+					flag.FlagInt{Name: "int", Aliases: []string{"i"}},
+					flag.FlagBool{Name: "bool", Aliases: []string{"b"}},
+					flag.FlagString{Name: "string", Aliases: []string{"s"}},
 				},
 			},
 			wantIndex: 1,
-			wantItem: FlagInt{
+			wantItem: flag.FlagInt{
 				Name:         "int",
 				Summary:      "",
 				Value:        0,
 				Aliases:      []string{"i"},
 				EnvVar:       "",
-				flagValue:    AnyValue(""),
-				flagAssigned: false,
+				FlagValue:    flag.Value(""),
+				FlagAssigned: false,
 			},
 			wantFlagShort: true,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1, got2 := findFlagByKey(tt.args.key, tt.args.flags)
-			if got != tt.wantIndex {
-				t.Errorf("findFlagByKey() got = %v, want %v", got, tt.wantIndex)
-			}
-			if !reflect.DeepEqual(got1, tt.wantItem) {
-				t.Errorf("findFlagByKey() got1 = %v, want %v", got1, tt.wantItem)
-			}
-			if got2 != tt.wantFlagShort {
-				t.Errorf("findFlagByKey() got2 = %v, want %v", got2, tt.wantFlagShort)
-			}
+			actualIndex, actualFlag, actualIsAlias := helpers.FindFlagByKey(tt.args.key, tt.args.flags)
+			assert.Equal(t, actualIndex, tt.wantIndex, "Indexes do not match the expected value")
+			assert.Equal(t, actualFlag, tt.wantItem, "Flags do not match the expected value")
+			assert.Equal(t, actualIsAlias, tt.wantFlagShort, "Flag short status does not match the expected value")
 		})
 	}
 }

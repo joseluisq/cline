@@ -48,8 +48,8 @@ func (h *Handler) Run(vArgs []string) error {
 	var hasVersion = false
 	var vArgsLen = len(vArgs)
 
-	for argIndex := 1; argIndex < vArgsLen; argIndex++ {
-		arg := strings.TrimSpace(vArgs[argIndex])
+	for idx := 1; idx < vArgsLen; idx++ {
+		arg := strings.TrimSpace(vArgs[idx])
 
 		// Check for no supported arguments (remaining)
 		if len(tailArgs) > 0 {
@@ -127,7 +127,7 @@ func (h *Handler) Run(vArgs []string) error {
 					// If bool flag is defined is assumed as `true`
 					fl.FlagValue = flag.Value("1")
 					// Check if we are at the last arg's item
-					if argIndex == vArgsLen-1 {
+					if idx == vArgsLen-1 {
 						fl.FlagAssigned = true
 					}
 					lastFlag = fl

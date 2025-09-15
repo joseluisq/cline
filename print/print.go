@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/joseluisq/cline/app"
-	// "github.com/joseluisq/cline/cmd"
 	"github.com/joseluisq/cline/flag"
 )
 
