@@ -1,88 +1,46 @@
-// Package cline is a fast and lightweight CLI package for Go.
-package cline
+package handler
 
 import (
 	"fmt"
 	"strings"
+
+	"github.com/joseluisq/cline/app"
+	"github.com/joseluisq/cline/flag"
+	"github.com/joseluisq/cline/helpers"
+	"github.com/joseluisq/cline/print"
 )
 
-// Flag defines a flag generic type.
-type Flag interface{}
-
-// Cmd defines an application command.
-type Cmd struct {
-	Name    string
-	Summary string
-	Flags   []Flag
-	Handler CmdHandler
+type Handler struct {
+	ap *app.App
 }
 
-// CmdContext defines command context.
-type CmdContext struct {
-	// Cmd references to current application command.
-	Cmd *Cmd
-	// Flags references to flag input values of current command.
-	Flags *FlagValues
-	// TailArgs contains current tail input arguments.
-	TailArgs []string
-	// AppContext references to current application context.
-	AppContext *AppContext
+// New creates a new handler for the given application.
+func New(ap *app.App) *Handler {
+	return &Handler{ap: ap}
 }
 
-// CmdHandler responds to a command action.
-type CmdHandler func(*CmdContext) error
-
-// App defines application settings
-type App struct {
-	Name        string
-	Summary     string
-	Version     string
-	BuildTime   string
-	BuildCommit string
-	Flags       []Flag
-	Commands    []Cmd
-	Handler     AppHandler
-}
-
-// AppContext defines an application context.
-type AppContext struct {
-	// App references to current application instance.
-	App *App
-	// Flags references to flag input values of current application (global flags).
-	Flags *FlagValues
-	// TailArgs contains current tail input arguments.
-	TailArgs []string
-}
-
-// AppHandler responds to an application action.
-type AppHandler func(*AppContext) error
-
-// New creates a new application instance.
-func New() *App {
-	return &App{}
-}
-
-// Run executes the current application with given arguments. Note that the first argument is always skipped.
-func (app *App) Run(vArgs []string) error {
+// Run executes the current application with given arguments.
+// Note that the first argument is always skipped.
+func (h *Handler) Run(vArgs []string) error {
 	// Commands and flags validation
 
 	// 1. Check application global flags
-	vflags, err := validateFlagsAndInit(app.Flags)
+	vflags, err := helpers.ValidateFlagsAndInit(h.ap.Flags)
 	if err != nil {
 		return err
 	}
-	app.Flags = vflags
+	h.ap.Flags = vflags
 
 	// 2. Check commands and their flags
-	vcmds, err := validateCommands(app.Commands)
+	vcmds, err := helpers.ValidateCommands(h.ap.Commands)
 	if err != nil {
 		return err
 	}
-	app.Commands = vcmds
+	h.ap.Commands = vcmds
 
 	// 3. Process commands and flags
-	var lastCmd Cmd
-	var lastFlag Flag
+	var lastCmd app.Cmd
+	var lastFlag flag.Flag
 	var lastFlagIndex int = -1
 	var tailArgs []string
 	var hasCmd = false
@@ -90,8 +48,8 @@ func (app *App) Run(vArgs []string) error {
 	var hasVersion = false
 	var vArgsLen = len(vArgs)
 
-	for argIndex := 1; argIndex < vArgsLen; argIndex++ {
-		arg := strings.TrimSpace(vArgs[argIndex])
+	for idx := 1; idx < vArgsLen; idx++ {
+		arg := strings.TrimSpace(vArgs[idx])
 
 		// Check for no supported arguments (remaining)
 		if len(tailArgs) > 0 {
@@ -122,55 +80,55 @@ func (app *App) Run(vArgs []string) error {
 			}
 
 			// Assign flag default values
-			var flags []Flag
+			var flags []flag.Flag
 			if hasCmd {
 				flags = lastCmd.Flags
 			} else {
-				flags = app.Flags
+				flags = h.ap.Flags
 			}
 
 			// Find argument key flag on flag list
-			i, flag, isAlias := findFlagByKey(flagKey, flags)
-			if flag == nil {
+			i, fl, isAlias := helpers.FindFlagByKey(flagKey, flags)
+			if fl == nil {
 				return fmt.Errorf("argument `%s` is not recognised", arg)
 			}
-			lastFlag = flag
+			lastFlag = fl
 			lastFlagIndex = i
 
 			// Check provided incoming flags
 			switch v := lastFlag.(type) {
-			case FlagBool:
-				v.flagProvided = true
-				v.flagProvidedAsAlias = isAlias
+			case flag.FlagBool:
+				v.FlagProvided = true
+				v.FlagProvidedAsAlias = isAlias
 				lastFlag = v
-			case FlagInt:
-				v.flagProvided = true
-				v.flagProvidedAsAlias = isAlias
+			case flag.FlagInt:
+				v.FlagProvided = true
+				v.FlagProvidedAsAlias = isAlias
 				lastFlag = v
-			case FlagString:
-				v.flagProvided = true
-				v.flagProvidedAsAlias = isAlias
+			case flag.FlagString:
+				v.FlagProvided = true
+				v.FlagProvidedAsAlias = isAlias
 				lastFlag = v
-			case FlagStringSlice:
-				v.flagProvided = true
-				v.flagProvidedAsAlias = isAlias
+			case flag.FlagStringSlice:
+				v.FlagProvided = true
+				v.FlagProvidedAsAlias = isAlias
 				lastFlag = v
 			}
 
 			// Check for bool flags and values early
 			switch fl := lastFlag.(type) {
-			case FlagBool:
+			case flag.FlagBool:
 				if fl.Name != "" {
-					if fl.flagAssigned {
+					if fl.FlagAssigned {
 						tailArgs = append(tailArgs, arg)
 						continue
 					}
 
 					// If bool flag is defined is assumed as `true`
-					fl.flagValue = AnyValue("1")
+					fl.FlagValue = flag.Value("1")
 					// Check if we are at the last arg's item
-					if argIndex == vArgsLen-1 {
-						fl.flagAssigned = true
+					if idx == vArgsLen-1 {
+						fl.FlagAssigned = true
 					}
 					lastFlag = fl
 
@@ -179,8 +137,8 @@ func (app *App) Run(vArgs []string) error {
 							lastCmd.Flags[lastFlagIndex] = fl
 						}
 					} else {
-						if len(app.Flags) > 0 && lastFlagIndex > -1 {
-							app.Flags[lastFlagIndex] = fl
+						if len(h.ap.Flags) > 0 && lastFlagIndex > -1 {
+							h.ap.Flags[lastFlagIndex] = fl
 						}
 					}
 
@@ -194,7 +152,7 @@ func (app *App) Run(vArgs []string) error {
 		// 3.2. Commands
 		// 3.2.1 Check for a valid command (first time)
 		if !hasCmd {
-			for _, c := range app.Commands {
+			for _, c := range h.ap.Commands {
 				if c.Name == arg {
 					hasCmd = true
 					lastCmd = c
@@ -214,14 +172,14 @@ func (app *App) Run(vArgs []string) error {
 
 		// 5. Process app or command flag values
 		switch fl := lastFlag.(type) {
-		case FlagBool:
+		case flag.FlagBool:
 			if fl.Name != "" {
-				if fl.flagAssigned {
+				if fl.FlagAssigned {
 					tailArgs = append(tailArgs, arg)
 					continue
 				}
 
-				s := AnyValue(arg)
+				s := flag.Value(arg)
 				_, err := s.ToBool()
 				if err != nil {
 					tailArgs = append(tailArgs, arg)
@@ -229,11 +187,11 @@ func (app *App) Run(vArgs []string) error {
 
 				// If bool flag is defined is assumed as `true`
 				if err != nil {
-					s = AnyValue("1")
+					s = flag.Value("1")
 				}
 
-				fl.flagValue = s
-				fl.flagAssigned = true
+				fl.FlagValue = s
+				fl.FlagAssigned = true
 				lastFlag = fl
 
 				if hasCmd {
@@ -241,23 +199,23 @@ func (app *App) Run(vArgs []string) error {
 						lastCmd.Flags[lastFlagIndex] = fl
 					}
 				} else {
-					if len(app.Flags) > 0 && lastFlagIndex > -1 {
-						app.Flags[lastFlagIndex] = fl
+					if len(h.ap.Flags) > 0 && lastFlagIndex > -1 {
+						h.ap.Flags[lastFlagIndex] = fl
 					}
 				}
 
 				continue
 			}
-		case FlagInt:
+		case flag.FlagInt:
 			if fl.Name != "" {
-				if fl.flagAssigned {
+				if fl.FlagAssigned {
 					tailArgs = append(tailArgs, arg)
 					continue
 				}
-				s := AnyValue(arg)
+				s := flag.Value(arg)
 				if _, err := s.ToInt(); err == nil {
-					fl.flagValue = s
-					fl.flagAssigned = true
+					fl.FlagValue = s
+					fl.FlagAssigned = true
 					lastFlag = fl
 
 					if hasCmd {
@@ -265,8 +223,8 @@ func (app *App) Run(vArgs []string) error {
 							lastCmd.Flags[lastFlagIndex] = fl
 						}
 					} else {
-						if len(app.Flags) > 0 && lastFlagIndex > -1 {
-							app.Flags[lastFlagIndex] = fl
+						if len(h.ap.Flags) > 0 && lastFlagIndex > -1 {
+							h.ap.Flags[lastFlagIndex] = fl
 						}
 					}
 					continue
@@ -274,14 +232,14 @@ func (app *App) Run(vArgs []string) error {
 					return fmt.Errorf("--%s: invalid integer value", fl.Name)
 				}
 			}
-		case FlagString:
+		case flag.FlagString:
 			if fl.Name != "" {
-				if fl.flagAssigned {
+				if fl.FlagAssigned {
 					tailArgs = append(tailArgs, arg)
 					continue
 				}
-				fl.flagValue = AnyValue(arg)
-				fl.flagAssigned = true
+				fl.FlagValue = flag.Value(arg)
+				fl.FlagAssigned = true
 				lastFlag = fl
 
 				if hasCmd {
@@ -289,20 +247,20 @@ func (app *App) Run(vArgs []string) error {
 						lastCmd.Flags[lastFlagIndex] = fl
 					}
 				} else {
-					if len(app.Flags) > 0 && lastFlagIndex > -1 {
-						app.Flags[lastFlagIndex] = fl
+					if len(h.ap.Flags) > 0 && lastFlagIndex > -1 {
+						h.ap.Flags[lastFlagIndex] = fl
 					}
 				}
 				continue
 			}
-		case FlagStringSlice:
+		case flag.FlagStringSlice:
 			if fl.Name != "" {
-				if fl.flagAssigned {
+				if fl.FlagAssigned {
 					tailArgs = append(tailArgs, arg)
 					continue
 				}
-				fl.flagValue = AnyValue(arg)
-				fl.flagAssigned = true
+				fl.FlagValue = flag.Value(arg)
+				fl.FlagAssigned = true
 				lastFlag = fl
 
 				if hasCmd {
@@ -310,8 +268,8 @@ func (app *App) Run(vArgs []string) error {
 						lastCmd.Flags[lastFlagIndex] = fl
 					}
 				} else {
-					if len(app.Flags) > 0 && lastFlagIndex > -1 {
-						app.Flags[lastFlagIndex] = fl
+					if len(h.ap.Flags) > 0 && lastFlagIndex > -1 {
+						h.ap.Flags[lastFlagIndex] = fl
 					}
 				}
 				continue
@@ -322,43 +280,39 @@ func (app *App) Run(vArgs []string) error {
 	// Show `help` flag details
 	if hasHelp {
 		if hasCmd {
-			return printHelp(app, &lastCmd)
+			return print.PrintHelp(h.ap, &lastCmd)
 		}
-		return printHelp(app, nil)
+		return print.PrintHelp(h.ap, nil)
 	}
 
 	// Show `version` flag details
 	if hasVersion {
-		app.printVersion()
+		h.ap.PrintVersion()
 		return nil
 	}
 
 	// Call command handler
 	if hasCmd && lastCmd.Handler != nil {
-		return lastCmd.Handler(&CmdContext{
-			Cmd: &lastCmd,
-			Flags: &FlagValues{
-				flags: lastCmd.Flags,
-			},
+		return lastCmd.Handler(&app.CmdContext{
+			Cmd:      &lastCmd,
+			Flags:    flag.NewFlagValues(lastCmd.Flags),
 			TailArgs: tailArgs,
-			AppContext: &AppContext{
-				App: app,
-				Flags: &FlagValues{
-					flags: app.Flags,
-				},
-			},
+			AppContext: app.NewContext(
+				h.ap,
+				flag.NewFlagValues(h.ap.Flags),
+				[]string{},
+			),
 		})
 	}
 
 	// Call application handler
-	if app.Handler != nil {
-		return app.Handler(&AppContext{
-			App: app,
-			Flags: &FlagValues{
-				flags: app.Flags,
-			},
-			TailArgs: tailArgs,
-		})
+	if h.ap.Handler != nil {
+		ctx := app.NewContext(
+			h.ap,
+			flag.NewFlagValues(h.ap.Flags),
+			tailArgs,
+		)
+		return h.ap.Handler(ctx)
 	}
 
 	return nil

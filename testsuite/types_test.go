@@ -1,19 +1,23 @@
-package cline
+package testsuite
 
 import (
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/joseluisq/cline/flag"
 )
 
-func TestFlagInt_initialize(t *testing.T) {
+func TestFlagInt_init(t *testing.T) {
 	type fields struct {
 		Name         string
 		Summary      string
 		Value        int
 		Aliases      []string
 		EnvVar       string
-		flagValue    AnyValue
-		flagAssigned bool
+		FlagValue    flag.Value
+		FlagAssigned bool
 	}
 	// env variables for test purposes
 	os.Setenv("ENV_INT_VAR_OK", "1")
@@ -25,58 +29,62 @@ func TestFlagInt_initialize(t *testing.T) {
 		{
 			name: "initialize FlagInt by default value",
 			fields: fields{
-				Name:    "a",
-				Summary: "",
-				Value:   2,
-				Aliases: nil,
-				EnvVar:  "",
+				Name:      "a",
+				Value:     2,
+				FlagValue: "2",
 			},
 		},
 		{
 			name: "initialize FlagInt by env value",
 			fields: fields{
-				Name:    "b",
-				Summary: "",
-				Value:   1,
-				Aliases: nil,
-				EnvVar:  "ENV_INT_VAR_OK",
+				Name:      "b",
+				Value:     1,
+				EnvVar:    "ENV_INT_VAR_OK",
+				FlagValue: "1",
 			},
 		},
 		{
 			name: "initialize FlagInt with wrong env value",
 			fields: fields{
-				Name:    "b",
-				Summary: "",
-				Aliases: nil,
-				EnvVar:  "ENV_INT_VAR_ERR",
+				Name:      "b",
+				Aliases:   []string{"x", "y"},
+				EnvVar:    "ENV_INT_VAR_ERR",
+				FlagValue: "0",
 			},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fi := &FlagInt{
+			fi := &flag.FlagInt{
 				Name:         tt.fields.Name,
 				Summary:      tt.fields.Summary,
 				Value:        tt.fields.Value,
 				Aliases:      tt.fields.Aliases,
 				EnvVar:       tt.fields.EnvVar,
-				flagValue:    tt.fields.flagValue,
-				flagAssigned: tt.fields.flagAssigned,
+				FlagValue:    tt.fields.FlagValue,
+				FlagAssigned: tt.fields.FlagAssigned,
 			}
-			fi.initialize()
+			fi.Init()
+
+			assert.Equal(t, tt.fields.Summary, fi.Summary)
+			assert.Equal(t, tt.fields.Aliases, fi.Aliases)
+			assert.Equal(t, tt.fields.EnvVar, fi.EnvVar)
+			assert.Equal(t, tt.fields.Value, fi.Value)
+			assert.Equal(t, tt.fields.FlagValue, fi.FlagValue)
 		})
 	}
 }
 
-func TestFlagBool_initialize(t *testing.T) {
+func TestFlagBool_init(t *testing.T) {
 	type fields struct {
 		Name         string
 		Summary      string
 		Value        bool
 		Aliases      []string
 		EnvVar       string
-		flagValue    AnyValue
-		flagAssigned bool
+		FlagValue    flag.Value
+		FlagAssigned bool
 	}
 	// env variables for test purposes
 	os.Setenv("ENV_BOOL_VAR_OK", "true")
@@ -88,58 +96,60 @@ func TestFlagBool_initialize(t *testing.T) {
 		{
 			name: "initialize FlagBool by default value",
 			fields: fields{
-				Name:    "a",
-				Summary: "",
-				Value:   true,
-				Aliases: nil,
-				EnvVar:  "",
+				Name:      "a",
+				Value:     true,
+				FlagValue: "true",
 			},
 		},
 		{
 			name: "initialize FlagBool by env value",
 			fields: fields{
-				Name:    "b",
-				Summary: "",
-				Value:   false,
-				Aliases: nil,
-				EnvVar:  "ENV_BOOL_VAR_OK",
+				Name:      "b",
+				EnvVar:    "ENV_BOOL_VAR_OK",
+				FlagValue: "true",
 			},
 		},
 		{
 			name: "initialize FlagBool with wrong env value",
 			fields: fields{
-				Name:    "b",
-				Summary: "",
-				Aliases: nil,
-				EnvVar:  "ENV_BOOL_VAR_ERR",
+				Name:      "b",
+				EnvVar:    "ENV_BOOL_VAR_ERR",
+				FlagValue: "false",
 			},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fb := &FlagBool{
+			fb := &flag.FlagBool{
 				Name:         tt.fields.Name,
 				Summary:      tt.fields.Summary,
 				Value:        tt.fields.Value,
 				Aliases:      tt.fields.Aliases,
 				EnvVar:       tt.fields.EnvVar,
-				flagValue:    tt.fields.flagValue,
-				flagAssigned: tt.fields.flagAssigned,
+				FlagValue:    tt.fields.FlagValue,
+				FlagAssigned: tt.fields.FlagAssigned,
 			}
-			fb.initialize()
+			fb.Init()
+
+			assert.Equal(t, tt.fields.Summary, fb.Summary)
+			assert.Equal(t, tt.fields.Aliases, fb.Aliases)
+			assert.Equal(t, tt.fields.EnvVar, fb.EnvVar)
+			assert.Equal(t, tt.fields.Value, fb.Value)
+			assert.Equal(t, tt.fields.FlagValue, fb.FlagValue)
 		})
 	}
 }
 
-func TestFlagString_initialize(t *testing.T) {
+func TestFlagString_init(t *testing.T) {
 	type fields struct {
 		Name         string
 		Summary      string
 		Value        string
 		Aliases      []string
 		EnvVar       string
-		flagValue    AnyValue
-		flagAssigned bool
+		FlagValue    flag.Value
+		FlagAssigned bool
 	}
 	// env variables for test purposes
 	os.Setenv("ENV_STRING_VAR_OK", "str")
@@ -150,49 +160,59 @@ func TestFlagString_initialize(t *testing.T) {
 		{
 			name: "initialize FlagString by default value",
 			fields: fields{
-				Name:    "a",
-				Summary: "",
-				Value:   "str",
-				Aliases: nil,
-				EnvVar:  "",
+				Name:      "a",
+				Value:     "str",
+				FlagValue: "str",
 			},
 		},
 		{
 			name: "initialize FlagString by env value",
 			fields: fields{
-				Name:    "b",
-				Summary: "",
-				Value:   "",
-				Aliases: nil,
-				EnvVar:  "ENV_STRING_VAR_OK",
+				Name:      "b",
+				EnvVar:    "ENV_STRING_VAR_OK",
+				FlagValue: "str",
+			},
+		},
+		{
+			name: "initialize FlagString with wrong env value",
+			fields: fields{
+				Name:   "b",
+				EnvVar: "ENV_STRING_VAR_ERR",
 			},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fs := &FlagString{
+			fs := &flag.FlagString{
 				Name:         tt.fields.Name,
 				Summary:      tt.fields.Summary,
 				Value:        tt.fields.Value,
 				Aliases:      tt.fields.Aliases,
 				EnvVar:       tt.fields.EnvVar,
-				flagValue:    tt.fields.flagValue,
-				flagAssigned: tt.fields.flagAssigned,
+				FlagValue:    tt.fields.FlagValue,
+				FlagAssigned: tt.fields.FlagAssigned,
 			}
-			fs.initialize()
+			fs.Init()
+
+			assert.Equal(t, tt.fields.Summary, fs.Summary)
+			assert.Equal(t, tt.fields.Aliases, fs.Aliases)
+			assert.Equal(t, tt.fields.EnvVar, fs.EnvVar)
+			assert.Equal(t, tt.fields.Value, fs.Value)
+			assert.Equal(t, tt.fields.FlagValue, fs.FlagValue)
 		})
 	}
 }
 
-func TestFlagStringSlice_initialize(t *testing.T) {
+func TestFlagStringSlice_init(t *testing.T) {
 	type fields struct {
 		Name         string
 		Summary      string
 		Value        []string
 		Aliases      []string
 		EnvVar       string
-		flagValue    AnyValue
-		flagAssigned bool
+		FlagValue    flag.Value
+		FlagAssigned bool
 	}
 	// env variables for test purposes
 	os.Setenv("ENV_STRING_SLICE_VAR_OK", "A,b,C,d,E")
@@ -203,36 +223,44 @@ func TestFlagStringSlice_initialize(t *testing.T) {
 		{
 			name: "initialize FlagString by default value",
 			fields: fields{
-				Name:    "a",
-				Summary: "",
-				Value:   nil,
-				Aliases: nil,
-				EnvVar:  "",
+				Name: "a",
 			},
 		},
 		{
 			name: "initialize FlagString by env value",
 			fields: fields{
-				Name:    "b",
-				Summary: "",
-				Value:   nil,
-				Aliases: nil,
-				EnvVar:  "ENV_STRING_SLICE_VAR_OK",
+				Name:      "b",
+				EnvVar:    "ENV_STRING_SLICE_VAR_OK",
+				FlagValue: flag.Value("A,b,C,d,E"),
+			},
+		},
+		{
+			name: "initialize FlagString with wrong env value",
+			fields: fields{
+				Name:   "b",
+				EnvVar: "ENV_STRING_SLICE_VAR_ERR",
 			},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fs := &FlagStringSlice{
+			fs := &flag.FlagStringSlice{
 				Name:         tt.fields.Name,
 				Summary:      tt.fields.Summary,
 				Value:        tt.fields.Value,
 				Aliases:      tt.fields.Aliases,
 				EnvVar:       tt.fields.EnvVar,
-				flagValue:    tt.fields.flagValue,
-				flagAssigned: tt.fields.flagAssigned,
+				FlagValue:    tt.fields.FlagValue,
+				FlagAssigned: tt.fields.FlagAssigned,
 			}
-			fs.initialize()
+			fs.Init()
+
+			assert.Equal(t, tt.fields.Summary, fs.Summary)
+			assert.Equal(t, tt.fields.Aliases, fs.Aliases)
+			assert.Equal(t, tt.fields.EnvVar, fs.EnvVar)
+			assert.Equal(t, tt.fields.Value, fs.Value)
+			assert.Equal(t, tt.fields.FlagValue, fs.FlagValue)
 		})
 	}
 }

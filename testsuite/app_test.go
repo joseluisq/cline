@@ -1,25 +1,28 @@
 // Package cline is a fast and lightweight CLI package for Go.
-//
-package cline
+package testsuite
 
 import (
 	"reflect"
 	"testing"
+
+	"github.com/joseluisq/cline/app"
+	"github.com/joseluisq/cline/flag"
+	"github.com/joseluisq/cline/handler"
 )
 
 func TestNew(t *testing.T) {
 	tests := []struct {
 		name string
-		want *App
+		want *app.App
 	}{
 		{
 			name: "valid instance",
-			want: &App{},
+			want: &app.App{},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := New(); !reflect.DeepEqual(got, tt.want) {
+			if got := app.New(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("New() = %v, want %v", got, tt.want)
 			}
 		})
@@ -27,20 +30,20 @@ func TestNew(t *testing.T) {
 }
 
 func TestApp_Run(t *testing.T) {
-	appEmptyFlags := newApp(nil, nil)
+	appEmptyFlags := NewApp(nil, nil)
 	for i, v := range appEmptyFlags.Flags {
 		switch f := v.(type) {
-		case FlagBool:
+		case flag.FlagBool:
 			f.Name = ""
 			appEmptyFlags.Flags[i] = f
 		}
 	}
-	appEmptyCommmands := newApp(nil, nil)
+	appEmptyCommmands := NewApp(nil, nil)
 	for i, c := range appEmptyFlags.Commands {
 		c.Name = ""
 		appEmptyCommmands.Commands[i] = c
 	}
-	appInvalidHandlers := newApp(nil, nil)
+	appInvalidHandlers := NewApp(nil, nil)
 	appInvalidHandlers.Handler = nil
 	appInvalidHandlers.Commands[0].Handler = nil
 
@@ -49,13 +52,13 @@ func TestApp_Run(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		app     *App
+		app     *app.App
 		args    args
 		wantErr bool
 	}{
 		{
 			name: "not recognized argument",
-			app:  newApp(nil, nil),
+			app:  NewApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "--unknown", "123"},
 			},
@@ -63,14 +66,14 @@ func TestApp_Run(t *testing.T) {
 		},
 		{
 			name: "run an app instance and flags",
-			app:  newApp(nil, nil),
+			app:  NewApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "--AA", "sdev.env", "--BB", "--CC", "22", "-d", "xyz"},
 			},
 		},
 		{
 			name: "run an app instance and command flags",
-			app:  newApp(nil, nil),
+			app:  NewApp(nil, nil),
 			args: args{
 				vArgs: []string{
 					"", "--AA", "sdev.env", "--BB", "-c", "22", "-d", "2,2",
@@ -80,7 +83,7 @@ func TestApp_Run(t *testing.T) {
 		},
 		{
 			name: "run an app instance and command flags with tail args",
-			app:  newApp(nil, nil),
+			app:  NewApp(nil, nil),
 			args: args{
 				vArgs: []string{
 					"", "info", "--FF", ".env2", "-g", "11", "--ZZ", "-i", "a,b", "sdasdas",
@@ -89,21 +92,21 @@ func TestApp_Run(t *testing.T) {
 		},
 		{
 			name: "run version flag",
-			app:  newApp(nil, nil),
+			app:  NewApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "--version"},
 			},
 		},
 		{
 			name: "run help flag",
-			app:  newApp(nil, nil),
+			app:  NewApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "--help"},
 			},
 		},
 		{
 			name: "run command help flag",
-			app:  newApp(nil, nil),
+			app:  NewApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "info", "--help"},
 			},
@@ -118,28 +121,28 @@ func TestApp_Run(t *testing.T) {
 		},
 		{
 			name: "run valid command bool flag short",
-			app:  newApp(nil, nil),
+			app:  NewApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "info", "--ZZ"},
 			},
 		},
 		{
 			name: "run valid command bool flag long",
-			app:  newApp(nil, nil),
+			app:  NewApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "info", "--ZZ", "true"},
 			},
 		},
 		{
 			name: "run invalid command bool flag long",
-			app:  newApp(nil, nil),
+			app:  NewApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "info", "--ZZ", "1f9"},
 			},
 		},
 		{
 			name: "run command tail args",
-			app:  newApp(nil, nil),
+			app:  NewApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "info", "zzz", "yyy"},
 			},
@@ -154,35 +157,35 @@ func TestApp_Run(t *testing.T) {
 		},
 		{
 			name: "run invalid argument flags",
-			app:  newApp(nil, nil),
+			app:  NewApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "---unknown", "123"},
 			},
 		},
 		{
 			name: "run valid bool flag short",
-			app:  newApp(nil, nil),
+			app:  NewApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "--BB"},
 			},
 		},
 		{
 			name: "run valid bool flag long",
-			app:  newApp(nil, nil),
+			app:  NewApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "--BB", "false"},
 			},
 		},
 		{
 			name: "run valid int flag",
-			app:  newApp(nil, nil),
+			app:  NewApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "--CC", "2"},
 			},
 		},
 		{
 			name: "run invalid int flag value",
-			app:  newApp(nil, nil),
+			app:  NewApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "--CC", "s1f0"},
 			},
@@ -190,28 +193,28 @@ func TestApp_Run(t *testing.T) {
 		},
 		{
 			name: "run valid string slice flag",
-			app:  newApp(nil, nil),
+			app:  NewApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "-d", "2,4,5"},
 			},
 		},
 		{
 			name: "run valid command string slice flag",
-			app:  newApp(nil, nil),
+			app:  NewApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "info", "--II", "2,4,5"},
 			},
 		},
 		{
 			name: "run valid command string slice and bool flags",
-			app:  newApp(nil, nil),
+			app:  NewApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "info", "--II", "2,4,5", "-z"},
 			},
 		},
 		{
 			name: "run valid command int flag",
-			app:  newApp(nil, nil),
+			app:  NewApp(nil, nil),
 			args: args{
 				vArgs: []string{"", "info", "-g", "0", "-z"},
 			},
@@ -226,8 +229,7 @@ func TestApp_Run(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			app := tt.app
-			if err := app.Run(tt.args.vArgs); (err != nil) != tt.wantErr {
+			if err := handler.New(tt.app).Run(tt.args.vArgs); (err != nil) != tt.wantErr {
 				t.Errorf("App.Run() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

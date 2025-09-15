@@ -1,4 +1,4 @@
-# CLIne [![devel](https://github.com/joseluisq/cline/actions/workflows/devel.yml/badge.svg)](https://github.com/joseluisq/cline/actions/workflows/devel.yml) [![codecov](https://codecov.io/gh/joseluisq/cline/branch/master/graph/badge.svg)](https://codecov.io/gh/joseluisq/cline) [![Go Report Card](https://goreportcard.com/badge/github.com/joseluisq/cline)](https://goreportcard.com/report/github.com/joseluisq/cline) [![PkgGoDev](https://pkg.go.dev/badge/github.com/joseluisq/cline)](https://pkg.go.dev/github.com/joseluisq/cline)
+# CLIne [![devel](https://github.com/joseluisq/cline/actions/workflows/devel.yml/badge.svg)](https://github.com/joseluisq/cline/actions/workflows/devel.yml) [![codecov](https://codecov.io/gh/joseluisq/cline/graph/badge.svg?token=LisSjmXpcx)](https://codecov.io/gh/joseluisq/cline) [![Go Report Card](https://goreportcard.com/badge/github.com/joseluisq/cline)](https://goreportcard.com/report/github.com/joseluisq/cline) [![PkgGoDev](https://pkg.go.dev/badge/github.com/joseluisq/cline)](https://pkg.go.dev/github.com/joseluisq/cline)
 
 > A fast and lightweight CLI package for Go without external dependencies.
 
@@ -32,7 +32,9 @@ import (
 	"fmt"
 	"os"
 
-	cli "github.com/joseluisq/cline"
+	"github.com/joseluisq/cline/app"
+	"github.com/joseluisq/cline/flag"
+	"github.com/joseluisq/cline/handler"
 )
 
 // App values passed at compile time for --version flag
@@ -44,21 +46,21 @@ var (
 )
 
 func main() {
-	app := cli.New()
-	app.Name = "enve"
-	app.Summary = "Run a program in a modified environment using .env files"
-	app.Version = version
-	app.BuildTime = buildTime
-	app.BuildCommit = buildCommit
+	ap := app.New()
+	ap.Name = "enve"
+	ap.Summary = "Run a program in a modified environment using .env files"
+	ap.Version = version
+	ap.BuildTime = buildTime
+	ap.BuildCommit = buildCommit
 	// Global App flags
-	app.Flags = []cli.Flag{
-		cli.FlagString{
+	ap.Flags = []flag.Flag{
+		flag.FlagString{
 			Name:    "file",
 			Summary: "Load environment variables from a file path",
 			Value:   ".env",
 			Aliases: []string{"f"},
 		},
-		cli.FlagBool{
+		flag.FlagBool{
 			Name:    "verbose",
 			Summary: "Enable more verbose info",
 			Value:   false,
@@ -67,18 +69,18 @@ func main() {
 		},
 	}
 	// App commands
-	app.Commands = []cli.Cmd{
+	ap.Commands = []app.Cmd{
 		{
 			Name:    "info",
 			Summary: "Show command information",
-			Flags: []cli.Flag{
-				cli.FlagInt{
+			Flags: []flag.Flag{
+				flag.FlagInt{
 					Name:    "trace",
 					Summary: "Enable tracing mode",
 					Value:   10,
 					Aliases: []string{"t"},
 				},
-				cli.FlagBool{
+				flag.FlagBool{
 					Name:    "detailed",
 					Summary: "Enable info details",
 					Value:   true,
@@ -86,9 +88,9 @@ func main() {
 				},
 			},
 			// Specific command handler for its flags
-			Handler: func(ctx *cli.CmdContext) error {
+			Handler: func(ctx *app.CmdContext) error {
 				fmt.Printf("Cmd `%s` executed!\n", ctx.Cmd.Name)
-				fmt.Printf("App Flag `file` opted: `%s`\n", ctx.AppContext.Flags.Any("file"))
+				fmt.Printf("App Flag `file` opted: `%s`\n", ctx.AppContext.Flags().Value("file"))
 
 				trace, err := ctx.Flags.Int("trace")
 				if err != nil {
@@ -116,22 +118,22 @@ func main() {
 		},
 	}
 	// App handler for flags
-	app.Handler = func(ctx *cli.AppContext) error {
-		fmt.Printf("App `%s` executed!\n", ctx.App.Name)
+	ap.Handler = func(ctx *app.AppContext) error {
+		fmt.Printf("App `%s` executed!\n", ctx.App().Name)
 		fmt.Printf("App Tail arguments: %#v\n", ctx.TailArgs)
 
-		if f, err := ctx.Flags.StringSlice("file"); err == nil {
+		if f, err := ctx.Flags().StringSlice("file"); err == nil {
 			fmt.Printf("App Flag `file` opted: `%v`\n", f.Value())
 		}
 
-		if v, err := ctx.Flags.Bool("verbose"); err == nil {
+		if v, err := ctx.Flags().Bool("verbose"); err == nil {
 			b, _ := v.Value()
 			fmt.Printf("App Flag `verbose` opted: `%v`\n", b)
 		}
 
 		return nil
 	}
-	if err := app.Run(os.Args); err != nil {
+	if err := handler.New(ap).Run(os.Args); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
@@ -164,10 +166,9 @@ $ go run examples/main.go -h
 
 $ go run examples/main.go -v
 # Version:       0.0.0
-# Go version:    go1.16.2
-# Built:         2021-03-28T20:03:04
-# Commit:        1885ad1
-# OS/Arch:       linux/amd64
+# Go version:    go1.24.5
+# Built:         2025-09-15T16:09:24
+# Commit:        9061c4d
 ```
 
 More details on [examples/main.go](./examples/main.go)
