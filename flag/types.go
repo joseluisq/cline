@@ -7,7 +7,7 @@ import (
 )
 
 // Flag defines a flag generic type.
-type Flag interface{}
+type Flag any
 
 // FlagInt defines an `Int` type flag.
 type FlagInt struct {
@@ -31,7 +31,7 @@ type FlagInt struct {
 	FlagProvidedAsAlias bool
 }
 
-// It sets a default flag value via its associated `Value` prop
+// Init sets a default flag value via its associated `Value` prop
 // or its environment variable (`EnvVar`) if so.
 func (fi *FlagInt) Init() {
 	val := Value(strconv.Itoa(fi.Value))
@@ -66,7 +66,7 @@ type FlagBool struct {
 	FlagProvidedAsAlias bool
 }
 
-// It sets a default flag value via its associated `Value` prop
+// Init sets a default flag value via its associated `Value` prop
 // or its environment variable (`EnvVar`) if so.
 func (fb *FlagBool) Init() {
 	val := Value(strconv.FormatBool(fb.Value))
@@ -100,7 +100,7 @@ type FlagString struct {
 	FlagProvidedAsAlias bool
 }
 
-// It sets a default flag value via its associated `Value` prop
+// Init sets a default flag value via its associated `Value` prop
 // or its environment variable (`EnvVar`) if so.
 func (fs *FlagString) Init() {
 	val := Value(fs.Value)
@@ -132,7 +132,7 @@ type FlagStringSlice struct {
 	FlagProvidedAsAlias bool
 }
 
-// It sets a default flag value via its associated `Value` prop
+// Init sets a default flag value via its associated `Value` prop
 // or its environment variable (`EnvVar`) if so.
 func (fs *FlagStringSlice) Init() {
 	val := Value(strings.Join(fs.Value, ","))

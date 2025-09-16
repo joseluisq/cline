@@ -1,3 +1,4 @@
+// Package handler provides a handler for the CLI application.
 package handler
 
 import (

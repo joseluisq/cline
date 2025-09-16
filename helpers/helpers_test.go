@@ -1,4 +1,4 @@
-package testsuite
+package helpers_test
 
 import (
 	"os"

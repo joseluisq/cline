@@ -1,4 +1,4 @@
-package testsuite
+package flag_test
 
 import (
 	"testing"

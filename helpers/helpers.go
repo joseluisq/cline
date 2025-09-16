@@ -1,14 +1,16 @@
+// Package helpers provides utility functions for working with flag and command types.
 package helpers
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/joseluisq/cline/app"
 	"github.com/joseluisq/cline/flag"
 )
 
-// It checks if a list of commands and initialize them if they are valid.
+// ValidateCommands checks if a list of commands and initialize them if they are valid.
 func ValidateCommands(commands []app.Cmd) (cmds []app.Cmd, err error) {
 	for _, c := range commands {
 		name := strings.TrimSpace(c.Name)
@@ -27,7 +29,7 @@ func ValidateCommands(commands []app.Cmd) (cmds []app.Cmd, err error) {
 	return
 }
 
-// It checks a list of flags and initialize them if they are valid.
+// ValidateFlagsAndInit checks a list of flags and initialize them if they are valid.
 func ValidateFlagsAndInit(flags []flag.Flag) (vflags []flag.Flag, err error) {
 	for _, v := range flags {
 		switch f := v.(type) {
@@ -71,7 +73,7 @@ func ValidateFlagsAndInit(flags []flag.Flag) (vflags []flag.Flag, err error) {
 	return
 }
 
-// It finds a flag item with its index in a given flags array by key
+// FindFlagByKey finds a flag item with its index in a given flags array by key
 // then checks if every flag is a short flag or not.
 func FindFlagByKey(key string, flags []flag.Flag) (index int, fl flag.Flag, isAlias bool) {
 	for i, v := range flags {
@@ -109,17 +111,12 @@ func FindFlagByKey(key string, flags []flag.Flag) (index int, fl flag.Flag, isAl
 	return -1, nil, false
 }
 
-// Check for long named flags.
+// IsFlagLong checks for long named flags.
 func IsFlagLong(name string, key string) bool {
 	return name == key
 }
 
-// Check for short named flags (aliases).
+// IsFlagAlias checks for short named flags (aliases).
 func IsFlagAlias(key string, aliases []string) bool {
-	for _, s := range aliases {
-		if s == key {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(aliases, key)
 }
