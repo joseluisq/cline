@@ -1,3 +1,4 @@
+// Package flag provides all flag and flag-value types.
 package flag
 
 import (

@@ -17,7 +17,7 @@ func NewFlagValues(flags []Flag) *FlagValues {
 	}
 }
 
-// It finds a `Flag` by its string key in the inner list.
+// FindByKey finds a `Flag` by its string key in the inner list.
 func (v *FlagValues) FindByKey(longFlagName string) (flag Flag) {
 	longFlagName = strings.TrimSpace(longFlagName)
 	if longFlagName == "" {
@@ -50,7 +50,7 @@ func (v *FlagValues) FindByKey(longFlagName string) (flag Flag) {
 	return
 }
 
-// It returns provided flags by specified filters.
+// GetProvidedFlags returns provided flags by specified filters.
 func (v *FlagValues) GetProvidedFlags(providedOnly bool, providedAliasOnly bool) (flags []Flag) {
 	if !providedOnly && !providedAliasOnly {
 		flags = v.Flags

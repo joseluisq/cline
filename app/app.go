@@ -1,4 +1,4 @@
-// Package cline is a fast and lightweight CLI package for Go.
+// Package app provides the application structure and methods.
 package app
 
 import (
@@ -33,7 +33,7 @@ func New() *App {
 	return &App{}
 }
 
-// printVersion prints current application version (--version).
+// PrintVersion prints the current application version information (--version).
 func (ap *App) PrintVersion() {
 	fmt.Printf("Version:       %s\n", ap.Version)
 	fmt.Printf("Go version:    %s\n", runtime.Version())
