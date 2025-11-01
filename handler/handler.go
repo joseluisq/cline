@@ -15,6 +15,11 @@ type Handler struct {
 	ap *app.App
 }
 
+const (
+	maxArgLen    = 4096 // 4KB
+	maxArgsCount = 1024
+)
+
 // New creates a new handler for the given application.
 func New(ap *app.App) *Handler {
 	return &Handler{ap: ap}
@@ -39,20 +44,42 @@ func (h *Handler) Run(vArgs []string) error {
 	}
 	h.ap.Commands = vcmds
 
+	// Optimization: Create maps for faster flag lookups
+	appFlagMap := helpers.BuildFlagMap(h.ap.Flags)
+	cmdFlagMaps := make(map[string]map[string]helpers.FlagInfo, len(h.ap.Commands))
+	for _, cmd := range h.ap.Commands {
+		cmdFlagMaps[cmd.Name] = helpers.BuildFlagMap(cmd.Flags)
+	}
+
 	// 3. Process commands and flags
-	var lastCmd app.Cmd
+	var lastCmd *app.Cmd
 	var lastFlag flag.Flag
-	var lastFlagIndex int = -1
-	var tailArgs []string
+	var lastFlagIndex = -1
+	var tailArgs = make([]string, 0, 4)
 	var hasCmd = false
 	var hasHelp = false
 	var hasVersion = false
 	var vArgsLen = len(vArgs)
 
+	if vArgsLen > maxArgsCount {
+		return fmt.Errorf("number of arguments exceeds the limit of %d", maxArgsCount)
+	}
+
 	for idx := 1; idx < vArgsLen; idx++ {
 		arg := strings.TrimSpace(vArgs[idx])
 
+		if len(arg) > maxArgLen {
+			return fmt.Errorf("argument exceeds maximum length of %d characters", maxArgLen)
+		}
+
 		// Check for no supported arguments (remaining)
+		if arg == "--" {
+			if idx+1 < vArgsLen {
+				tailArgs = append(tailArgs, vArgs[idx+1:]...)
+			}
+			break // Stop processing further arguments as flags
+		}
+
 		if len(tailArgs) > 0 {
 			tailArgs = append(tailArgs, arg)
 			continue
@@ -60,8 +87,15 @@ func (h *Handler) Run(vArgs []string) error {
 
 		// 3.1. Flags (options)
 		if strings.HasPrefix(arg, "-") {
-			flagKey := strings.TrimPrefix(strings.TrimPrefix(arg, "-"), "-")
-			// Skip unsupported fags
+			var flagKey string
+			isAlias := !strings.HasPrefix(arg, "--")
+			if isAlias {
+				flagKey = arg[1:]
+			} else {
+				flagKey = arg[2:]
+			}
+
+			// Skip unsupported flags
 			if flagKey == "" || strings.HasPrefix(flagKey, "-") {
 				tailArgs = append(tailArgs, arg)
 				continue
@@ -80,21 +114,19 @@ func (h *Handler) Run(vArgs []string) error {
 				break
 			}
 
-			// Assign flag default values
-			var flags []flag.Flag
+			var flagMap map[string]helpers.FlagInfo
 			if hasCmd {
-				flags = lastCmd.Flags
+				flagMap = cmdFlagMaps[lastCmd.Name]
 			} else {
-				flags = h.ap.Flags
+				flagMap = appFlagMap
 			}
 
-			// Find argument key flag on flag list
-			i, fl, isAlias := helpers.FindFlagByKey(flagKey, flags)
-			if fl == nil {
-				return fmt.Errorf("argument `%s` is not recognised", arg)
+			flagInfo, ok := flagMap[flagKey]
+			if !ok {
+				return fmt.Errorf("unknown argument: %s", arg)
 			}
-			lastFlag = fl
-			lastFlagIndex = i
+			lastFlag = flagInfo.Flag
+			lastFlagIndex = flagInfo.Index
 
 			// Check provided incoming flags
 			switch v := lastFlag.(type) {
@@ -125,12 +157,20 @@ func (h *Handler) Run(vArgs []string) error {
 						continue
 					}
 
-					// If bool flag is defined is assumed as `true`
-					fl.FlagValue = flag.Value("1")
-					// Check if we are at the last arg's item
-					if idx == vArgsLen-1 {
-						fl.FlagAssigned = true
+					// A boolean flag is considered true on its own
+					fl.FlagValue = flag.Value("true")
+					fl.FlagAssigned = true
+
+					// Check if the next argument could be a value for this bool flag
+					if idx+1 < vArgsLen {
+						nextArg := vArgs[idx+1]
+						if _, err := flag.Value(nextArg).ToBool(); err == nil {
+							fl.FlagValue = flag.Value(nextArg)
+							// Skip next argument
+							idx++
+						}
 					}
+
 					lastFlag = fl
 
 					if hasCmd {
@@ -142,7 +182,6 @@ func (h *Handler) Run(vArgs []string) error {
 							h.ap.Flags[lastFlagIndex] = fl
 						}
 					}
-
 					continue
 				}
 			}
@@ -153,10 +192,10 @@ func (h *Handler) Run(vArgs []string) error {
 		// 3.2. Commands
 		// 3.2.1 Check for a valid command (first time)
 		if !hasCmd {
-			for _, c := range h.ap.Commands {
+			for i, c := range h.ap.Commands {
 				if c.Name == arg {
 					hasCmd = true
-					lastCmd = c
+					lastCmd = &h.ap.Commands[i]
 					break
 				}
 			}
@@ -180,31 +219,9 @@ func (h *Handler) Run(vArgs []string) error {
 					continue
 				}
 
-				s := flag.Value(arg)
-				_, err := s.ToBool()
-				if err != nil {
-					tailArgs = append(tailArgs, arg)
-				}
-
-				// If bool flag is defined is assumed as `true`
-				if err != nil {
-					s = flag.Value("1")
-				}
-
-				fl.FlagValue = s
-				fl.FlagAssigned = true
-				lastFlag = fl
-
-				if hasCmd {
-					if len(lastCmd.Flags) > 0 && lastFlagIndex > -1 {
-						lastCmd.Flags[lastFlagIndex] = fl
-					}
-				} else {
-					if len(h.ap.Flags) > 0 && lastFlagIndex > -1 {
-						h.ap.Flags[lastFlagIndex] = fl
-					}
-				}
-
+				// This case is now handled when the flag is first seen.
+				// If we are here, it means the argument isn't a value for the bool flag.
+				tailArgs = append(tailArgs, arg)
 				continue
 			}
 		case flag.FlagInt:
@@ -230,7 +247,7 @@ func (h *Handler) Run(vArgs []string) error {
 					}
 					continue
 				} else {
-					return fmt.Errorf("--%s: invalid integer value", fl.Name)
+					return fmt.Errorf("invalid integer value for flag --%s", fl.Name)
 				}
 			}
 		case flag.FlagString:
@@ -281,7 +298,7 @@ func (h *Handler) Run(vArgs []string) error {
 	// Show `help` flag details
 	if hasHelp {
 		if hasCmd {
-			return print.PrintHelp(h.ap, &lastCmd)
+			return print.PrintHelp(h.ap, lastCmd)
 		}
 		return print.PrintHelp(h.ap, nil)
 	}
@@ -295,7 +312,7 @@ func (h *Handler) Run(vArgs []string) error {
 	// Call command handler
 	if hasCmd && lastCmd.Handler != nil {
 		return lastCmd.Handler(&app.CmdContext{
-			Cmd:      &lastCmd,
+			Cmd:      lastCmd,
 			Flags:    flag.NewFlagValues(lastCmd.Flags),
 			TailArgs: tailArgs,
 			AppContext: app.NewContext(

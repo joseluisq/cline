@@ -15,7 +15,7 @@ func ValidateCommands(commands []app.Cmd) (cmds []app.Cmd, err error) {
 	for _, c := range commands {
 		name := strings.TrimSpace(c.Name)
 		if name == "" {
-			err = fmt.Errorf("one command name has empty value")
+			err = fmt.Errorf("command name cannot be empty")
 			return
 		}
 		flags, errf := ValidateFlagsAndInit(c.Flags)
@@ -32,10 +32,14 @@ func ValidateCommands(commands []app.Cmd) (cmds []app.Cmd, err error) {
 // ValidateFlagsAndInit checks a list of flags and initialize them if they are valid.
 func ValidateFlagsAndInit(flags []flag.Flag) (vflags []flag.Flag, err error) {
 	for _, v := range flags {
+		if v == nil {
+			err = fmt.Errorf("flag list contains a nil value")
+			return
+		}
 		switch f := v.(type) {
 		case flag.FlagBool:
 			if name := strings.ToLower(strings.TrimSpace(f.Name)); name == "" {
-				err = fmt.Errorf("bool flag name has an empty value")
+				err = fmt.Errorf("bool flag name cannot be empty")
 				return
 			}
 			f.Init()
@@ -43,7 +47,7 @@ func ValidateFlagsAndInit(flags []flag.Flag) (vflags []flag.Flag, err error) {
 
 		case flag.FlagInt:
 			if name := strings.ToLower(strings.TrimSpace(f.Name)); name == "" {
-				err = fmt.Errorf("int flag name has an empty value")
+				err = fmt.Errorf("int flag name cannot be empty")
 				return
 			}
 			f.Init()
@@ -51,7 +55,7 @@ func ValidateFlagsAndInit(flags []flag.Flag) (vflags []flag.Flag, err error) {
 
 		case flag.FlagString:
 			if name := strings.ToLower(strings.TrimSpace(f.Name)); name == "" {
-				err = fmt.Errorf("string flag name has an empty value")
+				err = fmt.Errorf("string flag name cannot be empty")
 				return
 			}
 			f.Init()
@@ -59,14 +63,14 @@ func ValidateFlagsAndInit(flags []flag.Flag) (vflags []flag.Flag, err error) {
 
 		case flag.FlagStringSlice:
 			if name := strings.ToLower(strings.TrimSpace(f.Name)); name == "" {
-				err = fmt.Errorf("string slice flag name has an empty value")
+				err = fmt.Errorf("string slice flag name cannot be empty")
 				return
 			}
 			f.Init()
 			vflags = append(vflags, f)
 
 		default:
-			err = fmt.Errorf("one flag has invalid data type value. Use a bool, int, string, []string or nil value")
+			err = fmt.Errorf("invalid data type for flag or flag pointer (%T). Use a FlagBool, FlagInt, FlagString, FlagStringSlice or nil value instead", v)
 			return
 		}
 	}
@@ -119,4 +123,41 @@ func IsFlagLong(name string, key string) bool {
 // IsFlagAlias checks for short named flags (aliases).
 func IsFlagAlias(key string, aliases []string) bool {
 	return slices.Contains(aliases, key)
+}
+
+type FlagInfo struct {
+	Flag  flag.Flag
+	Index int
+}
+
+// BuildFlagMap creates a map of flags for quick lookups.
+func BuildFlagMap(flags []flag.Flag) map[string]FlagInfo {
+	// Pre-allocate for names and aliases
+	flagMap := make(map[string]FlagInfo, len(flags)*2)
+	for i, f := range flags {
+		info := FlagInfo{Flag: f, Index: i}
+		switch ft := f.(type) {
+		case flag.FlagBool:
+			flagMap[ft.Name] = info
+			for _, alias := range ft.Aliases {
+				flagMap[alias] = info
+			}
+		case flag.FlagInt:
+			flagMap[ft.Name] = info
+			for _, alias := range ft.Aliases {
+				flagMap[alias] = info
+			}
+		case flag.FlagString:
+			flagMap[ft.Name] = info
+			for _, alias := range ft.Aliases {
+				flagMap[alias] = info
+			}
+		case flag.FlagStringSlice:
+			flagMap[ft.Name] = info
+			for _, alias := range ft.Aliases {
+				flagMap[alias] = info
+			}
+		}
+	}
+	return flagMap
 }
