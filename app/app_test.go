@@ -1,8 +1,9 @@
 package app_test
 
 import (
-	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/joseluisq/cline/app"
 	"github.com/joseluisq/cline/flag"
@@ -92,9 +93,8 @@ func TestNew(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := app.New(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("New() = %v, want %v", got, tt.want)
-			}
+			got := app.New()
+			assert.Equal(t, got, tt.want, "New() = %v, want %v", got, tt.want)
 		})
 	}
 }
@@ -300,7 +300,7 @@ func TestApp_Run(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := handler.New(tt.app).Run(tt.args.vArgs); (err != nil) != tt.wantErr {
-				t.Errorf("App.Run() error = %v, wantErr %v", err, tt.wantErr)
+				assert.Error(t, err, "App.Run() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

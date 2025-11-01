@@ -21,10 +21,9 @@ func TestHandler_Run(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:    "should handle no arguments",
-			ap:      &app.App{},
-			vArgs:   []string{},
-			wantErr: false,
+			name:  "should handle no arguments",
+			ap:    &app.App{},
+			vArgs: []string{},
 		},
 		{
 			name:    "should return error for unknown flag",
@@ -33,16 +32,14 @@ func TestHandler_Run(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:    "should treat unknown command as tail argument",
-			ap:      &app.App{Commands: []app.Cmd{}},
-			vArgs:   []string{"app", "notacmd"},
-			wantErr: false,
+			name:  "should treat unknown command as tail argument",
+			ap:    &app.App{Commands: []app.Cmd{}},
+			vArgs: []string{"app", "notacmd"},
 		},
 		{
-			name:    "should trigger help on --help flag",
-			ap:      &app.App{},
-			vArgs:   []string{"app", "--help"},
-			wantErr: false,
+			name:  "should trigger help on --help flag",
+			ap:    &app.App{},
+			vArgs: []string{"app", "--help"},
 		},
 		{
 			name: "should trigger command help when --help flag is used with a command",
@@ -54,14 +51,12 @@ func TestHandler_Run(t *testing.T) {
 					},
 				},
 			},
-			vArgs:   []string{"app", "info", "--help"},
-			wantErr: false,
+			vArgs: []string{"app", "info", "--help"},
 		},
 		{
-			name:    "should trigger version on --version flag",
-			ap:      &app.App{},
-			vArgs:   []string{"app", "--version"},
-			wantErr: false,
+			name:  "should trigger version on --version flag",
+			ap:    &app.App{},
+			vArgs: []string{"app", "--version"},
 		},
 		{
 			name: "should return error for flag with invalid int value",
@@ -80,8 +75,7 @@ func TestHandler_Run(t *testing.T) {
 					flag.FlagInt{Name: "num"},
 				},
 			},
-			vArgs:   []string{"app", "--num", "42"},
-			wantErr: false,
+			vArgs: []string{"app", "--num", "42"},
 		},
 		{
 			name: "should handle potentially dangerous input as a string",
@@ -90,8 +84,7 @@ func TestHandler_Run(t *testing.T) {
 					flag.FlagString{Name: "input"},
 				},
 			},
-			vArgs:   []string{"app", "--input", "; rm -rf /"},
-			wantErr: false,
+			vArgs: []string{"app", "--input", "; rm -rf /"},
 		},
 		{
 			name: "should pass tail arguments to command handler",
@@ -108,8 +101,7 @@ func TestHandler_Run(t *testing.T) {
 					},
 				},
 			},
-			vArgs:   []string{"app", "run", "foo", "bar"},
-			wantErr: false,
+			vArgs: []string{"app", "run", "foo", "bar"},
 		},
 		{
 			name: "should handle SQL injection attempt as a string",
@@ -118,8 +110,7 @@ func TestHandler_Run(t *testing.T) {
 					flag.FlagString{Name: "query"},
 				},
 			},
-			vArgs:   []string{"app", "--query", "'; DROP TABLE users; --"},
-			wantErr: false,
+			vArgs: []string{"app", "--query", "'; DROP TABLE users; --"},
 		},
 		{
 			name: "should handle XSS attempt as a string",
@@ -128,8 +119,7 @@ func TestHandler_Run(t *testing.T) {
 					flag.FlagString{Name: "name"},
 				},
 			},
-			vArgs:   []string{"app", "--name", "<script>alert('xss')</script>"},
-			wantErr: false,
+			vArgs: []string{"app", "--name", "<script>alert('xss')</script>"},
 		},
 		{
 			name: "should return error when argument count exceeds limit",
@@ -164,8 +154,7 @@ func TestHandler_Run(t *testing.T) {
 					return nil
 				},
 			},
-			vArgs:   []string{"app", "--verbose", "--", "--another-flag", "-f"},
-			wantErr: false,
+			vArgs: []string{"app", "--verbose", "--", "--another-flag", "-f"},
 		},
 		{
 			name: "should not consume next argument for boolean flag if not a bool value",
@@ -182,8 +171,7 @@ func TestHandler_Run(t *testing.T) {
 					return nil
 				},
 			},
-			vArgs:   []string{"app", "--verbose", "my-command"},
-			wantErr: false,
+			vArgs: []string{"app", "--verbose", "my-command"},
 		},
 		{
 			name: "should treat non-boolean argument after bool flag as tail arg with a command",
@@ -195,8 +183,7 @@ func TestHandler_Run(t *testing.T) {
 					{Name: "start"},
 				},
 			},
-			vArgs:   []string{"app", "--verbose", "start"},
-			wantErr: false,
+			vArgs: []string{"app", "--verbose", "start"},
 		},
 		{
 			name: "should treat non-boolean numeric value after bool flag as tail arg",
@@ -215,8 +202,7 @@ func TestHandler_Run(t *testing.T) {
 					return nil
 				},
 			},
-			vArgs:   []string{"app", "--enabled", "2"},
-			wantErr: false,
+			vArgs: []string{"app", "--enabled", "2"},
 		},
 		{
 			name: "should handle malformed flags as tail arguments",
@@ -227,8 +213,7 @@ func TestHandler_Run(t *testing.T) {
 					return nil
 				},
 			},
-			vArgs:   []string{"app", "---"},
-			wantErr: false,
+			vArgs: []string{"app", "---"},
 		},
 		{
 			name: "should handle path traversal attempt as a string",
@@ -237,8 +222,7 @@ func TestHandler_Run(t *testing.T) {
 					flag.FlagString{Name: "file"},
 				},
 			},
-			vArgs:   []string{"app", "--file", "../../../etc/passwd"},
-			wantErr: false,
+			vArgs: []string{"app", "--file", "../../../etc/passwd"},
 		},
 		{
 			name:    "should handle non-UTF-8 characters in flag name",
@@ -253,8 +237,7 @@ func TestHandler_Run(t *testing.T) {
 					flag.FlagString{Name: "input"},
 				},
 			},
-			vArgs:   []string{"app", "--input", "value-\xff\xfe\xfd"},
-			wantErr: false,
+			vArgs: []string{"app", "--input", "value-\xff\xfe\xfd"},
 		},
 		{
 			name: "should handle null byte in argument",
@@ -263,8 +246,7 @@ func TestHandler_Run(t *testing.T) {
 					flag.FlagString{Name: "input"},
 				},
 			},
-			vArgs:   []string{"app", "--input", "some\x00value"},
-			wantErr: false,
+			vArgs: []string{"app", "--input", "some\x00value"},
 		},
 		{
 			name: "should handle invalid UTF-8 sequence as a tail argument",
@@ -275,8 +257,7 @@ func TestHandler_Run(t *testing.T) {
 					return nil
 				},
 			},
-			vArgs:   []string{"app", "arg-\xff\xfe\xfd"},
-			wantErr: false,
+			vArgs: []string{"app", "arg-\xff\xfe\xfd"},
 		},
 		{
 			name: "should overwrite string slice flag on multiple assignments",
@@ -290,8 +271,7 @@ func TestHandler_Run(t *testing.T) {
 					return nil
 				},
 			},
-			vArgs:   []string{"app", "--items", "a,b", "--items", "c,d"},
-			wantErr: false,
+			vArgs: []string{"app", "--items", "a,b", "--items", "c,d"},
 		},
 		{
 			name: "should handle empty value for string slice flag",
@@ -305,8 +285,7 @@ func TestHandler_Run(t *testing.T) {
 					return nil
 				},
 			},
-			vArgs:   []string{"app", "--items", ""},
-			wantErr: false,
+			vArgs: []string{"app", "--items", ""},
 		},
 		{
 			name: "should return error if flag requiring value is followed by another flag",
@@ -360,8 +339,7 @@ func TestHandler_Run(t *testing.T) {
 					return nil
 				},
 			},
-			vArgs:   []string{"app", "--input", "first-value", "another-value"},
-			wantErr: false,
+			vArgs: []string{"app", "--input", "first-value", "another-value"},
 		},
 		{
 			name: "should treat subsequent value as tail arg if string slice flag already assigned",
@@ -377,8 +355,7 @@ func TestHandler_Run(t *testing.T) {
 					return nil
 				},
 			},
-			vArgs:   []string{"app", "--items", "a,b", "another-value"},
-			wantErr: false,
+			vArgs: []string{"app", "--items", "a,b", "another-value"},
 		},
 		{
 			name: "should parse command-specific bool flag when command is present",
@@ -401,8 +378,7 @@ func TestHandler_Run(t *testing.T) {
 					},
 				},
 			},
-			vArgs:   []string{"app", "run", "--local"},
-			wantErr: false,
+			vArgs: []string{"app", "run", "--local"},
 		},
 		{
 			name: "should parse command-specific string flag when command is present",
@@ -425,8 +401,7 @@ func TestHandler_Run(t *testing.T) {
 					},
 				},
 			},
-			vArgs:   []string{"app", "run", "--local", "value"},
-			wantErr: false,
+			vArgs: []string{"app", "run", "--local", "value"},
 		},
 		{
 			name: "should parse command-specific string slice flag when command is present",
@@ -449,8 +424,7 @@ func TestHandler_Run(t *testing.T) {
 					},
 				},
 			},
-			vArgs:   []string{"app", "run", "--local", "value1,value2"},
-			wantErr: false,
+			vArgs: []string{"app", "run", "--local", "value1,value2"},
 		},
 		{
 			name: "should parse command-specific int flag when command is present",
@@ -473,8 +447,7 @@ func TestHandler_Run(t *testing.T) {
 					},
 				},
 			},
-			vArgs:   []string{"app", "run", "--local", "1"},
-			wantErr: false,
+			vArgs: []string{"app", "run", "--local", "1"},
 		},
 		{
 			name: "should correctly identify flag provided as alias",
@@ -494,8 +467,7 @@ func TestHandler_Run(t *testing.T) {
 					return nil
 				},
 			},
-			vArgs:   []string{"app", "-f", "somefile.txt"},
-			wantErr: false,
+			vArgs: []string{"app", "-f", "somefile.txt"},
 		},
 		{
 			name: "should treat subsequent value as tail arg if int flag already assigned",
@@ -511,8 +483,7 @@ func TestHandler_Run(t *testing.T) {
 					return nil
 				},
 			},
-			vArgs:   []string{"app", "--num", "123", "456"},
-			wantErr: false,
+			vArgs: []string{"app", "--num", "123", "456"},
 		},
 		{
 			name: "should treat subsequent non-flag arg as tail arg after a bool flag",
@@ -530,9 +501,7 @@ func TestHandler_Run(t *testing.T) {
 					return nil
 				},
 			},
-			// This triggers the `if fl.FlagAssigned` block for a boolean flag.
-			vArgs:   []string{"app", "--verbose", "true", "extra-arg"},
-			wantErr: false,
+			vArgs: []string{"app", "--verbose", "true", "extra-arg"},
 		},
 	}
 

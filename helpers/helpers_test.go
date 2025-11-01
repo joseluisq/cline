@@ -25,8 +25,7 @@ func Test_ValidateCommands(t *testing.T) {
 			args: args{
 				commands: []app.Cmd{},
 			},
-			want:    nil,
-			wantErr: false,
+			want: nil,
 		},
 		{
 			name: "invalid command name",
@@ -53,7 +52,6 @@ func Test_ValidateCommands(t *testing.T) {
 					Flags:   nil,
 				},
 			},
-			wantErr: false,
 		},
 		{
 			name: "invalid command flag names",
@@ -115,7 +113,6 @@ func Test_ValidateCommands(t *testing.T) {
 					},
 				},
 			},
-			wantErr: false,
 		},
 	}
 
@@ -150,8 +147,7 @@ func Test_ValidateAndInitFlags(t *testing.T) {
 			args: args{
 				flags: []flag.Flag{},
 			},
-			want:    nil,
-			wantErr: false,
+			want: nil,
 		},
 		{
 			name: "invalid FlagString name",
@@ -198,6 +194,16 @@ func Test_ValidateAndInitFlags(t *testing.T) {
 			args: args{
 				flags: []flag.Flag{
 					struct{ ok bool }{false},
+				},
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "should return error for nil flag in slice",
+			args: args{
+				flags: []flag.Flag{
+					nil,
 				},
 			},
 			want:    nil,
@@ -251,7 +257,6 @@ func Test_ValidateAndInitFlags(t *testing.T) {
 					FlagAssigned: false,
 				},
 			},
-			wantErr: false,
 		},
 		{
 			name: "invalid flag names",
@@ -304,7 +309,6 @@ func Test_ValidateAndInitFlags(t *testing.T) {
 					FlagAssigned: false,
 				},
 			},
-			wantErr: false,
 		},
 	}
 
@@ -529,6 +533,80 @@ func Test_FindFlagByKey(t *testing.T) {
 			assert.Equal(t, actualIndex, tt.wantIndex, "Indexes do not match the expected value")
 			assert.Equal(t, actualFlag, tt.wantItem, "Flags do not match the expected value")
 			assert.Equal(t, actualIsAlias, tt.wantFlagShort, "Flag short status does not match the expected value")
+		})
+	}
+}
+
+func Test_BuildFlagMap(t *testing.T) {
+	tests := []struct {
+		name  string
+		flags []flag.Flag
+		want  map[string]helpers.FlagInfo
+	}{
+		{
+			name:  "should handle an empty flag slice",
+			flags: []flag.Flag{},
+			want:  map[string]helpers.FlagInfo{},
+		},
+		{
+			name: "should create a map with names and aliases",
+			flags: []flag.Flag{
+				flag.FlagBool{Name: "verbose", Aliases: []string{"v"}},
+				flag.FlagString{Name: "file", Aliases: []string{"f"}},
+			},
+			want: map[string]helpers.FlagInfo{
+				"verbose": {Flag: flag.FlagBool{Name: "verbose", Aliases: []string{"v"}}, Index: 0},
+				"v":       {Flag: flag.FlagBool{Name: "verbose", Aliases: []string{"v"}}, Index: 0},
+				"file":    {Flag: flag.FlagString{Name: "file", Aliases: []string{"f"}}, Index: 1},
+				"f":       {Flag: flag.FlagString{Name: "file", Aliases: []string{"f"}}, Index: 1},
+			},
+		},
+		{
+			name: "should handle mixed flag types",
+			flags: []flag.Flag{
+				flag.FlagInt{Name: "count"},
+				flag.FlagStringSlice{Name: "items", Aliases: []string{"i"}},
+			},
+			want: map[string]helpers.FlagInfo{
+				"count": {Flag: flag.FlagInt{Name: "count"}, Index: 0},
+				"items": {Flag: flag.FlagStringSlice{Name: "items", Aliases: []string{"i"}}, Index: 1},
+				"i":     {Flag: flag.FlagStringSlice{Name: "items", Aliases: []string{"i"}}, Index: 1},
+			},
+		},
+		{
+			name: "should handle alias collisions by taking the last one",
+			flags: []flag.Flag{
+				flag.FlagString{Name: "output"},
+				flag.FlagBool{Name: "override", Aliases: []string{"output"}},
+			},
+			want: map[string]helpers.FlagInfo{
+				"output":   {Flag: flag.FlagBool{Name: "override", Aliases: []string{"output"}}, Index: 1},
+				"override": {Flag: flag.FlagBool{Name: "override", Aliases: []string{"output"}}, Index: 1},
+			},
+		},
+		{
+			name: "should skip nil flags in the slice",
+			flags: []flag.Flag{
+				flag.FlagString{Name: "file"},
+				nil,
+				flag.FlagBool{Name: "verbose"},
+			},
+			want: map[string]helpers.FlagInfo{
+				"file":    {Flag: flag.FlagString{Name: "file"}, Index: 0},
+				"verbose": {Flag: flag.FlagBool{Name: "verbose"}, Index: 2},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := helpers.BuildFlagMap(tt.flags)
+			assert.Equal(t, len(tt.want), len(got), "map length should be equal")
+			for key, wantInfo := range tt.want {
+				gotInfo, ok := got[key]
+				assert.True(t, ok, "key %s should exist in the map", key)
+				assert.Equal(t, wantInfo.Index, gotInfo.Index, "index for key %s should match", key)
+				assert.ObjectsAreEqual(wantInfo.Flag, gotInfo.Flag)
+			}
 		})
 	}
 }
