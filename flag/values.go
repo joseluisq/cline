@@ -155,7 +155,7 @@ func (v *FlagValues) Bool(longFlagName string) (val *ValueBool, err error) {
 	default:
 		t := strings.ReplaceAll(fmt.Sprintf("%T", f), "cline.", "")
 		err = fmt.Errorf(
-			"flag `--%s` value used as `FlagBoolValue` but declared as `%s`",
+			"error: flag `--%s` value used as `FlagBoolValue` but declared as `%s`",
 			longFlagName,
 			t,
 		)
@@ -173,7 +173,7 @@ func (v *FlagValues) Int(longFlagName string) (val *ValueInt, err error) {
 	default:
 		t := strings.ReplaceAll(fmt.Sprintf("%T", f), "cline.", "")
 		err = fmt.Errorf(
-			"flag `--%s` value used as `FlagIntValue` but declared as `%s`",
+			"error: flag `--%s` value used as `FlagIntValue` but declared as `%s`",
 			longFlagName,
 			t,
 		)
@@ -191,7 +191,7 @@ func (v *FlagValues) String(longFlagName string) (val *ValueString, err error) {
 	default:
 		t := strings.ReplaceAll(fmt.Sprintf("%T", f), "cline.", "")
 		err = fmt.Errorf(
-			"flag `--%s` value used as `FlagStringValue` but declared as `%s`",
+			"error: flag `--%s` value used as `FlagStringValue` but declared as `%s`",
 			longFlagName,
 			t,
 		)
@@ -209,7 +209,7 @@ func (v *FlagValues) StringSlice(longFlagName string) (val *ValueStringSlice, er
 	default:
 		t := strings.ReplaceAll(fmt.Sprintf("%T", f), "cline.", "")
 		err = fmt.Errorf(
-			"flag `--%s` value used as `FlagStringSliceValue` but declared as `%s`",
+			"error: flag `--%s` value used as `FlagStringSliceValue` but declared as `%s`",
 			longFlagName,
 			t,
 		)

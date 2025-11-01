@@ -2,9 +2,14 @@ name: devel
 
 on:
   pull_request:
+    paths:
+    - .github/workflows/devel.yml
+    - go.mod
+    - go.sum
+    - '**.go'
   push:
     branches:
-      - master
+    - master
     paths:
     - .github/workflows/devel.yml
     - go.mod
@@ -47,14 +52,17 @@ jobs:
           install-go: false
           cache-key: ${{ matrix.go }}
       - name: Tests
+        shell: bash
         run: |
-          go test ./... -v -timeout 30s -coverprofile=coverage.txt -covermode=atomic
+          go test $(go list ./... | grep -v /examples) -v -timeout 30s -coverprofile=coverage.txt -covermode=atomic
       - name: Coverage
         uses: codecov/codecov-action@v5
         with:
           flags: unittests
           verbose: true
           name: codecov-cline
+          gcov_ignore: |
+            examples/
           token: ${{ secrets.CODECOV_TOKEN }}
       - name: Build
         shell: bash
