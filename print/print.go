@@ -45,7 +45,7 @@ func PrintHelp(ap *app.App, cmd *app.Cmd) error {
 	fmt.Printf("OPTIONS:\n")
 
 	var vflags []flagStruct
-	var fLen int = 0
+	var fLen = 0
 	var aliasMaxLen = 0
 
 	// Append help and version flags
@@ -139,7 +139,7 @@ func PrintHelp(ap *app.App, cmd *app.Cmd) error {
 			fmt.Printf("COMMANDS:\n")
 
 			var vcmds [][]string
-			var cmdLen int = 0
+			var cmdLen = 0
 			for _, c := range ap.Commands {
 				vcmds = append(vcmds, []string{c.Name, c.Summary})
 				if len([]rune(c.Name)) > cmdLen {

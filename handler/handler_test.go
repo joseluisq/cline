@@ -45,6 +45,19 @@ func TestHandler_Run(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "should trigger command help when --help flag is used with a command",
+			ap: &app.App{
+				Commands: []app.Cmd{
+					{
+						Name:    "info",
+						Summary: "Show command information",
+					},
+				},
+			},
+			vArgs:   []string{"app", "info", "--help"},
+			wantErr: false,
+		},
+		{
 			name:    "should trigger version on --version flag",
 			ap:      &app.App{},
 			vArgs:   []string{"app", "--version"},
@@ -173,6 +186,39 @@ func TestHandler_Run(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "should treat non-boolean argument after bool flag as tail arg with a command",
+			ap: &app.App{
+				Flags: []flag.Flag{
+					flag.FlagBool{Name: "verbose"},
+				},
+				Commands: []app.Cmd{
+					{Name: "start"},
+				},
+			},
+			vArgs:   []string{"app", "--verbose", "start"},
+			wantErr: false,
+		},
+		{
+			name: "should treat non-boolean numeric value after bool flag as tail arg",
+			ap: &app.App{
+				Flags: []flag.Flag{
+					flag.FlagBool{Name: "enabled"},
+				},
+				Handler: func(ctx *app.AppContext) error {
+					enabledFlag, _ := ctx.Flags().Bool("enabled")
+					val, _ := enabledFlag.Value()
+					// The flag itself should be true because it was present.
+					assert.True(t, val, "enabled flag should be true")
+					// The non-boolean value "2" should become a tail argument.
+					assert.Equal(t, 1, len(ctx.TailArgs()), "should have one tail argument")
+					assert.Equal(t, "2", ctx.TailArgs()[0])
+					return nil
+				},
+			},
+			vArgs:   []string{"app", "--enabled", "2"},
+			wantErr: false,
+		},
+		{
 			name: "should handle malformed flags as tail arguments",
 			ap: &app.App{
 				Handler: func(ctx *app.AppContext) error {
@@ -263,6 +309,47 @@ func TestHandler_Run(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "should return error if flag requiring value is followed by another flag",
+			ap: &app.App{
+				Flags: []flag.Flag{
+					flag.FlagString{Name: "input"},
+					flag.FlagBool{Name: "verbose"},
+				},
+			},
+			vArgs:   []string{"app", "--input", "--verbose"},
+			wantErr: true,
+		},
+		{
+			name: "should return error if string flag is last argument",
+			ap: &app.App{
+				Flags: []flag.Flag{
+					flag.FlagString{Name: "input"},
+				},
+			},
+			vArgs:   []string{"app", "--input"},
+			wantErr: true,
+		},
+		{
+			name: "should return error if int flag is last argument",
+			ap: &app.App{
+				Flags: []flag.Flag{
+					flag.FlagInt{Name: "num"},
+				},
+			},
+			vArgs:   []string{"app", "--num"},
+			wantErr: true,
+		},
+		{
+			name: "should return error if string slice flag is last argument",
+			ap: &app.App{
+				Flags: []flag.Flag{
+					flag.FlagStringSlice{Name: "items"},
+				},
+			},
+			vArgs:   []string{"app", "--items"},
+			wantErr: true,
+		},
+		{
 			name: "should treat subsequent value as tail arg if flag already assigned",
 			ap: &app.App{
 				Flags: []flag.Flag{
@@ -274,6 +361,177 @@ func TestHandler_Run(t *testing.T) {
 				},
 			},
 			vArgs:   []string{"app", "--input", "first-value", "another-value"},
+			wantErr: false,
+		},
+		{
+			name: "should treat subsequent value as tail arg if string slice flag already assigned",
+			ap: &app.App{
+				Flags: []flag.Flag{
+					flag.FlagStringSlice{Name: "items"},
+				},
+				Handler: func(ctx *app.AppContext) error {
+					itemsFlag, _ := ctx.Flags().StringSlice("items")
+					val := itemsFlag.Value()
+					assert.Equal(t, []string{"a", "b"}, val)
+					assert.Equal(t, []string{"another-value"}, ctx.TailArgs(), "should have one tail argument")
+					return nil
+				},
+			},
+			vArgs:   []string{"app", "--items", "a,b", "another-value"},
+			wantErr: false,
+		},
+		{
+			name: "should parse command-specific bool flag when command is present",
+			ap: &app.App{
+				Flags: []flag.Flag{
+					flag.FlagBool{Name: "global"},
+				},
+				Commands: []app.Cmd{
+					{
+						Name: "run",
+						Flags: []flag.Flag{
+							flag.FlagBool{Name: "local"},
+						},
+						Handler: func(ctx *app.CmdContext) error {
+							localFlag, err := ctx.Flags.Bool("local")
+							assert.NoError(t, err)
+							assert.True(t, localFlag.IsProvided(), "local flag should be provided")
+							return nil
+						},
+					},
+				},
+			},
+			vArgs:   []string{"app", "run", "--local"},
+			wantErr: false,
+		},
+		{
+			name: "should parse command-specific string flag when command is present",
+			ap: &app.App{
+				Flags: []flag.Flag{
+					flag.FlagString{Name: "global"},
+				},
+				Commands: []app.Cmd{
+					{
+						Name: "run",
+						Flags: []flag.Flag{
+							flag.FlagString{Name: "local"},
+						},
+						Handler: func(ctx *app.CmdContext) error {
+							localFlag, err := ctx.Flags.String("local")
+							assert.NoError(t, err)
+							assert.True(t, localFlag.IsProvided(), "local flag should be provided")
+							return nil
+						},
+					},
+				},
+			},
+			vArgs:   []string{"app", "run", "--local", "value"},
+			wantErr: false,
+		},
+		{
+			name: "should parse command-specific string slice flag when command is present",
+			ap: &app.App{
+				Flags: []flag.Flag{
+					flag.FlagStringSlice{Name: "global"},
+				},
+				Commands: []app.Cmd{
+					{
+						Name: "run",
+						Flags: []flag.Flag{
+							flag.FlagStringSlice{Name: "local"},
+						},
+						Handler: func(ctx *app.CmdContext) error {
+							localFlag, err := ctx.Flags.StringSlice("local")
+							assert.NoError(t, err)
+							assert.True(t, localFlag.IsProvided(), "local flag should be provided")
+							return nil
+						},
+					},
+				},
+			},
+			vArgs:   []string{"app", "run", "--local", "value1,value2"},
+			wantErr: false,
+		},
+		{
+			name: "should parse command-specific int flag when command is present",
+			ap: &app.App{
+				Flags: []flag.Flag{
+					flag.FlagInt{Name: "global"},
+				},
+				Commands: []app.Cmd{
+					{
+						Name: "run",
+						Flags: []flag.Flag{
+							flag.FlagInt{Name: "local"},
+						},
+						Handler: func(ctx *app.CmdContext) error {
+							localFlag, err := ctx.Flags.Int("local")
+							assert.NoError(t, err)
+							assert.True(t, localFlag.IsProvided(), "local flag should be provided")
+							return nil
+						},
+					},
+				},
+			},
+			vArgs:   []string{"app", "run", "--local", "1"},
+			wantErr: false,
+		},
+		{
+			name: "should correctly identify flag provided as alias",
+			ap: &app.App{
+				Flags: []flag.Flag{
+					flag.FlagString{
+						Name:    "file",
+						Aliases: []string{"f"},
+					},
+				},
+				Handler: func(ctx *app.AppContext) error {
+					f, err := ctx.Flags().String("file")
+					assert.NoError(t, err)
+					assert.True(t, f.IsProvided(), "flag should be marked as provided")
+					assert.True(t, f.IsProvidedShort(), "flag should be marked as provided via alias (short)")
+					assert.False(t, f.IsProvidedLong(), "flag should not be marked as provided via long name")
+					return nil
+				},
+			},
+			vArgs:   []string{"app", "-f", "somefile.txt"},
+			wantErr: false,
+		},
+		{
+			name: "should treat subsequent value as tail arg if int flag already assigned",
+			ap: &app.App{
+				Flags: []flag.Flag{
+					flag.FlagInt{Name: "num"},
+				},
+				Handler: func(ctx *app.AppContext) error {
+					numFlag, _ := ctx.Flags().Int("num")
+					val, _ := numFlag.Value()
+					assert.Equal(t, 123, val)
+					assert.Equal(t, []string{"456"}, ctx.TailArgs(), "should have one tail argument")
+					return nil
+				},
+			},
+			vArgs:   []string{"app", "--num", "123", "456"},
+			wantErr: false,
+		},
+		{
+			name: "should treat subsequent non-flag arg as tail arg after a bool flag",
+			ap: &app.App{
+				Flags: []flag.Flag{
+					flag.FlagBool{Name: "verbose"},
+				},
+				Handler: func(ctx *app.AppContext) error {
+					verboseFlag, _ := ctx.Flags().Bool("verbose")
+					val, _ := verboseFlag.Value()
+
+					assert.True(t, val, "verbose flag should be true")
+					assert.True(t, verboseFlag.Flag.FlagAssigned, "verbose flag should be assigned")
+					assert.Equal(t, []string{"extra-arg"}, ctx.TailArgs(), "should have one tail argument")
+					return nil
+				},
+			},
+			// This triggers the `if fl.FlagAssigned` block for a boolean flag.
+			vArgs:   []string{"app", "--verbose", "true", "extra-arg"},
 			wantErr: false,
 		},
 	}

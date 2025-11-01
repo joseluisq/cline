@@ -62,14 +62,45 @@ func (h *Handler) Run(vArgs []string) error {
 	var vArgsLen = len(vArgs)
 
 	if vArgsLen > maxArgsCount {
-		return fmt.Errorf("number of arguments exceeds the limit of %d", maxArgsCount)
+		return fmt.Errorf("error: number of arguments exceeds the limit of %d", maxArgsCount)
 	}
 
 	for idx := 1; idx < vArgsLen; idx++ {
 		arg := strings.TrimSpace(vArgs[idx])
 
 		if len(arg) > maxArgLen {
-			return fmt.Errorf("argument exceeds maximum length of %d characters", maxArgLen)
+			return fmt.Errorf("error: argument exceeds maximum length of %d characters", maxArgLen)
+		}
+
+		// Check if the previous flag was expecting a value but didn't get one
+		if lastFlag != nil {
+			// Check if the flag type requires a value (i.e., it's not a bool)
+			name := ""
+			isUnassignedValueFlag := false
+			switch v := lastFlag.(type) {
+			case flag.FlagInt:
+				if !v.FlagAssigned {
+					name = v.Name
+					isUnassignedValueFlag = true
+				}
+			case flag.FlagString:
+				if !v.FlagAssigned {
+					name = v.Name
+					isUnassignedValueFlag = true
+				}
+			case flag.FlagStringSlice:
+				if !v.FlagAssigned {
+					name = v.Name
+					isUnassignedValueFlag = true
+				}
+			}
+
+			// If the previous flag needed a value and the current argument is another flag,
+			// it's an error.
+			if isUnassignedValueFlag && strings.HasPrefix(arg, "-") {
+				// The previous flag is missing its required value.
+				return fmt.Errorf("error: flag \"--%s\" requires a value", name)
+			}
 		}
 
 		// Check for no supported arguments (remaining)
@@ -123,7 +154,7 @@ func (h *Handler) Run(vArgs []string) error {
 
 			flagInfo, ok := flagMap[flagKey]
 			if !ok {
-				return fmt.Errorf("unknown argument: %s", arg)
+				return fmt.Errorf("error: unknown argument: %s", arg)
 			}
 			lastFlag = flagInfo.Flag
 			lastFlagIndex = flagInfo.Index
@@ -214,13 +245,8 @@ func (h *Handler) Run(vArgs []string) error {
 		switch fl := lastFlag.(type) {
 		case flag.FlagBool:
 			if fl.Name != "" {
-				if fl.FlagAssigned {
-					tailArgs = append(tailArgs, arg)
-					continue
-				}
-
-				// This case is now handled when the flag is first seen.
-				// If we are here, it means the argument isn't a value for the bool flag.
+				// A boolean flag's value is determined when the flag itself is parsed.
+				// Any subsequent non-flag argument is always a tail argument.
 				tailArgs = append(tailArgs, arg)
 				continue
 			}
@@ -247,7 +273,7 @@ func (h *Handler) Run(vArgs []string) error {
 					}
 					continue
 				} else {
-					return fmt.Errorf("invalid integer value for flag --%s", fl.Name)
+					return fmt.Errorf("error: invalid integer value for flag --%s", fl.Name)
 				}
 			}
 		case flag.FlagString:
@@ -291,6 +317,25 @@ func (h *Handler) Run(vArgs []string) error {
 					}
 				}
 				continue
+			}
+		}
+	}
+
+	// After the loop, check if the very last flag was left without a value
+	if lastFlag != nil {
+		// The last argument was a flag that required a value
+		switch v := lastFlag.(type) {
+		case flag.FlagInt:
+			if !v.FlagAssigned {
+				return fmt.Errorf("error: flag \"--%s\" requires a value", v.Name)
+			}
+		case flag.FlagString:
+			if !v.FlagAssigned {
+				return fmt.Errorf("error: flag \"--%s\" requires a value", v.Name)
+			}
+		case flag.FlagStringSlice:
+			if !v.FlagAssigned {
+				return fmt.Errorf("error: flag \"--%s\" requires a value", v.Name)
 			}
 		}
 	}

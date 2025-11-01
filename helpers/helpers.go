@@ -15,7 +15,7 @@ func ValidateCommands(commands []app.Cmd) (cmds []app.Cmd, err error) {
 	for _, c := range commands {
 		name := strings.TrimSpace(c.Name)
 		if name == "" {
-			err = fmt.Errorf("command name cannot be empty")
+			err = fmt.Errorf("error: command name cannot be empty")
 			return
 		}
 		flags, errf := ValidateFlagsAndInit(c.Flags)
@@ -33,13 +33,13 @@ func ValidateCommands(commands []app.Cmd) (cmds []app.Cmd, err error) {
 func ValidateFlagsAndInit(flags []flag.Flag) (vflags []flag.Flag, err error) {
 	for _, v := range flags {
 		if v == nil {
-			err = fmt.Errorf("flag list contains a nil value")
+			err = fmt.Errorf("error: flag list contains a nil value")
 			return
 		}
 		switch f := v.(type) {
 		case flag.FlagBool:
 			if name := strings.ToLower(strings.TrimSpace(f.Name)); name == "" {
-				err = fmt.Errorf("bool flag name cannot be empty")
+				err = fmt.Errorf("error: bool flag name cannot be empty")
 				return
 			}
 			f.Init()
@@ -47,7 +47,7 @@ func ValidateFlagsAndInit(flags []flag.Flag) (vflags []flag.Flag, err error) {
 
 		case flag.FlagInt:
 			if name := strings.ToLower(strings.TrimSpace(f.Name)); name == "" {
-				err = fmt.Errorf("int flag name cannot be empty")
+				err = fmt.Errorf("error: int flag name cannot be empty")
 				return
 			}
 			f.Init()
@@ -55,7 +55,7 @@ func ValidateFlagsAndInit(flags []flag.Flag) (vflags []flag.Flag, err error) {
 
 		case flag.FlagString:
 			if name := strings.ToLower(strings.TrimSpace(f.Name)); name == "" {
-				err = fmt.Errorf("string flag name cannot be empty")
+				err = fmt.Errorf("error: string flag name cannot be empty")
 				return
 			}
 			f.Init()
@@ -63,14 +63,14 @@ func ValidateFlagsAndInit(flags []flag.Flag) (vflags []flag.Flag, err error) {
 
 		case flag.FlagStringSlice:
 			if name := strings.ToLower(strings.TrimSpace(f.Name)); name == "" {
-				err = fmt.Errorf("string slice flag name cannot be empty")
+				err = fmt.Errorf("error: string slice flag name cannot be empty")
 				return
 			}
 			f.Init()
 			vflags = append(vflags, f)
 
 		default:
-			err = fmt.Errorf("invalid data type for flag or flag pointer (%T). Use a FlagBool, FlagInt, FlagString, FlagStringSlice or nil value instead", v)
+			err = fmt.Errorf("error: invalid data type for flag or flag pointer (%T). Use a FlagBool, FlagInt, FlagString, FlagStringSlice or nil value instead", v)
 			return
 		}
 	}
