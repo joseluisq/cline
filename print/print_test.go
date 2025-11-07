@@ -1,6 +1,7 @@
 package print_test
 
 import (
+	"errors"
 	"os"
 	"testing"
 
@@ -89,34 +90,44 @@ func Test_printHelp(t *testing.T) {
 	}
 	ap := NewApp(nil, nil)
 	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
+		name        string
+		args        args
+		expectedErr error
 	}{
 		{
-			name:    "invalid command app for output",
-			args:    args{},
-			wantErr: true,
+			name:        "should return error for nil app",
+			args:        args{},
+			expectedErr: errors.New("error: application instance not found"),
 		},
 		{
-			name: "valid global output",
+			name: "should print global app output",
 			args: args{
 				app: ap,
 			},
 		},
 		{
-			name: "valid command output",
+			name: "should print command output",
 			args: args{
 				app: ap,
 				cmd: &ap.Commands[0],
+			},
+		},
+		{
+			name: "should return default output for command not in app",
+			args: args{
+				app: ap,
+				cmd: &app.Cmd{
+					Name: "unknown",
+				},
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := print.PrintHelp(tt.args.app, tt.args.cmd); tt.wantErr {
+			if err := print.PrintHelp(tt.args.app, tt.args.cmd); tt.expectedErr != nil {
 				assert.Error(t, err, "Expected an error but got none")
+				assert.EqualError(t, err, tt.expectedErr.Error(), "Error messages do not match")
 			} else {
 				assert.NoError(t, err, "Expected no error but got one")
 			}
@@ -126,12 +137,11 @@ func Test_printHelp(t *testing.T) {
 
 func TestApp_printVersion(t *testing.T) {
 	tests := []struct {
-		name    string
-		app     *app.App
-		wantErr bool
+		name string
+		app  *app.App
 	}{
 		{
-			name: "valid app for version output",
+			name: "should print version output for valid app",
 			app:  NewApp(nil, nil),
 		},
 	}

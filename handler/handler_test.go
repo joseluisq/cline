@@ -1,6 +1,7 @@
-package handler_test
+package handler
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -8,38 +9,35 @@ import (
 
 	"github.com/joseluisq/cline/app"
 	"github.com/joseluisq/cline/flag"
-	"github.com/joseluisq/cline/handler"
 )
-
-const maxArgsCount = 1024
 
 func TestHandler_Run(t *testing.T) {
 	tests := []struct {
 		name    string
 		ap      *app.App
-		vArgs   []string
-		wantErr bool
+		vargs   []string
+		wantErr error
 	}{
 		{
 			name:  "should handle no arguments",
 			ap:    &app.App{},
-			vArgs: []string{},
+			vargs: []string{},
 		},
 		{
 			name:    "should return error for unknown flag",
 			ap:      &app.App{Flags: []flag.Flag{}},
-			vArgs:   []string{"app", "--unknown"},
-			wantErr: true,
+			vargs:   []string{"app", "--unknown"},
+			wantErr: errors.New("error: unknown argument: --unknown"),
 		},
 		{
 			name:  "should treat unknown command as tail argument",
 			ap:    &app.App{Commands: []app.Cmd{}},
-			vArgs: []string{"app", "notacmd"},
+			vargs: []string{"app", "notacmd"},
 		},
 		{
 			name:  "should trigger help on --help flag",
 			ap:    &app.App{},
-			vArgs: []string{"app", "--help"},
+			vargs: []string{"app", "--help"},
 		},
 		{
 			name: "should trigger command help when --help flag is used with a command",
@@ -51,12 +49,12 @@ func TestHandler_Run(t *testing.T) {
 					},
 				},
 			},
-			vArgs: []string{"app", "info", "--help"},
+			vargs: []string{"app", "info", "--help"},
 		},
 		{
 			name:  "should trigger version on --version flag",
 			ap:    &app.App{},
-			vArgs: []string{"app", "--version"},
+			vargs: []string{"app", "--version"},
 		},
 		{
 			name: "should return error for flag with invalid int value",
@@ -65,8 +63,8 @@ func TestHandler_Run(t *testing.T) {
 					flag.FlagInt{Name: "num"},
 				},
 			},
-			vArgs:   []string{"app", "--num", "notanint"},
-			wantErr: true,
+			vargs:   []string{"app", "--num", "notanint"},
+			wantErr: errors.New("error: invalid integer value for flag --num"),
 		},
 		{
 			name: "should parse valid int flag value",
@@ -75,7 +73,7 @@ func TestHandler_Run(t *testing.T) {
 					flag.FlagInt{Name: "num"},
 				},
 			},
-			vArgs: []string{"app", "--num", "42"},
+			vargs: []string{"app", "--num", "42"},
 		},
 		{
 			name: "should handle potentially dangerous input as a string",
@@ -84,7 +82,7 @@ func TestHandler_Run(t *testing.T) {
 					flag.FlagString{Name: "input"},
 				},
 			},
-			vArgs: []string{"app", "--input", "; rm -rf /"},
+			vargs: []string{"app", "--input", "; rm -rf /"},
 		},
 		{
 			name: "should pass tail arguments to command handler",
@@ -101,7 +99,7 @@ func TestHandler_Run(t *testing.T) {
 					},
 				},
 			},
-			vArgs: []string{"app", "run", "foo", "bar"},
+			vargs: []string{"app", "run", "foo", "bar"},
 		},
 		{
 			name: "should handle SQL injection attempt as a string",
@@ -110,7 +108,7 @@ func TestHandler_Run(t *testing.T) {
 					flag.FlagString{Name: "query"},
 				},
 			},
-			vArgs: []string{"app", "--query", "'; DROP TABLE users; --"},
+			vargs: []string{"app", "--query", "'; DROP TABLE users; --"},
 		},
 		{
 			name: "should handle XSS attempt as a string",
@@ -119,12 +117,12 @@ func TestHandler_Run(t *testing.T) {
 					flag.FlagString{Name: "name"},
 				},
 			},
-			vArgs: []string{"app", "--name", "<script>alert('xss')</script>"},
+			vargs: []string{"app", "--name", "<script>alert('xss')</script>"},
 		},
 		{
 			name: "should return error when argument count exceeds limit",
 			ap:   &app.App{},
-			vArgs: func() []string {
+			vargs: func() []string {
 				// Create a slice with more arguments than the allowed maximum
 				args := make([]string, maxArgsCount+2)
 				args[0] = "app"
@@ -133,13 +131,17 @@ func TestHandler_Run(t *testing.T) {
 				}
 				return args
 			}(),
-			wantErr: true,
+			wantErr: fmt.Errorf("error: number of arguments exceeds the limit of %d", maxArgsCount),
 		},
 		{
-			name:    "should return error when an argument length exceeds limit",
-			ap:      &app.App{},
-			vArgs:   []string{"app", "--long-arg", string(make([]byte, 4097))},
-			wantErr: true,
+			name: "should return error when an argument length exceeds limit",
+			ap: &app.App{
+				Flags: []flag.Flag{
+					flag.FlagString{Name: "long-arg"},
+				},
+			},
+			vargs:   []string{"app", "--long-arg", string(make([]byte, 4097))},
+			wantErr: fmt.Errorf("error: argument exceeds maximum length of %d characters", maxArgLen),
 		},
 		{
 			name: "should treat arguments after -- as tail arguments",
@@ -154,7 +156,7 @@ func TestHandler_Run(t *testing.T) {
 					return nil
 				},
 			},
-			vArgs: []string{"app", "--verbose", "--", "--another-flag", "-f"},
+			vargs: []string{"app", "--verbose", "--", "--another-flag", "-f"},
 		},
 		{
 			name: "should not consume next argument for boolean flag if not a bool value",
@@ -171,7 +173,7 @@ func TestHandler_Run(t *testing.T) {
 					return nil
 				},
 			},
-			vArgs: []string{"app", "--verbose", "my-command"},
+			vargs: []string{"app", "--verbose", "my-command"},
 		},
 		{
 			name: "should treat non-boolean argument after bool flag as tail arg with a command",
@@ -183,7 +185,7 @@ func TestHandler_Run(t *testing.T) {
 					{Name: "start"},
 				},
 			},
-			vArgs: []string{"app", "--verbose", "start"},
+			vargs: []string{"app", "--verbose", "start"},
 		},
 		{
 			name: "should treat non-boolean numeric value after bool flag as tail arg",
@@ -202,7 +204,7 @@ func TestHandler_Run(t *testing.T) {
 					return nil
 				},
 			},
-			vArgs: []string{"app", "--enabled", "2"},
+			vargs: []string{"app", "--enabled", "2"},
 		},
 		{
 			name: "should handle malformed flags as tail arguments",
@@ -213,7 +215,7 @@ func TestHandler_Run(t *testing.T) {
 					return nil
 				},
 			},
-			vArgs: []string{"app", "---"},
+			vargs: []string{"app", "---"},
 		},
 		{
 			name: "should handle path traversal attempt as a string",
@@ -222,13 +224,13 @@ func TestHandler_Run(t *testing.T) {
 					flag.FlagString{Name: "file"},
 				},
 			},
-			vArgs: []string{"app", "--file", "../../../etc/passwd"},
+			vargs: []string{"app", "--file", "../../../etc/passwd"},
 		},
 		{
 			name:    "should handle non-UTF-8 characters in flag name",
 			ap:      &app.App{},
-			vArgs:   []string{"app", "--\xff\xfe\xfd"},
-			wantErr: true,
+			vargs:   []string{"app", "--\xff\xfe\xfd"},
+			wantErr: fmt.Errorf("error: unknown argument: --\xff\xfe\xfd"),
 		},
 		{
 			name: "should handle non-UTF-8 characters in flag value",
@@ -237,7 +239,7 @@ func TestHandler_Run(t *testing.T) {
 					flag.FlagString{Name: "input"},
 				},
 			},
-			vArgs: []string{"app", "--input", "value-\xff\xfe\xfd"},
+			vargs: []string{"app", "--input", "value-\xff\xfe\xfd"},
 		},
 		{
 			name: "should handle null byte in argument",
@@ -246,7 +248,7 @@ func TestHandler_Run(t *testing.T) {
 					flag.FlagString{Name: "input"},
 				},
 			},
-			vArgs: []string{"app", "--input", "some\x00value"},
+			vargs: []string{"app", "--input", "some\x00value"},
 		},
 		{
 			name: "should handle invalid UTF-8 sequence as a tail argument",
@@ -257,7 +259,7 @@ func TestHandler_Run(t *testing.T) {
 					return nil
 				},
 			},
-			vArgs: []string{"app", "arg-\xff\xfe\xfd"},
+			vargs: []string{"app", "arg-\xff\xfe\xfd"},
 		},
 		{
 			name: "should overwrite string slice flag on multiple assignments",
@@ -271,7 +273,7 @@ func TestHandler_Run(t *testing.T) {
 					return nil
 				},
 			},
-			vArgs: []string{"app", "--items", "a,b", "--items", "c,d"},
+			vargs: []string{"app", "--items", "a,b", "--items", "c,d"},
 		},
 		{
 			name: "should handle empty value for string slice flag",
@@ -285,7 +287,7 @@ func TestHandler_Run(t *testing.T) {
 					return nil
 				},
 			},
-			vArgs: []string{"app", "--items", ""},
+			vargs: []string{"app", "--items", ""},
 		},
 		{
 			name: "should return error if flag requiring value is followed by another flag",
@@ -295,8 +297,8 @@ func TestHandler_Run(t *testing.T) {
 					flag.FlagBool{Name: "verbose"},
 				},
 			},
-			vArgs:   []string{"app", "--input", "--verbose"},
-			wantErr: true,
+			vargs:   []string{"app", "--input", "--verbose"},
+			wantErr: fmt.Errorf("error: flag \"--input\" requires a value"),
 		},
 		{
 			name: "should return error if string flag is last argument",
@@ -305,8 +307,8 @@ func TestHandler_Run(t *testing.T) {
 					flag.FlagString{Name: "input"},
 				},
 			},
-			vArgs:   []string{"app", "--input"},
-			wantErr: true,
+			vargs:   []string{"app", "--input"},
+			wantErr: fmt.Errorf("error: flag \"--input\" requires a value"),
 		},
 		{
 			name: "should return error if int flag is last argument",
@@ -315,8 +317,8 @@ func TestHandler_Run(t *testing.T) {
 					flag.FlagInt{Name: "num"},
 				},
 			},
-			vArgs:   []string{"app", "--num"},
-			wantErr: true,
+			vargs:   []string{"app", "--num"},
+			wantErr: fmt.Errorf("error: flag \"--num\" requires a value"),
 		},
 		{
 			name: "should return error if string slice flag is last argument",
@@ -325,8 +327,8 @@ func TestHandler_Run(t *testing.T) {
 					flag.FlagStringSlice{Name: "items"},
 				},
 			},
-			vArgs:   []string{"app", "--items"},
-			wantErr: true,
+			vargs:   []string{"app", "--items"},
+			wantErr: fmt.Errorf("error: flag \"--items\" requires a value"),
 		},
 		{
 			name: "should treat subsequent value as tail arg if flag already assigned",
@@ -339,7 +341,7 @@ func TestHandler_Run(t *testing.T) {
 					return nil
 				},
 			},
-			vArgs: []string{"app", "--input", "first-value", "another-value"},
+			vargs: []string{"app", "--input", "first-value", "another-value"},
 		},
 		{
 			name: "should treat subsequent value as tail arg if string slice flag already assigned",
@@ -355,7 +357,7 @@ func TestHandler_Run(t *testing.T) {
 					return nil
 				},
 			},
-			vArgs: []string{"app", "--items", "a,b", "another-value"},
+			vargs: []string{"app", "--items", "a,b", "another-value"},
 		},
 		{
 			name: "should parse command-specific bool flag when command is present",
@@ -378,7 +380,7 @@ func TestHandler_Run(t *testing.T) {
 					},
 				},
 			},
-			vArgs: []string{"app", "run", "--local"},
+			vargs: []string{"app", "run", "--local"},
 		},
 		{
 			name: "should parse command-specific string flag when command is present",
@@ -401,7 +403,7 @@ func TestHandler_Run(t *testing.T) {
 					},
 				},
 			},
-			vArgs: []string{"app", "run", "--local", "value"},
+			vargs: []string{"app", "run", "--local", "value"},
 		},
 		{
 			name: "should parse command-specific string slice flag when command is present",
@@ -424,7 +426,7 @@ func TestHandler_Run(t *testing.T) {
 					},
 				},
 			},
-			vArgs: []string{"app", "run", "--local", "value1,value2"},
+			vargs: []string{"app", "run", "--local", "value1,value2"},
 		},
 		{
 			name: "should parse command-specific int flag when command is present",
@@ -447,7 +449,7 @@ func TestHandler_Run(t *testing.T) {
 					},
 				},
 			},
-			vArgs: []string{"app", "run", "--local", "1"},
+			vargs: []string{"app", "run", "--local", "1"},
 		},
 		{
 			name: "should correctly identify flag provided as alias",
@@ -467,7 +469,7 @@ func TestHandler_Run(t *testing.T) {
 					return nil
 				},
 			},
-			vArgs: []string{"app", "-f", "somefile.txt"},
+			vargs: []string{"app", "-f", "somefile.txt"},
 		},
 		{
 			name: "should treat subsequent value as tail arg if int flag already assigned",
@@ -483,7 +485,7 @@ func TestHandler_Run(t *testing.T) {
 					return nil
 				},
 			},
-			vArgs: []string{"app", "--num", "123", "456"},
+			vargs: []string{"app", "--num", "123", "456"},
 		},
 		{
 			name: "should treat subsequent non-flag arg as tail arg after a bool flag",
@@ -501,15 +503,15 @@ func TestHandler_Run(t *testing.T) {
 					return nil
 				},
 			},
-			vArgs: []string{"app", "--verbose", "true", "extra-arg"},
+			vargs: []string{"app", "--verbose", "true", "extra-arg"},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := handler.New(tt.ap)
-			if err := h.Run(tt.vArgs); tt.wantErr {
+			if err := New(tt.ap).Run(tt.vargs); tt.wantErr != nil {
 				assert.Error(t, err, "Expected an error but got none")
+				assert.Equal(t, err, tt.wantErr, "Error message does not match the expected one")
 			} else {
 				assert.NoError(t, err, "Expected no error but got one")
 			}

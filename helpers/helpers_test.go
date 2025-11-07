@@ -564,11 +564,12 @@ func Test_BuildFlagMap(t *testing.T) {
 		{
 			name: "should handle mixed flag types",
 			flags: []flag.Flag{
-				flag.FlagInt{Name: "count"},
+				flag.FlagInt{Name: "count", Aliases: []string{"c"}},
 				flag.FlagStringSlice{Name: "items", Aliases: []string{"i"}},
 			},
 			want: map[string]helpers.FlagInfo{
-				"count": {Flag: flag.FlagInt{Name: "count"}, Index: 0},
+				"count": {Flag: flag.FlagInt{Name: "count", Aliases: []string{"i"}}, Index: 0},
+				"c":     {Flag: flag.FlagStringSlice{Name: "count", Aliases: []string{"c"}}, Index: 0},
 				"items": {Flag: flag.FlagStringSlice{Name: "items", Aliases: []string{"i"}}, Index: 1},
 				"i":     {Flag: flag.FlagStringSlice{Name: "items", Aliases: []string{"i"}}, Index: 1},
 			},

@@ -19,7 +19,7 @@ type flagStruct struct {
 // PrintHelp prints current application flags and commands info (--help).
 func PrintHelp(ap *app.App, cmd *app.Cmd) error {
 	if ap == nil {
-		return fmt.Errorf("application instance not found")
+		return fmt.Errorf("error: application instance not found")
 	}
 
 	paddingLeft := strings.Repeat(" ", 3)

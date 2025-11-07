@@ -27,7 +27,7 @@ func TestFlagInt_init(t *testing.T) {
 		fields fields
 	}{
 		{
-			name: "initialize FlagInt by default value",
+			name: "should initialize FlagInt by default value",
 			fields: fields{
 				Name:      "a",
 				Value:     2,
@@ -35,7 +35,7 @@ func TestFlagInt_init(t *testing.T) {
 			},
 		},
 		{
-			name: "initialize FlagInt by env value",
+			name: "should initialize FlagInt by env value",
 			fields: fields{
 				Name:      "b",
 				Value:     1,
@@ -44,7 +44,7 @@ func TestFlagInt_init(t *testing.T) {
 			},
 		},
 		{
-			name: "initialize FlagInt with wrong env value",
+			name: "should initialize FlagInt with wrong env value",
 			fields: fields{
 				Name:      "b",
 				Aliases:   []string{"x", "y"},
@@ -94,7 +94,7 @@ func TestFlagBool_init(t *testing.T) {
 		fields fields
 	}{
 		{
-			name: "initialize FlagBool by default value",
+			name: "should initialize FlagBool by default value",
 			fields: fields{
 				Name:      "a",
 				Value:     true,
@@ -102,7 +102,7 @@ func TestFlagBool_init(t *testing.T) {
 			},
 		},
 		{
-			name: "initialize FlagBool by env value",
+			name: "should initialize FlagBool by env value",
 			fields: fields{
 				Name:      "b",
 				EnvVar:    "ENV_BOOL_VAR_OK",
@@ -110,7 +110,7 @@ func TestFlagBool_init(t *testing.T) {
 			},
 		},
 		{
-			name: "initialize FlagBool with wrong env value",
+			name: "should initialize FlagBool with wrong env value",
 			fields: fields{
 				Name:      "b",
 				EnvVar:    "ENV_BOOL_VAR_ERR",
@@ -158,7 +158,7 @@ func TestFlagString_init(t *testing.T) {
 		fields fields
 	}{
 		{
-			name: "initialize FlagString by default value",
+			name: "should initialize FlagString by default value",
 			fields: fields{
 				Name:      "a",
 				Value:     "str",
@@ -166,7 +166,7 @@ func TestFlagString_init(t *testing.T) {
 			},
 		},
 		{
-			name: "initialize FlagString by env value",
+			name: "should initialize FlagString by env value",
 			fields: fields{
 				Name:      "b",
 				EnvVar:    "ENV_STRING_VAR_OK",
@@ -174,7 +174,7 @@ func TestFlagString_init(t *testing.T) {
 			},
 		},
 		{
-			name: "initialize FlagString with wrong env value",
+			name: "should initialize FlagString with wrong env value",
 			fields: fields{
 				Name:   "b",
 				EnvVar: "ENV_STRING_VAR_ERR",
@@ -221,13 +221,13 @@ func TestFlagStringSlice_init(t *testing.T) {
 		fields fields
 	}{
 		{
-			name: "initialize FlagString by default value",
+			name: "should initialize FlagString by default value",
 			fields: fields{
 				Name: "a",
 			},
 		},
 		{
-			name: "initialize FlagString by env value",
+			name: "should initialize FlagString by env value",
 			fields: fields{
 				Name:      "b",
 				EnvVar:    "ENV_STRING_SLICE_VAR_OK",
@@ -235,7 +235,7 @@ func TestFlagStringSlice_init(t *testing.T) {
 			},
 		},
 		{
-			name: "initialize FlagString with wrong env value",
+			name: "should initialize FlagString with wrong env value",
 			fields: fields{
 				Name:   "b",
 				EnvVar: "ENV_STRING_SLICE_VAR_ERR",

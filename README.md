@@ -18,7 +18,7 @@
 
 ### Work in progress
 
-- POSIX-compliant flags feature is partial. Please see [issue #3](https://github.com/joseluisq/cline/issues/3)
+- POSIX-compliant flags support is partial. Please see [issue #3](https://github.com/joseluisq/cline/issues/3)
 - Subcommands are not supported yet.
 
 ## Usage
