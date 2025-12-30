@@ -346,6 +346,53 @@ func TestHandler_Run(t *testing.T) {
 			wantErr: fmt.Errorf("error: flag '--items' requires a value"),
 		},
 		{
+			name: "should return error for inconsistent special flag version alias",
+			ap: &app.App{
+				Flags: []flag.Flag{
+					flag.FlagStringSlice{Name: "items"},
+				},
+			},
+			vargs:   []string{"app", "--v"},
+			wantErr: fmt.Errorf("error: unknown flag '--v' argument"),
+		},
+		{
+			name: "should execute when consistent special flag version alias",
+			ap: &app.App{
+				Flags: []flag.Flag{
+					flag.FlagStringSlice{Name: "items"},
+				},
+			},
+			vargs: []string{"app", "-v"},
+		},
+		{
+			name: "should return error for inconsistent special flag help alias",
+			ap: &app.App{
+				Flags: []flag.Flag{
+					flag.FlagStringSlice{Name: "items"},
+				},
+			},
+			vargs:   []string{"app", "--h"},
+			wantErr: fmt.Errorf("error: unknown flag '--h' argument"),
+		},
+		{
+			name: "should execute when consistent special flag help alias",
+			ap: &app.App{
+				Flags: []flag.Flag{
+					flag.FlagStringSlice{Name: "items"},
+				},
+			},
+			vargs: []string{"app", "-h"},
+		},
+		{
+			name: "should skip when unsupported argument is provided",
+			ap: &app.App{
+				Flags: []flag.Flag{
+					flag.FlagStringSlice{Name: "items"},
+				},
+			},
+			vargs: []string{"app", "-"},
+		},
+		{
 			name: "should treat subsequent value as tail arg if flag already assigned",
 			ap: &app.App{
 				Flags: []flag.Flag{
@@ -538,13 +585,23 @@ func TestHandler_Run(t *testing.T) {
 			},
 			vargs: []string{"app", "--verbose", "true", "extra-arg"},
 		},
+		{
+			name: "should return error for invalid flag",
+			ap: &app.App{
+				Flags: []flag.Flag{
+					flag.FlagStringSlice{Name: "itéms", Aliases: []string{"i"}},
+				},
+			},
+			vargs:   []string{"app", "-i"},
+			wantErr: fmt.Errorf("error: flag 'itéms' contains invalid characters"),
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if actualErr := New(tt.ap).Run(tt.vargs); tt.wantErr != nil {
 				assert.Error(t, actualErr, "Expected an error but got none")
-				assert.Equal(t, tt.wantErr, actualErr, "Error message does not match the expected one")
+				assert.Equal(t, actualErr, tt.wantErr, "Error message does not match the expected one")
 			} else {
 				assert.NoError(t, actualErr, "Expected no error but got one")
 			}
