@@ -27,7 +27,7 @@ func TestHandler_Run(t *testing.T) {
 			name:    "should return error for unknown flag",
 			ap:      &app.App{Flags: []flag.Flag{}},
 			vargs:   []string{"app", "--unknown"},
-			wantErr: errors.New("error: unknown argument: --unknown"),
+			wantErr: errors.New("error: unknown flag '--unknown' argument"),
 		},
 		{
 			name:  "should treat unknown command as tail argument",
@@ -64,7 +64,7 @@ func TestHandler_Run(t *testing.T) {
 				},
 			},
 			vargs:   []string{"app", "--num", "notanint"},
-			wantErr: errors.New("error: invalid integer value for flag --num"),
+			wantErr: errors.New("error: invalid integer value for flag '--num'"),
 		},
 		{
 			name: "should parse valid int flag value",
@@ -215,7 +215,8 @@ func TestHandler_Run(t *testing.T) {
 					return nil
 				},
 			},
-			vargs: []string{"app", "---"},
+			vargs:   []string{"app", "---"},
+			wantErr: fmt.Errorf("error: flag '-' contains invalid characters"),
 		},
 		{
 			name: "should handle path traversal attempt as a string",
@@ -227,19 +228,32 @@ func TestHandler_Run(t *testing.T) {
 			vargs: []string{"app", "--file", "../../../etc/passwd"},
 		},
 		{
-			name:    "should handle non-UTF-8 characters in flag name",
+			name:    "should return error when non-UTF-8 characters in flag name",
 			ap:      &app.App{},
 			vargs:   []string{"app", "--\xff\xfe\xfd"},
-			wantErr: fmt.Errorf("error: unknown argument: --\xff\xfe\xfd"),
+			wantErr: fmt.Errorf("error: argument contains invalid UTF-8 characters"),
 		},
 		{
-			name: "should handle non-UTF-8 characters in flag value",
+			name:    "should return error when non-ASCII characters in flag name",
+			ap:      &app.App{},
+			vargs:   []string{"app", "--ñame"},
+			wantErr: fmt.Errorf("error: flag 'ñame' contains invalid characters"),
+		},
+		{
+			name:    "should return error when non-ASCII characters in flag name with single dash",
+			ap:      &app.App{},
+			vargs:   []string{"app", "-–file"},
+			wantErr: fmt.Errorf("error: flag '–file' contains invalid characters"),
+		},
+		{
+			name: "should return error when non-UTF-8 characters in flag value",
 			ap: &app.App{
 				Flags: []flag.Flag{
 					flag.FlagString{Name: "input"},
 				},
 			},
-			vargs: []string{"app", "--input", "value-\xff\xfe\xfd"},
+			vargs:   []string{"app", "--input", "value-\xff\xfe\xfd"},
+			wantErr: fmt.Errorf("error: argument contains invalid UTF-8 characters"),
 		},
 		{
 			name: "should handle null byte in argument",
@@ -251,7 +265,7 @@ func TestHandler_Run(t *testing.T) {
 			vargs: []string{"app", "--input", "some\x00value"},
 		},
 		{
-			name: "should handle invalid UTF-8 sequence as a tail argument",
+			name: "should return error when invalid UTF-8 sequence as a tail argument",
 			ap: &app.App{
 				Handler: func(ctx *app.AppContext) error {
 					assert.Equal(t, 1, len(ctx.TailArgs()), "should have one tail argument")
@@ -259,7 +273,8 @@ func TestHandler_Run(t *testing.T) {
 					return nil
 				},
 			},
-			vargs: []string{"app", "arg-\xff\xfe\xfd"},
+			vargs:   []string{"app", "arg-\xff\xfe\xfd"},
+			wantErr: fmt.Errorf("error: argument contains invalid UTF-8 characters"),
 		},
 		{
 			name: "should overwrite string slice flag on multiple assignments",
@@ -298,7 +313,7 @@ func TestHandler_Run(t *testing.T) {
 				},
 			},
 			vargs:   []string{"app", "--input", "--verbose"},
-			wantErr: fmt.Errorf("error: flag \"--input\" requires a value"),
+			wantErr: fmt.Errorf("error: flag '--input' requires a value"),
 		},
 		{
 			name: "should return error if string flag is last argument",
@@ -308,7 +323,7 @@ func TestHandler_Run(t *testing.T) {
 				},
 			},
 			vargs:   []string{"app", "--input"},
-			wantErr: fmt.Errorf("error: flag \"--input\" requires a value"),
+			wantErr: fmt.Errorf("error: flag '--input' requires a value"),
 		},
 		{
 			name: "should return error if int flag is last argument",
@@ -318,7 +333,7 @@ func TestHandler_Run(t *testing.T) {
 				},
 			},
 			vargs:   []string{"app", "--num"},
-			wantErr: fmt.Errorf("error: flag \"--num\" requires a value"),
+			wantErr: fmt.Errorf("error: flag '--num' requires a value"),
 		},
 		{
 			name: "should return error if string slice flag is last argument",
@@ -328,7 +343,7 @@ func TestHandler_Run(t *testing.T) {
 				},
 			},
 			vargs:   []string{"app", "--items"},
-			wantErr: fmt.Errorf("error: flag \"--items\" requires a value"),
+			wantErr: fmt.Errorf("error: flag '--items' requires a value"),
 		},
 		{
 			name: "should treat subsequent value as tail arg if flag already assigned",
@@ -381,6 +396,24 @@ func TestHandler_Run(t *testing.T) {
 				},
 			},
 			vargs: []string{"app", "run", "--local"},
+		},
+		{
+			name: "should return error for command with invalid ASCII characters",
+			ap: &app.App{
+				Flags: []flag.Flag{
+					flag.FlagBool{Name: "global"},
+				},
+				Commands: []app.Cmd{
+					{
+						Name: "ràn",
+						Flags: []flag.Flag{
+							flag.FlagBool{Name: "local"},
+						},
+					},
+				},
+			},
+			vargs:   []string{"app", "run", "--local"},
+			wantErr: fmt.Errorf("error: command 'ràn' contains invalid characters"),
 		},
 		{
 			name: "should parse command-specific string flag when command is present",
@@ -509,11 +542,11 @@ func TestHandler_Run(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := New(tt.ap).Run(tt.vargs); tt.wantErr != nil {
-				assert.Error(t, err, "Expected an error but got none")
-				assert.Equal(t, err, tt.wantErr, "Error message does not match the expected one")
+			if actualErr := New(tt.ap).Run(tt.vargs); tt.wantErr != nil {
+				assert.Error(t, actualErr, "Expected an error but got none")
+				assert.Equal(t, tt.wantErr, actualErr, "Error message does not match the expected one")
 			} else {
-				assert.NoError(t, err, "Expected no error but got one")
+				assert.NoError(t, actualErr, "Expected no error but got one")
 			}
 		})
 	}

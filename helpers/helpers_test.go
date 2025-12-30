@@ -114,6 +114,34 @@ func Test_ValidateCommands(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "should return error for invalid string command name",
+			args: args{
+				commands: []app.Cmd{{Name: "ñame"}},
+			},
+			wantErr: true,
+		},
+		{
+			name: "should return error for invalid bool command name",
+			args: args{
+				commands: []app.Cmd{{Name: "~name"}},
+			},
+			wantErr: true,
+		},
+		{
+			name: "should return error for invalid string slice command name",
+			args: args{
+				commands: []app.Cmd{{Name: "name-\x00"}},
+			},
+			wantErr: true,
+		},
+		{
+			name: "should return error for invalid int command name",
+			args: args{
+				commands: []app.Cmd{{Name: "name-🚀"}},
+			},
+			wantErr: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -150,7 +178,7 @@ func Test_ValidateAndInitFlags(t *testing.T) {
 			want: nil,
 		},
 		{
-			name: "invalid FlagString name",
+			name: "should return error for invalid FlagString name",
 			args: args{
 				flags: []flag.Flag{
 					flag.FlagString{Name: ""},
@@ -160,7 +188,7 @@ func Test_ValidateAndInitFlags(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "invalid FlagBool name",
+			name: "should return error for invalid FlagBool name",
 			args: args{
 				flags: []flag.Flag{
 					flag.FlagBool{Name: ""},
@@ -170,7 +198,7 @@ func Test_ValidateAndInitFlags(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "invalid FlagInt name",
+			name: "should return error for invalid FlagInt name",
 			args: args{
 				flags: []flag.Flag{
 					flag.FlagInt{Name: ""},
@@ -180,7 +208,7 @@ func Test_ValidateAndInitFlags(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "invalid FlagStringSlice name",
+			name: "should return error for invalid FlagStringSlice name",
 			args: args{
 				flags: []flag.Flag{
 					flag.FlagStringSlice{Name: ""},
@@ -190,7 +218,7 @@ func Test_ValidateAndInitFlags(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "invalid flag type value",
+			name: "should return error for invalid flag type value",
 			args: args{
 				flags: []flag.Flag{
 					struct{ ok bool }{false},
@@ -259,7 +287,7 @@ func Test_ValidateAndInitFlags(t *testing.T) {
 			},
 		},
 		{
-			name: "invalid flag names",
+			name: "hould return error for invalid flag names",
 			args: args{
 				flags: []flag.Flag{
 					flag.FlagString{Name: ""},
@@ -309,6 +337,42 @@ func Test_ValidateAndInitFlags(t *testing.T) {
 					FlagAssigned: false,
 				},
 			},
+		},
+		{
+			name: "should return error for invalid string flag name",
+			args: args{
+				flags: []flag.Flag{
+					flag.FlagString{Name: "ñame"},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "should return error for invalid bool flag name",
+			args: args{
+				flags: []flag.Flag{
+					flag.FlagBool{Name: "~name"},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "should return error for invalid string slice flag name",
+			args: args{
+				flags: []flag.Flag{
+					flag.FlagStringSlice{Name: "name-\x00"},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "should return error for invalid int flag name",
+			args: args{
+				flags: []flag.Flag{
+					flag.FlagInt{Name: "name-🚀"},
+				},
+			},
+			wantErr: true,
 		},
 	}
 
@@ -607,6 +671,96 @@ func Test_BuildFlagMap(t *testing.T) {
 				assert.True(t, ok, "key %s should exist in the map", key)
 				assert.Equal(t, wantInfo.Index, gotInfo.Index, "index for key %s should match", key)
 				assert.ObjectsAreEqual(wantInfo.Flag, gotInfo.Flag)
+			}
+		})
+	}
+}
+
+func TestIsValidToken(t *testing.T) {
+	tests := []struct {
+		name      string
+		token     string
+		tokenType string
+		wantErr   bool
+	}{
+		{
+			name:      "should return no error for valid alphanumeric token",
+			token:     "validToken-123",
+			tokenType: "flag",
+		},
+		{
+			name:      "should return error for invalid token with special chars",
+			token:     "invalid-token_123.",
+			tokenType: "command",
+			wantErr:   true,
+		},
+		{
+			name:      "should return error for invalid flag token with hyphen at start",
+			token:     "-invalidToken",
+			tokenType: "flag",
+			wantErr:   true,
+		},
+		{
+			name:      "should return error for invalid flag token with hyphen at end",
+			token:     "invalidToken-",
+			tokenType: "flag",
+			wantErr:   true,
+		},
+		{
+			name:      "should return error for invalid flag token with consecutive hyphens",
+			token:     "invalid--token-name",
+			tokenType: "flag",
+			wantErr:   true,
+		},
+		{
+			name:      "should return error for invalid flag token with digits at start",
+			token:     "123-invalid",
+			tokenType: "flag",
+			wantErr:   true,
+		},
+		{
+			name:      "should return error for invalid flag token with space",
+			token:     "invalid token",
+			tokenType: "flag",
+			wantErr:   true,
+		},
+		{
+			name:      "should return error for invalid command token with tab",
+			token:     "invalid\ttoken",
+			tokenType: "command",
+			wantErr:   true,
+		},
+		{
+			name:      "should return error for invalid flag token with unicode",
+			token:     "invalidñtoken",
+			tokenType: "flag",
+			wantErr:   true,
+		},
+		{
+			name:      "should return error for invalid command token emoji",
+			token:     "invalid🚀token",
+			tokenType: "command",
+			wantErr:   true,
+		},
+		{
+			name:      "should return error for empty flag token",
+			token:     "",
+			tokenType: "flag",
+		},
+		{
+			name:      "should return error for invalid flag token with null byte",
+			token:     "invalid\x00token",
+			tokenType: "flag",
+			wantErr:   true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if actualErr := helpers.IsValidToken(tt.token, tt.tokenType); tt.wantErr {
+				assert.Error(t, actualErr, "IsValidToken() expected to return an error but got nil")
+				assert.Equal(t, actualErr.Error(), "error: "+tt.tokenType+" '"+tt.token+"' contains invalid characters")
+			} else {
+				assert.NoError(t, actualErr, "IsValidToken() returned an unexpected error")
 			}
 		})
 	}

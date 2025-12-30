@@ -4,6 +4,7 @@ package handler
 import (
 	"fmt"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/joseluisq/cline/app"
 	"github.com/joseluisq/cline/flag"
@@ -29,6 +30,10 @@ func New(ap *app.App) *Handler {
 // Note that the first argument is always skipped.
 func (h *Handler) Run(vArgs []string) error {
 	// Commands and flags validation
+	var vArgsLen = len(vArgs)
+	if vArgsLen > maxArgsCount {
+		return fmt.Errorf("error: number of arguments exceeds the limit of %d", maxArgsCount)
+	}
 
 	// 1. Check application global flags
 	vflags, err := helpers.ValidateFlagsAndInit(h.ap.Flags)
@@ -44,9 +49,8 @@ func (h *Handler) Run(vArgs []string) error {
 	}
 	h.ap.Commands = vcmds
 
-	// Optimization: Create maps for faster flag lookups
-	appFlagMap := helpers.BuildFlagMap(h.ap.Flags)
-	cmdFlagMaps := make(map[string]map[string]helpers.FlagInfo, len(h.ap.Commands))
+	var appFlagMap = helpers.BuildFlagMap(h.ap.Flags)
+	var cmdFlagMaps = make(map[string]map[string]helpers.FlagInfo, len(h.ap.Commands))
 	for _, cmd := range h.ap.Commands {
 		cmdFlagMaps[cmd.Name] = helpers.BuildFlagMap(cmd.Flags)
 	}
@@ -59,17 +63,16 @@ func (h *Handler) Run(vArgs []string) error {
 	var hasCmd = false
 	var hasHelp = false
 	var hasVersion = false
-	var vArgsLen = len(vArgs)
-
-	if vArgsLen > maxArgsCount {
-		return fmt.Errorf("error: number of arguments exceeds the limit of %d", maxArgsCount)
-	}
 
 	for idx := 1; idx < vArgsLen; idx++ {
 		arg := strings.TrimSpace(vArgs[idx])
 
 		if len(arg) > maxArgLen {
 			return fmt.Errorf("error: argument exceeds maximum length of %d characters", maxArgLen)
+		}
+
+		if !utf8.ValidString(arg) {
+			return fmt.Errorf("error: argument contains invalid UTF-8 characters")
 		}
 
 		// Check if the previous flag was expecting a value but didn't get one
@@ -99,7 +102,7 @@ func (h *Handler) Run(vArgs []string) error {
 			// it's an error.
 			if isUnassignedValueFlag && strings.HasPrefix(arg, "-") {
 				// The previous flag is missing its required value.
-				return fmt.Errorf("error: flag \"--%s\" requires a value", name)
+				return fmt.Errorf("error: flag '--%s' requires a value", name)
 			}
 		}
 
@@ -108,7 +111,7 @@ func (h *Handler) Run(vArgs []string) error {
 			if idx+1 < vArgsLen {
 				tailArgs = append(tailArgs, vArgs[idx+1:]...)
 			}
-			break // Stop processing further arguments as flags
+			break
 		}
 
 		if len(tailArgs) > 0 {
@@ -126,20 +129,33 @@ func (h *Handler) Run(vArgs []string) error {
 				flagKey = arg[2:]
 			}
 
-			// Skip unsupported flags
-			if flagKey == "" || strings.HasPrefix(flagKey, "-") {
-				tailArgs = append(tailArgs, arg)
-				continue
+			if err := helpers.IsValidToken(flagKey, "flag"); err != nil {
+				return err
 			}
 
 			// Process special flags (help and version)
 			switch flagKey {
-			case "help", "h":
+			case "help":
 				hasHelp = true
-			case "version", "v":
+			case "h":
+				if isAlias {
+					hasHelp = true
+				}
+			case "version":
+				hasVersion = true
 				if !hasCmd {
 					hasVersion = true
 				}
+			case "v":
+				if !hasCmd && isAlias {
+					hasVersion = true
+				}
+			}
+
+			// Skip unsupported flags
+			if flagKey == "" || strings.HasPrefix(flagKey, "-") {
+				tailArgs = append(tailArgs, arg)
+				continue
 			}
 			if hasHelp || hasVersion {
 				break
@@ -154,7 +170,7 @@ func (h *Handler) Run(vArgs []string) error {
 
 			flagInfo, ok := flagMap[flagKey]
 			if !ok {
-				return fmt.Errorf("error: unknown argument: %s", arg)
+				return fmt.Errorf("error: unknown flag '%s' argument", arg)
 			}
 			lastFlag = flagInfo.Flag
 			lastFlagIndex = flagInfo.Index
@@ -273,7 +289,7 @@ func (h *Handler) Run(vArgs []string) error {
 					}
 					continue
 				} else {
-					return fmt.Errorf("error: invalid integer value for flag --%s", fl.Name)
+					return fmt.Errorf("error: invalid integer value for flag '--%s'", fl.Name)
 				}
 			}
 		case flag.FlagString:
@@ -327,15 +343,15 @@ func (h *Handler) Run(vArgs []string) error {
 		switch v := lastFlag.(type) {
 		case flag.FlagInt:
 			if !v.FlagAssigned {
-				return fmt.Errorf("error: flag \"--%s\" requires a value", v.Name)
+				return fmt.Errorf("error: flag '--%s' requires a value", v.Name)
 			}
 		case flag.FlagString:
 			if !v.FlagAssigned {
-				return fmt.Errorf("error: flag \"--%s\" requires a value", v.Name)
+				return fmt.Errorf("error: flag '--%s' requires a value", v.Name)
 			}
 		case flag.FlagStringSlice:
 			if !v.FlagAssigned {
-				return fmt.Errorf("error: flag \"--%s\" requires a value", v.Name)
+				return fmt.Errorf("error: flag '--%s' requires a value", v.Name)
 			}
 		}
 	}
