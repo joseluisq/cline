@@ -14,6 +14,10 @@ import (
 func ValidateCommands(commands []app.Cmd) (cmds []app.Cmd, err error) {
 	for _, c := range commands {
 		name := strings.TrimSpace(c.Name)
+		if err2 := IsValidToken(name, "command"); err2 != nil {
+			return cmds, err2
+		}
+
 		if name == "" {
 			err = fmt.Errorf("error: command name cannot be empty")
 			return
@@ -38,33 +42,49 @@ func ValidateFlagsAndInit(flags []flag.Flag) (vflags []flag.Flag, err error) {
 		}
 		switch f := v.(type) {
 		case flag.FlagBool:
-			if name := strings.ToLower(strings.TrimSpace(f.Name)); name == "" {
+			name := strings.ToLower(strings.TrimSpace(f.Name))
+			if name == "" {
 				err = fmt.Errorf("error: bool flag name cannot be empty")
 				return
+			}
+			if err2 := IsValidToken(name, "flag"); err2 != nil {
+				return vflags, err2
 			}
 			f.Init()
 			vflags = append(vflags, f)
 
 		case flag.FlagInt:
-			if name := strings.ToLower(strings.TrimSpace(f.Name)); name == "" {
+			name := strings.ToLower(strings.TrimSpace(f.Name))
+			if name == "" {
 				err = fmt.Errorf("error: int flag name cannot be empty")
 				return
+			}
+			if err2 := IsValidToken(name, "flag"); err2 != nil {
+				return vflags, err2
 			}
 			f.Init()
 			vflags = append(vflags, f)
 
 		case flag.FlagString:
-			if name := strings.ToLower(strings.TrimSpace(f.Name)); name == "" {
+			name := strings.ToLower(strings.TrimSpace(f.Name))
+			if name == "" {
 				err = fmt.Errorf("error: string flag name cannot be empty")
 				return
+			}
+			if err2 := IsValidToken(name, "flag"); err2 != nil {
+				return vflags, err2
 			}
 			f.Init()
 			vflags = append(vflags, f)
 
 		case flag.FlagStringSlice:
-			if name := strings.ToLower(strings.TrimSpace(f.Name)); name == "" {
+			name := strings.ToLower(strings.TrimSpace(f.Name))
+			if name == "" {
 				err = fmt.Errorf("error: string slice flag name cannot be empty")
 				return
+			}
+			if err2 := IsValidToken(name, "flag"); err2 != nil {
+				return vflags, err2
 			}
 			f.Init()
 			vflags = append(vflags, f)
@@ -160,4 +180,33 @@ func BuildFlagMap(flags []flag.Flag) map[string]FlagInfo {
 		}
 	}
 	return flagMap
+}
+
+// IsValidToken checks for printable ASCII characters (letters and hyphen-minus).
+func IsValidToken(token string, tokenType string) error {
+	precededByHyphen := false
+	for i := 0; i < len(token); i++ {
+		b := token[i]
+		// allow hyphen-minus only once and not at the start or end
+		if b == 0x2D {
+			if i > 0 && i < len(token)-1 && !precededByHyphen {
+				precededByHyphen = true
+				continue
+			}
+		} else {
+			precededByHyphen = false
+		}
+		// allow digits but not at the start
+		if b >= 0x30 && b <= 0x39 {
+			if i > 0 {
+				continue
+			}
+		}
+		// allow upper and lower case letters
+		if (b >= 0x41 && b <= 0x5A) || (b >= 0x61 && b <= 0x7A) {
+			continue
+		}
+		return fmt.Errorf("error: %s '%s' contains invalid characters", tokenType, token)
+	}
+	return nil
 }
