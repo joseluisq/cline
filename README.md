@@ -6,20 +6,31 @@
 
 - No external dependencies more than few [Go's stdlib](https://golang.org/pkg/#stdlib) ones.
 - Compact but concise API.
-- Global and command flags support.
+- Global flags support.
+- Single-level commands support only.
 - `bool`, `int`, `string` and `[]string` flag's data types.
 - Flag aliases and default values support.
+- Optional environment variable names for flags.
 - Convenient contexts for function handlers (global and command flags)
 - Context built-in types conversion API for `bool`, `int`, `string` and `[]string` flag values.
-- Convenient API to detect provided (passed) flags only with thier props.
-- Optional environment variable names for flags.
+- Convenient API to detect provided (passed) flags with thier properties.
+- Strict UTF-8 for arguments and alphanumeric ASCII for flags and commands.
+- POSIX-compliant support is intentionally partial (see the limitations below).
+- Support for flags termination via `--` to provide further positional arguments (tail args).
+- Same repeated flag arguments use the last value provided.
 - Automatic `--help` (`-h`) flag for global flags and commands.
-- Automatic `--version` (`-v`) flag with relevant info like app version, Go version, build datetime and OS/Arch.
+- Automatic `--version` (`-v`) flag with relevant information like app version, Go version, build datetime and OS/Arch and commit.
 
-### Work in progress
+## Limitations
 
-- POSIX-compliant flags support is partial. Please see [issue #3](https://github.com/joseluisq/cline/issues/3)
-- Subcommands are not supported yet.
+The following POSIX features are intentionally NOT supported:
+
+- Short single-dash combined flags (e.g. `-abc` for `-a -b -c`).
+- Short single-dash flags with equal sign (e.g. `-f=value` or `--file=value`).
+- Single hyphen to denote standard inpu or output (e.g. `myapp -`).
+- Optional whitespace between flags and their values (e.g. `-vfoo` for `-v foo`).
+
+Please see [issue #3](https://github.com/joseluisq/cline/issues/3) for details.
 
 ## Usage
 
