@@ -12,27 +12,59 @@ import (
 	"github.com/joseluisq/cline/print"
 )
 
+// Handler represents a parser handler for the CLI application.
 type Handler struct {
-	ap *app.App
+	ap   *app.App
+	opts Options
+}
+
+// Options represents the configuration options for the Handler.
+type Options struct {
+	MaxArgLen    int
+	MaxArgsCount int
 }
 
 const (
-	maxArgLen    = 4096 // 4KB
-	maxArgsCount = 1024
+	defaultMaxArgLen    = 256
+	defaultMaxArgsCount = 128
 )
 
-// New creates a new handler for the given application.
+// New creates a new handler for the given application with default options.
 func New(ap *app.App) *Handler {
-	return &Handler{ap: ap}
+	return &Handler{
+		ap: ap,
+		opts: Options{
+			MaxArgLen:    defaultMaxArgLen,
+			MaxArgsCount: defaultMaxArgsCount,
+		},
+	}
 }
 
-// Run executes the current application with given arguments.
-// Note that the first argument is always skipped.
+// NewWithOpts creates a new handler for the given application with custom options.
+func NewWithOpts(ap *app.App, opts Options) *Handler {
+	s := &Options{
+		MaxArgLen:    defaultMaxArgLen,
+		MaxArgsCount: defaultMaxArgsCount,
+	}
+	if opts.MaxArgLen > 0 {
+		s.MaxArgLen = opts.MaxArgLen
+	}
+	if opts.MaxArgsCount > 0 {
+		s.MaxArgsCount = opts.MaxArgsCount
+	}
+	return &Handler{
+		ap:   ap,
+		opts: *s,
+	}
+}
+
+// Run processes the provided CLI arguments and executes the appropriate handler.
+// It validates commands and flags, manages tail arguments, and handles special flags like help and version.
 func (h *Handler) Run(vArgs []string) error {
 	// Commands and flags validation
 	var vArgsLen = len(vArgs)
-	if vArgsLen > maxArgsCount {
-		return fmt.Errorf("error: number of arguments exceeds the limit of %d", maxArgsCount)
+	if vArgsLen > h.opts.MaxArgsCount {
+		return fmt.Errorf("error: number of arguments exceeds the limit of %d", h.opts.MaxArgsCount)
 	}
 
 	// 1. Check application global flags
@@ -67,8 +99,8 @@ func (h *Handler) Run(vArgs []string) error {
 	for idx := 1; idx < vArgsLen; idx++ {
 		arg := strings.TrimSpace(vArgs[idx])
 
-		if len(arg) > maxArgLen {
-			return fmt.Errorf("error: argument exceeds maximum length of %d characters", maxArgLen)
+		if len(arg) > h.opts.MaxArgLen {
+			return fmt.Errorf("error: argument exceeds maximum length of %d characters", h.opts.MaxArgLen)
 		}
 
 		if !utf8.ValidString(arg) {

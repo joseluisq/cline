@@ -124,14 +124,14 @@ func TestHandler_Run(t *testing.T) {
 			ap:   &app.App{},
 			vargs: func() []string {
 				// Create a slice with more arguments than the allowed maximum
-				args := make([]string, maxArgsCount+2)
+				args := make([]string, defaultMaxArgsCount+2)
 				args[0] = "app"
 				for i := 1; i < len(args); i++ {
 					args[i] = "arg"
 				}
 				return args
 			}(),
-			wantErr: fmt.Errorf("error: number of arguments exceeds the limit of %d", maxArgsCount),
+			wantErr: fmt.Errorf("error: number of arguments exceeds the limit of %d", defaultMaxArgsCount),
 		},
 		{
 			name: "should return error when an argument length exceeds limit",
@@ -141,7 +141,7 @@ func TestHandler_Run(t *testing.T) {
 				},
 			},
 			vargs:   []string{"app", "--long-arg", string(make([]byte, 4097))},
-			wantErr: fmt.Errorf("error: argument exceeds maximum length of %d characters", maxArgLen),
+			wantErr: fmt.Errorf("error: argument exceeds maximum length of %d characters", defaultMaxArgLen),
 		},
 		{
 			name: "should treat arguments after -- as tail arguments",
@@ -605,6 +605,49 @@ func TestHandler_Run(t *testing.T) {
 			} else {
 				assert.NoError(t, actualErr, "Expected no error but got one")
 			}
+		})
+	}
+}
+
+func TestNewWithOpts(t *testing.T) {
+	tests := []struct {
+		name string
+		ap   *app.App
+		opts Options
+		want *Handler
+	}{
+		{
+			name: "should create handler with provided options",
+			ap:   &app.App{Name: "TestApp"},
+			opts: Options{
+				MaxArgLen:    8192,
+				MaxArgsCount: 2048,
+			},
+			want: &Handler{
+				ap: &app.App{Name: "TestApp"},
+				opts: Options{
+					MaxArgLen:    8192,
+					MaxArgsCount: 2048,
+				},
+			},
+		},
+		{
+			name: "should create handler with default options",
+			ap:   &app.App{Name: "DefaultApp"},
+			opts: Options{},
+			want: &Handler{
+				ap: &app.App{Name: "DefaultApp"},
+				opts: Options{
+					MaxArgLen:    defaultMaxArgLen,
+					MaxArgsCount: defaultMaxArgsCount,
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := NewWithOpts(tt.ap, tt.opts)
+			assert.Equal(t, tt.want, got, "Options provided do not match expected ones")
 		})
 	}
 }
