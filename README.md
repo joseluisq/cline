@@ -16,6 +16,7 @@
 - Convenient API to detect provided (passed) flags with thier properties.
 - Strict UTF-8 for arguments and alphanumeric ASCII for flags and commands.
 - POSIX-compliant support is intentionally partial (see the limitations below).
+- Restrict the maximum argument length and maximum number of arguments provided.
 - Support for flags termination via `--` to provide further positional arguments (tail args).
 - Same repeated flag arguments use the last value provided.
 - Automatic `--help` (`-h`) flag for global flags and commands.
@@ -27,10 +28,10 @@ The following POSIX features are intentionally NOT supported:
 
 - Short single-dash combined flags (e.g. `-abc` for `-a -b -c`).
 - Short single-dash flags with equal sign (e.g. `-f=value` or `--file=value`).
-- Single hyphen to denote standard inpu or output (e.g. `myapp -`).
+- Single hyphen to denote standard input or output (e.g. `myapp -`).
 - Optional whitespace between flags and their values (e.g. `-vfoo` for `-v foo`).
 
-Please see [issue #3](https://github.com/joseluisq/cline/issues/3) for details.
+Please see [POSIX-compliant support (#3)](https://github.com/joseluisq/cline/issues/3) for details.
 
 ## Usage
 

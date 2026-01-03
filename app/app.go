@@ -33,7 +33,7 @@ func New() *App {
 	return &App{}
 }
 
-// PrintVersion prints the current application version information (--version).
+// PrintVersion prints the current application version information (--version, -v).
 func (ap *App) PrintVersion() {
 	fmt.Printf("Version:       %s\n", ap.Version)
 	fmt.Printf("Go version:    %s\n", runtime.Version())

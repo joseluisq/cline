@@ -11,6 +11,7 @@ type AppContext struct {
 	tailArgs []string
 }
 
+// NewContext creates a new application context.
 func NewContext(app *App, flagValues *flag.FlagValues, tailArgs []string) *AppContext {
 	return &AppContext{
 		app:      app,
