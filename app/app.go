@@ -39,4 +39,5 @@ func (ap *App) PrintVersion() {
 	fmt.Printf("Go version:    %s\n", runtime.Version())
 	fmt.Printf("Built:         %s\n", ap.BuildTime)
 	fmt.Printf("Commit:        %s\n", ap.BuildCommit)
+	fmt.Printf("OS/Arch:       %s/%s\n", runtime.GOOS, runtime.GOARCH)
 }

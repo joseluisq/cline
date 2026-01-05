@@ -1,3 +1,4 @@
+// Package print provides functions to print application information to the console.
 package print
 
 import (
